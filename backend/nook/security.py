@@ -6,8 +6,9 @@ import bcrypt
 import jwt
 
 from .errors import ApiError
+from .schools import school_for_domain
 
-GT_EMAIL = re.compile(r"^[a-z0-9._%+\-]+@gatech\.edu$")
+EDU_EMAIL = re.compile(r"^[a-z0-9._%+\-]+@[a-z0-9.-]+\.edu$")
 
 
 def secret() -> str:
@@ -16,8 +17,11 @@ def secret() -> str:
 
 def normalize_email(email: str) -> str:
     cleaned = (email or "").strip().lower()
-    if not GT_EMAIL.match(cleaned):
-        raise ApiError("Use your Georgia Tech email — it needs to end in @gatech.edu.")
+    if not EDU_EMAIL.match(cleaned):
+        raise ApiError("Use an email that ends in .edu.")
+    school = school_for_domain(cleaned.split("@", 1)[1])
+    if not school:
+        raise ApiError("That .edu address isn't a university we recognize. Use the school's own domain, like gatech.edu or stanford.edu.")
     return cleaned
 
 

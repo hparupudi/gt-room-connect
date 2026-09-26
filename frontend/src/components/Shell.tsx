@@ -23,7 +23,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <header className="flex items-center justify-between gap-4 py-5">
         <NavLink to="/discover" className="flex items-center gap-2">
           <Mark />
-          <span className="font-serif text-2xl">Nook</span>
+          <span className="font-serif text-2xl">Dormsurf</span>
         </NavLink>
         <nav className="hidden items-center gap-1 md:flex">
           {LINKS.map((link) => (

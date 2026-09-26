@@ -142,7 +142,7 @@ export function Discover() {
           </div>
         </aside>
         <section>
-          {!dates.length ? <Banner tone="note">Pick at least one date. Nook won't guess which night you need.</Banner> : null}
+          {!dates.length ? <Banner tone="note">Pick at least one date. Dormsurf won't guess which night you need.</Banner> : null}
           {error ? <Banner>{error}</Banner> : null}
           {data ? (
             <p className="mb-3 text-sm text-muted">

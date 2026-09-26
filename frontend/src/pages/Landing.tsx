@@ -4,8 +4,8 @@ import { Mark, btnGhost, btnPrimary } from "../components/ui";
 
 const STEPS = [
   {
-    title: "Prove you're at Tech",
-    copy: "We'll send a code to your @gatech.edu email so we know it's you.",
+    title: "Use your school email",
+    copy: "We'll send a code to an .edu address when the school in it is one we recognize.",
   },
   {
     title: "Say how you live",
@@ -23,7 +23,7 @@ export function Landing() {
       <header className="flex items-center justify-between py-5">
         <div className="flex items-center gap-2">
           <Mark />
-          <span className="font-serif text-2xl">Nook</span>
+          <span className="font-serif text-2xl">Dormsurf</span>
         </div>
         <div className="flex gap-2">
           <Link to="/login" className={btnGhost}>
@@ -36,12 +36,12 @@ export function Landing() {
       </header>
       <section className="grid items-end gap-10 py-10 md:grid-cols-[1.3fr_0.7fr] md:py-16">
         <div>
-          <p className="text-xs font-medium tracking-[0.18em] text-gold uppercase">Georgia Tech · weekend housing</p>
+          <p className="text-xs font-medium tracking-[0.18em] text-gold uppercase">Weekend couches · accredited .edu</p>
           <h1 className="mt-3 max-w-xl font-serif text-5xl leading-[1.02] text-navy md:text-7xl">
-            Your roommate left town. Someone on campus has a couch.
+            Your roommate left town. Someone at Tech has a couch.
           </h1>
           <p className="mt-5 max-w-lg text-lg text-muted">
-            Nook is how Yellow Jackets spend a night in another hall — not a rental, a person. Match on how you live, or on the walk from your own room.
+            Dormsurf is how students spend a night in a Georgia Tech hall — not a rental, a person. A Tech room is optional if you live off campus or go to another school.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link to="/signup" className={btnPrimary}>

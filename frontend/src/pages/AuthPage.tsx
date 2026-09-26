@@ -7,11 +7,12 @@ import { useAuth } from "../auth";
 import { Banner, Field, Mark, btnGhost, btnPrimary } from "../components/ui";
 
 type Phase = "email" | "code" | "password";
-const DRAFT_KEY = "nook-signup-draft";
+const DRAFT_KEY = "dormsurf-signup-draft";
+const LEGACY_DRAFT_KEY = "nook-signup-draft";
 
 function readDraft(): { email: string; phase: Phase; preview: string; delivery: string; verificationToken: string } | null {
   try {
-    const raw = sessionStorage.getItem(DRAFT_KEY);
+    const raw = sessionStorage.getItem(DRAFT_KEY) || sessionStorage.getItem(LEGACY_DRAFT_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<{ email: string; phase: Phase; preview: string; delivery: string; verificationToken: string }>;
     if ((parsed.phase !== "code" && parsed.phase !== "password") || typeof parsed.email !== "string" || !parsed.email) return null;
@@ -129,7 +130,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
       <section className="hidden flex-col justify-center bg-navy px-10 py-12 text-paper md:flex">
         <Link to="/" className="flex items-center gap-2">
           <Mark />
-          <span className="font-serif text-2xl">Nook</span>
+          <span className="font-serif text-2xl">Dormsurf</span>
         </Link>
         <div>
           <p className="font-serif text-5xl leading-tight">A couch with a person attached.</p>
@@ -138,7 +139,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
       <section className="px-5 py-10 md:px-12">
         <Link to="/" className="mb-8 flex items-center gap-2 md:hidden">
           <Mark />
-          <span className="font-serif text-2xl">Nook</span>
+          <span className="font-serif text-2xl">Dormsurf</span>
         </Link>
         <div className="mb-6 flex gap-2">
           <Link to="/login" className={mode === "login" ? btnPrimary : btnGhost}>
@@ -156,7 +157,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
         {mode === "login" ? (
           <form className="space-y-4" method="get" action="/login" onSubmit={onLogin}>
             <Field label="Georgia Tech email">
-              <input type="email" autoComplete="username" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@gatech.edu" required />
+              <input type="email" autoComplete="username" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@school.edu" required />
             </Field>
             <Field label="Password">
               <input type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required />
@@ -170,7 +171,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
         ) : phase === "email" ? (
           <form className="space-y-4" method="get" action="/signup" onSubmit={sendCode}>
             <Field label="Georgia Tech email">
-              <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@gatech.edu" required />
+              <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@school.edu" required />
             </Field>
             <p className="text-sm text-muted">We'll send a 6-digit code before you can create a password.</p>
             <button className={btnPrimary} disabled={busy} type="submit">

@@ -65,7 +65,7 @@ function CampusMapView({
         doubleClickZoom={interactive}
         className="h-full w-full bg-[#eef0e7]"
       >
-        <TileLayer url={TILES} attribution={ATTRIBUTION} maxZoom={19} className="nook-tiles" />
+        <TileLayer url={TILES} attribution={ATTRIBUTION} maxZoom={19} className="dormsurf-tiles" />
         {dorms.map((dorm) => {
           const tone = hallTone(dorm);
           const active = dorm.id === selectedId;
@@ -87,7 +87,7 @@ function CampusMapView({
               pathOptions={style}
               eventHandlers={{ click: () => onSelect?.(dorm.id) }}
             >
-              <Tooltip sticky direction="top" opacity={1} className="nook-tip">
+              <Tooltip sticky direction="top" opacity={1} className="dormsurf-tip">
                 <strong>{dorm.name}</strong>
                 <br />
                 {label}
@@ -107,7 +107,7 @@ function CampusMapView({
                 pathOptions={{ color: "#fffaf3", weight: 2, fillColor: FILL[tone], fillOpacity: 1 }}
                 eventHandlers={{ click: () => onSelect?.(dorm.id) }}
               >
-                <Tooltip direction="top" offset={[0, -8]} opacity={1} className="nook-tip">
+                <Tooltip direction="top" offset={[0, -8]} opacity={1} className="dormsurf-tip">
                   <strong>{dorm.name}</strong>
                   <br />
                   {dorm.yours ? "Your hall" : `${dorm.open_units} unit${dorm.open_units === 1 ? "" : "s"} open`}
@@ -123,7 +123,7 @@ function CampusMapView({
               pathOptions={{ color: "#8d6e2f", weight: 4, dashArray: route.source === "estimate" ? "8 8" : undefined }}
             />
             <CircleMarker center={route.points[0]} radius={7} pathOptions={{ color: "#fffaf3", weight: 2, fillColor: "#003057", fillOpacity: 1 }}>
-              <Tooltip permanent direction="left" offset={[-8, 0]} className="nook-tip">
+              <Tooltip permanent direction="left" offset={[-8, 0]} className="dormsurf-tip">
                 {route.from?.unit ? `${route.from.dorm_name} ${route.from.unit}` : route.from?.dorm_name || "Start"}
               </Tooltip>
             </CircleMarker>
@@ -132,7 +132,7 @@ function CampusMapView({
               radius={7}
               pathOptions={{ color: "#fffaf3", weight: 2, fillColor: "#a84b28", fillOpacity: 1 }}
             >
-              <Tooltip permanent direction="right" offset={[8, 0]} className="nook-tip">
+              <Tooltip permanent direction="right" offset={[8, 0]} className="dormsurf-tip">
                 {route.to?.unit ? `${route.to.dorm_name} ${route.to.unit}` : route.to?.dorm_name || "Destination"}
               </Tooltip>
             </CircleMarker>

@@ -12,13 +12,13 @@ def send_verification(email: str, code: str) -> str:
     if not smtp_configured():
         return "preview"
     message = EmailMessage()
-    message["Subject"] = f"Your Nook code is {code}"
+    message["Subject"] = f"Your Dormsurf code is {code}"
     message["From"] = os.environ["SMTP_FROM"]
     message["To"] = email
     message.set_content(
         "\n".join(
             [
-                "Use this code to verify your Georgia Tech email for Nook:",
+                "Use this code to verify your school email for Dormsurf:",
                 "",
                 code,
                 "",

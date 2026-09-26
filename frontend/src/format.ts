@@ -96,6 +96,11 @@ export function matchPercent(score: number): string {
   return `${Math.round(score * 100)}%`;
 }
 
+export function placeLabel(dorm?: string | null, unit?: string | null): string {
+  const place = [dorm, unit].filter(Boolean).join(" ");
+  return place || "Off campus";
+}
+
 export function styleLabel(style?: string | null): string {
   if (style === "suite") return "Suite";
   if (style === "apartment") return "Apartment";

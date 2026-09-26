@@ -97,11 +97,11 @@ def transcribe_wav(wav_bytes: bytes) -> str | None:
         "model": "muse-voice-transcribe-1.0",
         "audioEncoding": "WAV",
         "languageBias": ["English"],
-        "keywords": ["Georgia Tech", "Yellow Jacket", "Nook", "couch", "dorm", "suite"],
+        "keywords": ["Georgia Tech", "Yellow Jacket", "Dormsurf", "couch", "dorm", "suite"],
     }
     response = requests.post(
         "https://api.meta.ai/v1/asr/transcribe",
-        params={"sessionId": f"nook-{uuid.uuid4().hex[:12]}"},
+        params={"sessionId": f"dormsurf-{uuid.uuid4().hex[:12]}"},
         headers={"Authorization": f"Bearer {os.environ['MODEL_API_KEY'].strip()}"},
         files={
             "request": (None, json.dumps(request_body), "application/json"),
@@ -189,7 +189,7 @@ def muse_extract(transcript: str, questionnaire: dict) -> LifestyleProfile:
     client = _client()
     questions = "\n".join(f"{index}. {question}" for index, question in enumerate(INTERVIEW_QUESTIONS, start=1))
     system = (
-        "You write structured roommate profiles for Nook, a Georgia Tech weekend couch-surfing app. "
+        "You write structured roommate profiles for Dormsurf, a weekend couch-surfing app for Georgia Tech halls. "
         "Turn the interview transcript into the schema. The axes are a 32-dimensional lifestyle embedding "
         "between 0 and 1: higher means the person more strongly fits that trait. "
         "Make the bio two or three specific sentences in the third person. Do not invent social media handles."
@@ -363,7 +363,7 @@ def compose_bio(fields: dict) -> str:
     """Ask Muse to write the blurb from structured fields. Raises if the model is off or fails."""
     client = _client()
     system = (
-        "Write a roommate blurb for Nook from the structured fields only. "
+        "Write a roommate blurb for Dormsurf from the structured fields only. "
         "Exactly two sentences, third person, grammatically correct. "
         "Use the person's name. Do not invent interests, hours, hometowns, or habits that are not in the fields. "
         "Leave a field out when it is empty. Do not mention social media."

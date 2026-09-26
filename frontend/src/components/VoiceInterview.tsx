@@ -262,7 +262,7 @@ export function VoiceInterview({ onDone }: { onDone: (user: User) => void }) {
         <p className="max-w-xl text-sm text-muted">
           {mode === "ask"
             ? "One question at a time. Talk for as long as you want, then continue when the answer covers it."
-            : "Enter your habits directly. Nook builds the same profile from these fields."}
+            : "Enter your habits directly. Dormsurf builds the same profile from these fields."}
         </p>
         <button type="button" className="text-sm text-navy underline" onClick={() => void switchMode()}>
           {mode === "ask" ? "Type your habits instead" : "Answer out loud instead"}

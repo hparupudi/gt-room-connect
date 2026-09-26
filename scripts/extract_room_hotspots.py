@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Place a click target on every room number printed on a Housing floor plan.
 
-The JPEG Nook serves is the same drawing as the PDF (same aspect ratio). Word
+The JPEG Dormsurf serves is the same drawing as the PDF (same aspect ratio). Word
 boxes from ``pdftotext -bbox`` become normalized rectangles on that image.
 
     python3 scripts/extract_room_hotspots.py

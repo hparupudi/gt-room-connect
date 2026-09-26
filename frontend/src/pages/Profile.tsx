@@ -7,7 +7,7 @@ import type { AboutPayload } from "../components/AboutForm";
 import { Shell } from "../components/Shell";
 import { Banner, Tags } from "../components/ui";
 import { VoiceInterview } from "../components/VoiceInterview";
-import { sleepLabel, styleLabel } from "../format";
+import { placeLabel, sleepLabel, styleLabel } from "../format";
 
 export function Profile() {
   const { token, user, refresh } = useAuth();
@@ -34,7 +34,7 @@ export function Profile() {
       <p className="text-xs tracking-[0.16em] text-gold uppercase">Profile</p>
       <h1 className="font-serif text-4xl text-navy">{user.name || "Your profile"}</h1>
       <p className="mt-1 text-sm text-muted">
-        {user.dorm_name} {user.unit} · {styleLabel(user.style)} · {user.email}
+        {user.dorm_name ? `${placeLabel(user.dorm_name, user.unit)} · ${styleLabel(user.style)}` : "Off campus"} · {user.email}
       </p>
       <p className="mt-1 text-sm text-muted">
         {user.embedding_model === "muse-spark-1.3"

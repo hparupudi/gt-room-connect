@@ -79,7 +79,7 @@ def ensure_pdf(hall: str, floor: str, url: str) -> Path | None:
     if dest.exists() and dest.stat().st_size > 1000:
         return dest
     try:
-        request = urllib.request.Request(url, headers={"User-Agent": "NookFloorplans/1.0"})
+        request = urllib.request.Request(url, headers={"User-Agent": "DormsurfFloorplans/1.0"})
         dest.write_bytes(urllib.request.urlopen(request, timeout=40).read())
     except Exception as exc:
         print(f"skip {hall} floor {floor}: {exc}")

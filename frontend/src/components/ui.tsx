@@ -35,7 +35,7 @@ export function Avatar({ name, size = "md" }: { name: string; size?: "md" | "lg"
   const dim = size === "lg" ? "h-16 w-16 text-xl" : "h-11 w-11 text-sm";
   return (
     <div className={`grid ${dim} shrink-0 place-items-center rounded-full bg-navy font-serif text-paper`}>
-      {initials || "N"}
+      {initials || "D"}
     </div>
   );
 }
@@ -57,8 +57,15 @@ export function Mark({ className = "h-8 w-8" }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" className={className} aria-hidden="true">
       <rect width="32" height="32" rx="8" fill="#003057" />
-      <path d="M8 23.5V9.5h7.2a4.2 4.2 0 0 1 0 8.4H8" fill="none" stroke="#f3efe6" strokeWidth="1.8" />
-      <circle cx="22.5" cy="21" r="2.1" fill="#e7d7a8" />
+      <path d="M8.4 16.2 16 8.4l7.6 7.8V21H8.4z" fill="#f3efe6" />
+      <path d="M14.35 16.7h3.3V21h-3.3z" fill="#d4b56a" />
+      <path
+        d="M6.2 24.5c2-1.7 3.15-1.7 5.15 0s3.15 1.7 5.15 0 3.15-1.7 5.15 0 3 1.55 4.15 0"
+        fill="none"
+        stroke="#e7d7a8"
+        strokeWidth="1.45"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

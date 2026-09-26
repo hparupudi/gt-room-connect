@@ -49,6 +49,11 @@ def login(client, email: str) -> str:
 def test_gatech_email_and_verification(client):
     rejected = client.post("/api/auth/email/start", json={"email": "maya@gmail.com"})
     assert rejected.status_code == 400
+    unknown = client.post("/api/auth/email/start", json={"email": "maya@notaschool.edu"})
+    assert unknown.status_code == 400
+    stanford = client.post("/api/auth/email/start", json={"email": "guest@cs.stanford.edu"})
+    assert stanford.status_code == 200
+    assert stanford.get_json()["email"] == "guest@cs.stanford.edu"
     started = client.post("/api/auth/email/start", json={"email": "new.jacket@gatech.edu"})
     assert started.status_code == 200
     body = started.get_json()
@@ -220,7 +225,7 @@ def test_messages_stay_in_nook_and_socials_link_out(client):
     )
     assert sent.status_code == 201
     message_id = sent.get_json()["message"]["id"]
-    assert sent.get_json()["message"]["channel"] == "nook"
+    assert sent.get_json()["message"]["channel"] == "dormsurf"
     assert sent.get_json()["message"]["delivery"] == "stored"
     assert sent.get_json()["message"]["deleted"] is False
 
@@ -702,3 +707,113 @@ def test_inbox_after_a_request_is_accepted(client):
     outsider = client.get("/api/inbox", headers=auth(elena)).get_json()
     assert all(thread["booking_id"] != booking_id for thread in outsider["threads"])
     assert client.get(f"/api/bookings/{booking_id}/messages", headers=auth(elena)).status_code == 404
+
+
+def _register(client, email: str) -> str:
+    started = client.post("/api/auth/email/start", json={"email": email})
+    assert started.status_code == 200, started.get_json()
+    verified = client.post(
+        "/api/auth/email/verify",
+        json={"email": email, "code": started.get_json()["preview_code"]},
+    )
+    created = client.post(
+        "/api/auth/register",
+        json={
+            "email": email,
+            "password": "Jacket123",
+            "verification_token": verified.get_json()["verification_token"],
+        },
+    )
+    assert created.status_code == 200, created.get_json()
+    return created.get_json()["token"]
+
+
+def test_off_campus_skip_still_searches(client):
+    token = _register(client, "off.campus@stanford.edu")
+    blocked = client.post(
+        "/api/me/questionnaire",
+        json={
+            "name": "Off Campus",
+            "gender": "woman",
+            "age": 20,
+            "major": "Computer Science",
+            "year": "2",
+            "hometown": "Palo Alto, CA",
+            "socials": {"instagram": "", "phone": "", "discord": ""},
+        },
+        headers=auth(token),
+    )
+    assert blocked.status_code == 400
+    skipped = client.post("/api/me/room", json={"skip": True}, headers=auth(token))
+    assert skipped.status_code == 200, skipped.get_json()
+    profile = skipped.get_json()["user"]
+    assert profile["onboarding_step"] == "about"
+    assert profile["room_skipped"] is True
+    assert not profile["dorm_id"]
+    about = client.post(
+        "/api/me/questionnaire",
+        json={
+            "name": "Off Campus",
+            "gender": "woman",
+            "age": 20,
+            "major": "Computer Science",
+            "year": "2",
+            "hometown": "Palo Alto, CA",
+            "socials": {"instagram": "off.campus", "phone": "404-555-0199", "discord": "off"},
+        },
+        headers=auth(token),
+    )
+    assert about.status_code == 200, about.get_json()
+    assert about.get_json()["user"]["onboarding_step"] == "voice"
+    interview = client.post(
+        "/api/me/interview",
+        data={
+            "duration_sec": "42",
+            "transcript": (
+                "I love climbing and jazz concerts. I stay up late, usually after midnight, "
+                "and I'm pretty relaxed about clutter. A guest should text me first."
+            ),
+        },
+        headers=auth(token),
+    )
+    assert interview.status_code == 200, interview.get_json()
+    assert interview.get_json()["user"]["onboarding_complete"] is True
+    found = client.post(
+        "/api/search",
+        json={"dates": [day(0)], "query": "", "sort": "match", "page_size": 6},
+        headers=auth(token),
+    )
+    assert found.status_code == 200, found.get_json()
+    assert found.get_json()["results"]
+    hosting = client.put("/api/me/availability", json={"dates": [day(0)]}, headers=auth(token))
+    assert hosting.status_code == 400
+
+
+def test_typing_indicator_is_visible_to_the_other_person(client):
+    andre = login(client, "andre.wallace@gatech.edu")
+    maya = login(client, "maya.chen@gatech.edu")
+    requested = client.post(
+        "/api/bookings",
+        json={"host_id": "maya-chen", "dates": [day(8)], "message": "Saturday?"},
+        headers=auth(andre),
+    )
+    assert requested.status_code == 201, requested.get_json()
+    booking_id = requested.get_json()["booking"]["id"]
+    too_soon = client.post(f"/api/bookings/{booking_id}/typing", json={"active": True}, headers=auth(andre))
+    assert too_soon.status_code == 400
+    assert client.post(f"/api/bookings/{booking_id}/accept", headers=auth(maya)).status_code == 200
+    typing = client.post(f"/api/bookings/{booking_id}/typing", json={"active": True}, headers=auth(maya))
+    assert typing.status_code == 200
+    seen = client.get(f"/api/bookings/{booking_id}/typing", headers=auth(andre)).get_json()
+    assert seen["typing"] == [{"id": "maya-chen", "name": "Maya Chen"}]
+    assert client.get(f"/api/bookings/{booking_id}/typing", headers=auth(maya)).get_json()["typing"] == []
+    legacy = client.post(
+        f"/api/bookings/{booking_id}/messages",
+        json={"channel": "nook", "text": "Still here."},
+        headers=auth(andre),
+    )
+    assert legacy.status_code == 201
+    assert legacy.get_json()["message"]["channel"] == "dormsurf"
+    cleared = client.post(f"/api/bookings/{booking_id}/typing", json={"active": False}, headers=auth(maya))
+    assert cleared.status_code == 200
+    assert client.get(f"/api/bookings/{booking_id}/typing", headers=auth(andre)).get_json()["typing"] == []

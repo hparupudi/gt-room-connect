@@ -17,7 +17,7 @@ import { Stay } from "./pages/Stay";
 
 function Gate({ children, requireProfile = true }: { children: ReactNode; requireProfile?: boolean }) {
   const { user, loading } = useAuth();
-  if (loading) return <p className="px-4 py-10 text-sm text-muted">Opening Nook…</p>;
+  if (loading) return <p className="px-4 py-10 text-sm text-muted">Opening Dormsurf…</p>;
   if (!user) return <Navigate to="/login" replace />;
   if (requireProfile && !user.onboarding_complete) return <Navigate to="/onboarding" replace />;
   if (!requireProfile && user.onboarding_complete) return <Navigate to="/discover" replace />;
@@ -38,7 +38,7 @@ class RouteBoundary extends Component<{ children: ReactNode }, { message: string
         <h1 className="font-serif text-4xl text-navy">This screen hit a snag.</h1>
         <p className="mt-3 text-sm text-muted">{this.state.message}</p>
         <a href="/discover" className="mt-6 inline-block text-sm text-navy underline">
-          Back to Nook
+          Back to Dormsurf
         </a>
       </div>
     );
@@ -51,7 +51,7 @@ function RoutedApp() {
   return (
     <RouteBoundary key={location.pathname}>
     <Routes>
-      <Route path="/" element={loading ? <p className="px-4 py-10 text-sm">Opening Nook…</p> : user ? <Navigate to={user.onboarding_complete ? "/discover" : "/onboarding"} replace /> : <Landing />} />
+      <Route path="/" element={loading ? <p className="px-4 py-10 text-sm">Opening Dormsurf…</p> : user ? <Navigate to={user.onboarding_complete ? "/discover" : "/onboarding"} replace /> : <Landing />} />
       <Route path="/login" element={<AuthPage mode="login" />} />
       <Route path="/signup" element={<AuthPage mode="signup" />} />
       <Route path="/onboarding" element={<Gate requireProfile={false}><Onboarding /></Gate>} />

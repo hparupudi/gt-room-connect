@@ -258,7 +258,6 @@ export function RoomLayoutDialog({
             <h2 id={titleId} className="font-serif text-4xl text-navy">
               Room {unit}
             </h2>
-            <p className="font-serif text-3xl text-navy">{foot.drawing}</p>
             {foot.summary !== foot.drawing ? <p className="text-sm text-ink">{foot.summary}</p> : null}
             <p className="text-sm text-muted">{styleLine}</p>
           </div>

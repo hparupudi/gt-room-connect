@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 import uuid
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -35,7 +36,7 @@ def today() -> date:
 
 def parse_dates(values: list[str], require: bool = True) -> list[str]:
     if require and not values:
-        raise ApiError("Pick at least one date. That's how Nook knows which couch is free.")
+        raise ApiError("Pick at least one date. That's how Dormsurf knows which couch is free.")
     cleaned = []
     for value in values:
         try:
@@ -45,7 +46,7 @@ def parse_dates(values: list[str], require: bool = True) -> list[str]:
         if parsed < today():
             raise ApiError("Dates need to be today or later.")
         if parsed > today() + timedelta(days=120):
-            raise ApiError("Nook only books the next four months.")
+            raise ApiError("Dormsurf only books the next four months.")
         iso = parsed.isoformat()
         if iso not in cleaned:
             cleaned.append(iso)
@@ -120,6 +121,7 @@ def serialize_user(user: dict, viewer_id: str | None = None, force_socials: bool
         "wake_time": life.get("wake_time"),
         "noise": life.get("noise"),
         "guest_notes": life.get("guest_notes") or "",
+        "room_skipped": bool(user.get("room_skipped")),
         "onboarding_complete": bool(user.get("onboarding_complete")),
         "onboarding_step": onboarding_step(user),
         "embedding_model": user.get("embedding_model"),
@@ -133,8 +135,16 @@ def serialize_user(user: dict, viewer_id: str | None = None, force_socials: bool
     return payload
 
 
+def has_claimed_room(user: dict) -> bool:
+    return bool(user.get("dorm_id") and user.get("unit"))
+
+
+def place_known(user: dict) -> bool:
+    return has_claimed_room(user) or bool(user.get("room_skipped"))
+
+
 def onboarding_step(user: dict) -> str:
-    if not user.get("dorm_id") or not user.get("unit"):
+    if not place_known(user):
         return "room"
     if not user.get("name") or not user.get("major") or not user.get("year"):
         return "about"
@@ -171,7 +181,7 @@ def apply_lifestyle(user: dict, profile: LifestyleProfile, model: str, transcrip
     patch = {
         "lifestyle": lifestyle,
         "transcript": transcript,
-        "onboarding_complete": bool(user.get("dorm_id") and user.get("name")),
+        "onboarding_complete": bool(place_known(user) and user.get("name")),
         **store_embedding({**user, "lifestyle": lifestyle}, list(axes.values()) if isinstance(axes, dict) else profile.axes.as_vector(), model),
     }
     # store_embedding used lifestyle sleep from user; axes vector is explicit
@@ -392,7 +402,7 @@ def unit_view(residents: list[dict], viewer_id: str | None, dates: list[str]) ->
 def dorm_detail(dorm_id: str, viewer: dict | None, dates: list[str]) -> dict:
     dorm = get_dorm(dorm_id)
     if not dorm:
-        raise ApiError("That hall isn't on the Nook map.", 404)
+        raise ApiError("That hall isn't on the Dormsurf map.", 404)
     grouped = _residents()
     published = official_floors(dorm_id)
     floor_numbers = sorted(set(dorm["floors"]) | set(published))
@@ -611,6 +621,8 @@ def cancel_booking(guest: dict, booking_id: str) -> dict:
 
 
 def set_availability(user: dict, dates: list[str]) -> dict:
+    if not has_claimed_room(user):
+        raise ApiError("Claim a Georgia Tech room before opening your couch. You can still request a stay from Discover.")
     dates = parse_dates(dates, require=False)
     accepted = set()
     for booking in get_db().find_all("bookings"):
@@ -629,10 +641,19 @@ def save_room(user: dict, dorm_id: str, floor: int, unit: str, open_dates: list[
         raise ApiError("Pick a residence hall on the map.")
     if not any(item["id"] == unit and item["floor"] == floor for item in dorm["units"]):
         raise ApiError("That unit isn't on this floor.")
-    patch = {"dorm_id": dorm_id, "floor": floor, "unit": unit}
+    patch = {"dorm_id": dorm_id, "floor": floor, "unit": unit, "room_skipped": False}
     if open_dates is not None:
         patch["open_dates"] = parse_dates(open_dates, require=False)
     updated = get_db().update("users", user["id"], patch)
+    return serialize_user(updated, user["id"])
+
+
+def skip_room(user: dict) -> dict:
+    updated = get_db().update(
+        "users",
+        user["id"],
+        {"dorm_id": "", "floor": None, "unit": "", "open_dates": [], "room_skipped": True},
+    )
     return serialize_user(updated, user["id"])
 
 
@@ -694,7 +715,7 @@ def _serialize_message(item: dict, viewer_id: str) -> dict:
     return {
         "id": item.get("id"),
         "sender_id": item.get("sender_id"),
-        "channel": item.get("channel") or "nook",
+        "channel": "dormsurf",
         "text": "" if deleted else (item.get("text") or ""),
         "created_at": item.get("created_at"),
         "edited_at": None if deleted else item.get("edited_at"),
@@ -874,20 +895,56 @@ def _store_image(upload) -> dict | None:
     return {"file": name, "type": _IMAGE_TYPES[kind]}
 
 
+_IN_APP_CHANNELS = {"dormsurf", "nook"}
+_typing_at: dict[str, dict[str, float]] = {}
+_TYPING_TTL = 3.5
+
+
+def _touch_typing(booking_id: str, user_id: str, active: bool) -> None:
+    bucket = _typing_at.setdefault(booking_id, {})
+    if active:
+        bucket[user_id] = time.monotonic()
+    else:
+        bucket.pop(user_id, None)
+
+
+def typing_peers(user: dict, booking_id: str) -> list[dict]:
+    booking = _accepted_booking(user["id"], booking_id)
+    now = time.monotonic()
+    bucket = _typing_at.get(booking["id"], {})
+    peers = []
+    for user_id, seen in list(bucket.items()):
+        if now - seen > _TYPING_TTL:
+            bucket.pop(user_id, None)
+            continue
+        if user_id == user["id"]:
+            continue
+        person = get_db().find_one("users", id=user_id) or {}
+        peers.append({"id": user_id, "name": person.get("name") or "Someone"})
+    return peers
+
+
+def set_typing(user: dict, booking_id: str, active: bool) -> list[dict]:
+    booking = _accepted_booking(user["id"], booking_id)
+    _touch_typing(booking["id"], user["id"], active)
+    return typing_peers(user, booking_id)
+
+
 def send_message(user: dict, booking_id: str, channel: str, text: str, image=None) -> dict:
     booking = _accepted_booking(user["id"], booking_id)
-    channel = (channel or "nook").strip().lower()
-    if channel != "nook":
-        raise ApiError("Messages stay in Nook. Instagram, WhatsApp, and Discord open from the logos on this stay.")
+    channel = (channel or "dormsurf").strip().lower()
+    if channel not in _IN_APP_CHANNELS:
+        raise ApiError("Messages stay in Dormsurf. Instagram, WhatsApp, and Discord open from the logos on this stay.")
     text = _clean_text(text)
     stored = _store_image(image)
     if not text and not stored:
         raise ApiError("Write a message or attach a photo.")
+    _touch_typing(booking["id"], user["id"], False)
     doc = {
         "id": uuid.uuid4().hex,
         "booking_id": booking["id"],
         "sender_id": user["id"],
-        "channel": "nook",
+        "channel": "dormsurf",
         "text": text,
         "image": stored,
         "reactions": [],
@@ -895,7 +952,7 @@ def send_message(user: dict, booking_id: str, channel: str, text: str, image=Non
         "edited_at": None,
         "deleted": False,
         "delivery": "stored",
-        "detail": "Saved in Nook.",
+        "detail": "Saved in Dormsurf.",
     }
     get_db().insert("messages", doc)
     return _serialize_message(doc, user["id"])

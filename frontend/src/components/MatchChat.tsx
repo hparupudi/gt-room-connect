@@ -27,6 +27,7 @@ export function MatchChat({
     onSeenRef.current = onSeen;
   }, [onSeen]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [typers, setTypers] = useState<{ id: string; name: string }[]>([]);
   const [text, setText] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
@@ -38,6 +39,15 @@ export function MatchChat({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef(text);
+  const focusedRef = useRef(false);
+  const typingSent = useRef(false);
+  textRef.current = text;
+
+  function signalTyping(active: boolean) {
+    typingSent.current = active;
+    void api(`/api/bookings/${bookingId}/typing`, { method: "POST", body: JSON.stringify({ active }) }, token).catch(() => undefined);
+  }
 
   async function loadMessages() {
     const body = await api<{ messages: ChatMessage[] }>(`/api/bookings/${bookingId}/messages`, {}, token);
@@ -62,6 +72,44 @@ export function MatchChat({
     return () => {
       stop = true;
       window.clearInterval(id);
+    };
+  }, [bookingId, token]);
+
+  useEffect(() => {
+    let stop = false;
+    async function pollTyping() {
+      try {
+        const body = await api<{ typing: { id: string; name: string }[] }>(`/api/bookings/${bookingId}/typing`, {}, token);
+        if (!stop) setTypers(body.typing);
+      } catch {
+        /* the message poll reports a dead thread */
+      }
+    }
+    void pollTyping();
+    const id = window.setInterval(() => {
+      if (document.hidden) return;
+      void pollTyping();
+    }, 1200);
+    return () => {
+      stop = true;
+      window.clearInterval(id);
+    };
+  }, [bookingId, token]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      if (document.hidden) return;
+      const active = focusedRef.current && textRef.current.trim().length > 0;
+      if (!active && !typingSent.current) return;
+      typingSent.current = active;
+      void api(`/api/bookings/${bookingId}/typing`, { method: "POST", body: JSON.stringify({ active }) }, token).catch(() => undefined);
+    }, 2000);
+    return () => {
+      window.clearInterval(id);
+      if (typingSent.current) {
+        typingSent.current = false;
+        void api(`/api/bookings/${bookingId}/typing`, { method: "POST", body: JSON.stringify({ active: false }) }, token).catch(() => undefined);
+      }
     };
   }, [bookingId, token]);
 
@@ -131,12 +179,13 @@ export function MatchChat({
     setError("");
     try {
       const form = new FormData();
-      form.set("channel", "nook");
+      form.set("channel", "dormsurf");
       form.set("text", body);
       if (file) form.set("image", file);
       const saved = await api<{ message: ChatMessage }>(`/api/bookings/${bookingId}/messages`, { method: "POST", body: form }, token);
       setText("");
       setFile(null);
+      if (typingSent.current) signalTyping(false);
       setMessages((current) => [...current.filter((item) => item.id !== saved.message.id), saved.message]);
       onSeen?.();
     } catch (err) {
@@ -282,7 +331,7 @@ export function MatchChat({
                   </>
                 )}
                 <p className={`mt-1 text-[11px] ${message.mine ? "text-gold-soft" : "text-muted"}`}>
-                  In Nook
+                  In Dormsurf
                   {message.edited_at && !message.deleted ? " · Edited" : ""}
                 </p>
               </div>
@@ -319,6 +368,18 @@ export function MatchChat({
             ) : (
               <span className="w-7 shrink-0" />
             )}
+          </li>
+        ))}
+        {typers.map((person) => (
+          <li key={person.id} data-typing-indicator={person.name} className="flex justify-start">
+            <div className="max-w-[85%] rounded-2xl bg-paper px-3 py-2 text-sm text-ink">
+              <p>{person.name} is typing</p>
+              <span className="typing-dots" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </span>
+            </div>
           </li>
         ))}
       </ol>
@@ -400,7 +461,26 @@ export function MatchChat({
             Photo
           </button>
           <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={onFile} />
-          <input className="min-w-0 flex-1" value={text} onChange={(event) => setText(event.target.value)} placeholder="Write in Nook" maxLength={1000} />
+          <input
+            className="min-w-0 flex-1"
+            value={text}
+            placeholder="Write in Dormsurf"
+            maxLength={1000}
+            onFocus={() => {
+              focusedRef.current = true;
+              if (textRef.current.trim()) signalTyping(true);
+            }}
+            onBlur={() => {
+              focusedRef.current = false;
+              if (typingSent.current) signalTyping(false);
+            }}
+            onChange={(event) => {
+              const next = event.target.value;
+              setText(next);
+              const active = focusedRef.current && next.trim().length > 0;
+              if (active !== typingSent.current) signalTyping(active);
+            }}
+          />
           <button className={`${btnPrimary} shrink-0`} disabled={busy || (!text.trim() && !file)} type="submit">
             {busy ? "Sending" : "Send"}
           </button>

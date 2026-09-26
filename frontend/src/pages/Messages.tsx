@@ -6,7 +6,7 @@ import { useAuth } from "../auth";
 import { MatchChat } from "../components/MatchChat";
 import { Shell } from "../components/Shell";
 import { Avatar, Banner } from "../components/ui";
-import { formatDates } from "../format";
+import { formatDates, placeLabel } from "../format";
 import type { Inbox, InboxNote } from "../types";
 
 export function Messages() {
@@ -128,7 +128,7 @@ export function Messages() {
                         ) : null}
                       </span>
                       <span className="block text-sm text-muted">
-                        {thread.person.dorm_name} {thread.person.unit}
+                        {placeLabel(thread.person.dorm_name, thread.person.unit)}
                         {thread.dates.length ? ` · ${formatDates(thread.dates)}` : ""}
                       </span>
                       <span className="mt-1 block truncate text-sm text-ink">
@@ -153,7 +153,7 @@ export function Messages() {
                 <div className="mt-3 lg:mt-0">
                   <p className="font-serif text-3xl text-navy">{selected.person.name}</p>
                   <p className="text-sm text-muted">
-                    {selected.person.dorm_name} {selected.person.unit}
+                    {placeLabel(selected.person.dorm_name, selected.person.unit)}
                     {selected.person.major ? ` · ${selected.person.major}` : ""}
                   </p>
                 </div>

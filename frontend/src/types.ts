@@ -43,6 +43,7 @@ export type User = {
   wake_time?: string;
   noise?: string;
   guest_notes: string;
+  room_skipped?: boolean;
   onboarding_complete: boolean;
   onboarding_step: "room" | "about" | "voice" | "done";
   embedding_model?: string;
@@ -276,7 +277,7 @@ export type ChatReaction = {
 export type ChatMessage = {
   id: string;
   sender_id: string;
-  channel: "nook";
+  channel: "dormsurf" | "nook";
   text: string;
   created_at: string;
   edited_at: string | null;

@@ -63,7 +63,10 @@ from .services import (
     onboarding_step,
     parse_dates,
     save_room,
+    set_typing,
+    skip_room,
     react_message,
+    typing_peers,
     search,
     send_message,
     serialize_user,
@@ -181,7 +184,7 @@ def register_routes(app: Flask) -> None:
     def email_start():
         email = normalize_email((request.get_json(silent=True) or {}).get("email", ""))
         if get_db().find_one("users", email=email):
-            raise ApiError("That email already has a Nook account. Log in instead.", 409)
+            raise ApiError("That email already has a Dormsurf account. Log in instead.", 409)
         recent = datetime.now(timezone.utc) - timedelta(hours=1)
         sent = 0
         for code in get_db().find_all("codes"):
@@ -261,7 +264,7 @@ def register_routes(app: Flask) -> None:
         if payload.get("purpose") != "verify" or payload.get("sub") != email:
             raise ApiError("Verify your email again before creating a password.")
         if get_db().find_one("users", email=email):
-            raise ApiError("That email already has a Nook account. Log in instead.", 409)
+            raise ApiError("That email already has a Dormsurf account. Log in instead.", 409)
         validate_password(password)
         user = {
             "id": uuid.uuid4().hex,
@@ -309,6 +312,8 @@ def register_routes(app: Flask) -> None:
     def update_room():
         user = _require()
         data = request.get_json(silent=True) or {}
+        if data.get("skip") or data.get("off_campus"):
+            return jsonify(user=skip_room(user))
         try:
             floor = int(data.get("floor"))
         except (TypeError, ValueError) as exc:
@@ -321,7 +326,7 @@ def register_routes(app: Flask) -> None:
     def questionnaire():
         user = _require()
         if onboarding_step(user) == "room":
-            raise ApiError("Claim your room before the questionnaire.")
+            raise ApiError("Choose a hall or skip it before the questionnaire.")
         data = request.get_json(silent=True) or {}
         name = (data.get("name") or "").strip()
         if len(name) < 2 or len(name) > 80:
@@ -397,7 +402,7 @@ def register_routes(app: Flask) -> None:
     def _ready_for_interview(person: dict) -> None:
         step = onboarding_step(person)
         if step == "room":
-            raise ApiError("Claim your room before the interview.")
+            raise ApiError("Choose a hall or skip it before the interview.")
         if step == "about":
             raise ApiError("Finish the questionnaire before the interview.")
 
@@ -405,7 +410,7 @@ def register_routes(app: Flask) -> None:
         gaps = habit_gaps(transcript)
         if gaps:
             missing = "; ".join(gaps)
-            raise ApiError(f"Tell Nook the rest of your habits before this can be saved. Still missing: {missing}.")
+            raise ApiError(f"Tell Dormsurf the rest of your habits before this can be saved. Still missing: {missing}.")
         questionnaire = {
             "name": person.get("name") or "",
             "major": person.get("major") or "",
@@ -427,7 +432,7 @@ def register_routes(app: Flask) -> None:
         user = _require()
         step = onboarding_step(user)
         if step == "room":
-            raise ApiError("Claim your room before the interview.")
+            raise ApiError("Choose a hall or skip it before the interview.")
         if step == "about":
             raise ApiError("Finish the questionnaire before the interview.")
         try:
@@ -549,7 +554,7 @@ def register_routes(app: Flask) -> None:
         if from_unit is None and from_id == user.get("dorm_id"):
             from_unit = user.get("unit") or None
         if not get_dorm(from_id):
-            raise ApiError("Claim your room first so Nook knows where to start.")
+            raise ApiError("Add a Georgia Tech room before asking for walking directions.")
         target = request.args.get("to") or ""
         if not get_dorm(target):
             raise ApiError("Pick a hall on the map.")
@@ -637,17 +642,27 @@ def register_routes(app: Flask) -> None:
     def booking_messages(booking_id: str):
         return jsonify(messages=list_messages(_require(), booking_id))
 
+    @app.get("/api/bookings/<booking_id>/typing")
+    def booking_typing(booking_id: str):
+        return jsonify(typing=typing_peers(_require(), booking_id))
+
+    @app.post("/api/bookings/<booking_id>/typing")
+    def booking_typing_set(booking_id: str):
+        user = _require()
+        data = request.get_json(silent=True) or {}
+        return jsonify(typing=set_typing(user, booking_id, bool(data.get("active"))))
+
     @app.post("/api/bookings/<booking_id>/messages")
     def booking_message_send(booking_id: str):
         user = _require()
         if request.files or (request.content_type and "multipart/form-data" in request.content_type):
             text = request.form.get("text") or ""
-            channel = request.form.get("channel") or "nook"
+            channel = request.form.get("channel") or "dormsurf"
             image = request.files.get("image")
         else:
             data = request.get_json(silent=True) or {}
             text = data.get("text") or ""
-            channel = data.get("channel") or "nook"
+            channel = data.get("channel") or "dormsurf"
             image = None
         message = send_message(user, booking_id, channel, text, image)
         return jsonify(message=message), 201
