@@ -20,7 +20,17 @@ from .db import get_db
 from .errors import ApiError
 from .mailer import send_verification, smtp_configured
 from .floorplans import image_file
-from .muse import convert_to_wav, extract_profile, habit_gaps, match_sentence, muse_configured, transcribe_wav
+from .muse import (
+    bio_fields,
+    compose_bio,
+    convert_to_wav,
+    extract_profile,
+    habit_gaps,
+    is_template_bio,
+    match_sentence,
+    muse_configured,
+    transcribe_wav,
+)
 from .security import (
     check_password,
     hash_password,
@@ -78,6 +88,26 @@ def _require():
 
 def _hash_code(code: str) -> str:
     return sha256(f"{secret()}:{code}".encode()).hexdigest()
+
+
+def _rewrite_bio(host: dict) -> dict:
+    """Replace a broken local blurb with one Muse writes from the structured profile."""
+    life = dict(host.get("lifestyle") or {})
+    bio = (life.get("bio") or "").strip()
+    if bio and not is_template_bio(bio):
+        return host
+    if not muse_configured():
+        return host
+    fields = bio_fields(host, life)
+    fields["year"] = YEAR_LABELS.get(host.get("year"), "") or fields["year"]
+    try:
+        written = compose_bio(fields)
+    except Exception as exc:
+        print(f"Muse Spark description failed, leaving it off: {exc}")
+        return host
+    life["bio"] = written
+    updated = get_db().update("users", host["id"], {"lifestyle": life})
+    return updated or host
 
 
 def _me_payload(user: dict) -> dict:
@@ -489,6 +519,7 @@ def register_routes(app: Flask) -> None:
         host = get_db().find_one("users", id=host_id)
         if not host or not host.get("onboarding_complete"):
             raise ApiError("That profile isn't available.", 404)
+        host = _rewrite_bio(host)
         payload = {"host": serialize_user(host, user["id"])}
         sentence, model = match_sentence(user, host)
         scores_payload = {

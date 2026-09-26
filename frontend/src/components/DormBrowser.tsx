@@ -7,6 +7,7 @@ import { styleLabel } from "../format";
 import type { DormDetail, DormPin, MapData, Route, RoomShape } from "../types";
 import { CampusMap } from "./CampusMap";
 import { FloorPlan } from "./FloorPlan";
+import { RoomFacts } from "./RoomFacts";
 import { Banner, btnGhost, btnPrimary } from "./ui";
 
 type Pick = { dormId: string; dormName: string; floor: number; unit: string };
@@ -243,6 +244,11 @@ export function DormBrowser({
           </div>
           {plan ? (
             <FloorPlan key={`${detail.id}-${plan.floor}`} plan={plan} selectedUnit={highlightUnit} onSelect={chooseUnit} />
+          ) : null}
+          {highlightUnit && plan?.rooms.some((room) => room.unit === highlightUnit) ? (
+            <div className="mt-4">
+              <RoomFacts unit={highlightUnit} housing={detail.housing} />
+            </div>
           ) : null}
           <p className="mt-3 text-xs text-muted">
             {plan?.image

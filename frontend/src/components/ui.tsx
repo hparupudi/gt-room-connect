@@ -43,7 +43,7 @@ export function Tags({ tags }: { tags: string[] }) {
   return (
     <ul className="flex flex-wrap gap-1.5">
       {tags.map((tag) => (
-        <li key={tag} className="rounded-full bg-paper px-2.5 py-1 text-xs text-ink">
+        <li key={tag} className="rounded-full bg-gold px-2.5 py-1 text-xs font-medium text-paper">
           {tag}
         </li>
       ))}

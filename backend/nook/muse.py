@@ -15,6 +15,7 @@ import uuid
 from pathlib import Path
 
 import requests
+from pydantic import BaseModel, Field
 
 from .constants import AXIS_NAMES, INTERVIEW_QUESTIONS
 from .embed import axes_from_signals
@@ -162,27 +163,8 @@ def local_extract(transcript: str, questionnaire: dict) -> LifestyleProfile:
     if _has(text, "key") or _has(text, "text"):
         guest_notes = "Text before you head over and leave the room the way you found it."
 
-    first = (questionnaire.get("name") or "They").split()[0]
-    year = (questionnaire.get("year_label") or "student").lower()
-    major = questionnaire.get("major") or "their major"
-    hometown = questionnaire.get("hometown") or "out of town"
-    shown = interests[:3]
-    if len(shown) == 1:
-        interest_phrase = shown[0]
-    elif len(shown) == 2:
-        interest_phrase = f"{shown[0]} and {shown[1]}"
-    else:
-        interest_phrase = ", ".join(shown[:-1]) + f", and {shown[-1]}"
-    sleep_phrase = {
-        "early": "keeps early hours",
-        "typical": "keeps typical college hours",
-        "late": "keeps late hours",
-        "nocturnal": "is basically nocturnal",
-    }[sleep]
-    bio = (
-        f"{first} is a {year} {major} student from {hometown} who's into {interest_phrase}. "
-        f"They keep a {cleanliness} space and {sleep_phrase}. {guest_notes}"
-    )
+    major = questionnaire.get("major") or ""
+    hometown = questionnaire.get("hometown") or ""
     signal = " ".join([transcript, major, hometown, " ".join(interests)])
     vector = axes_from_signals(signal, sleep, cleanliness, major, hometown, noise)
     axes = LifestyleAxes(**dict(zip(AXIS_NAMES, vector)))
@@ -195,7 +177,7 @@ def local_extract(transcript: str, questionnaire: dict) -> LifestyleProfile:
         wake_time=wake_time,
         noise=noise,
         guest_notes=guest_notes,
-        bio=bio,
+        bio="",
         tags=interests[:4] + [cleanliness, sleep],
         axes=axes,
     )
@@ -271,13 +253,79 @@ def habit_gaps(transcript: str) -> list[str]:
     return gaps
 
 
+class ProfileBio(BaseModel):
+    bio: str = Field(description="Exactly two grammatical sentences in the third person.")
+
+
+def is_template_bio(bio: str) -> bool:
+    """The old local blurb disagrees with itself ('keep a average', 'keeps early hours')."""
+    text = (bio or "").lower()
+    return "who's into" in text and "they keep a" in text
+
+
+def compose_bio(fields: dict) -> str:
+    """Ask Muse to write the blurb from structured fields. Raises if the model is off or fails."""
+    client = _client()
+    system = (
+        "Write a roommate blurb for Nook from the structured fields only. "
+        "Exactly two sentences, third person, grammatically correct. "
+        "Use the person's name. Do not invent interests, hours, hometowns, or habits that are not in the fields. "
+        "Leave a field out when it is empty. Do not mention social media."
+    )
+    response = client.beta.chat.completions.parse(
+        model="muse-spark-1.3",
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": json.dumps(fields)},
+        ],
+        response_format=ProfileBio,
+    )
+    parsed = response.choices[0].message.parsed
+    if parsed is None or not parsed.bio.strip():
+        raise RuntimeError("Muse Spark returned an empty description")
+    sentence = " ".join(parsed.bio.split())
+    if sentence[-1] not in ".!?":
+        sentence += "."
+    return sentence
+
+
+def bio_fields(person: dict, life: dict | None = None) -> dict:
+    habits = life if life is not None else (person.get("lifestyle") or {})
+    return {
+        "name": person.get("name") or "",
+        "year": person.get("year_label") or person.get("year") or "",
+        "major": person.get("major") or "",
+        "hometown": person.get("hometown") or "",
+        "interests": habits.get("interests") or [],
+        "hobbies": habits.get("hobbies") or [],
+        "cleanliness": habits.get("cleanliness") or "",
+        "sleep_timing": habits.get("sleep_timing") or "",
+        "sleep_start": habits.get("sleep_start") or "",
+        "wake_time": habits.get("wake_time") or "",
+        "noise": habits.get("noise") or "",
+        "guest_notes": habits.get("guest_notes") or "",
+    }
+
+
 def extract_profile(transcript: str, questionnaire: dict) -> tuple[LifestyleProfile, str]:
+    model_name = "local-lifestyle-v1"
+    profile = None
     if muse_configured():
         try:
-            return muse_extract(transcript, questionnaire), "muse-spark-1.3"
+            profile = muse_extract(transcript, questionnaire)
+            model_name = "muse-spark-1.3"
         except Exception as exc:
             print(f"Muse Spark extraction failed, using local parser: {exc}")
-    return local_extract(transcript, questionnaire), "local-lifestyle-v1"
+    if profile is None:
+        profile = local_extract(transcript, questionnaire)
+    profile.bio = ""
+    if muse_configured():
+        try:
+            profile.bio = compose_bio(bio_fields(questionnaire, profile.model_dump()))
+        except Exception as exc:
+            print(f"Muse Spark description failed, leaving it off: {exc}")
+            profile.bio = ""
+    return profile, model_name
 
 
 def muse_rerank(seeker: dict, hosts: list[dict]) -> RerankResponse:

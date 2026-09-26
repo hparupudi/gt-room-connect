@@ -171,7 +171,7 @@ export function Discover() {
                     <p className="mt-1 text-xs text-muted">{sort === "distance" ? matchPercent(scores.match) : `${scores.minutes} min`}</p>
                   </div>
                 </div>
-                <p className="mt-3 text-sm leading-6">{host.bio}</p>
+                {host.bio ? <p className="mt-3 text-sm leading-6">{host.bio}</p> : null}
                 <WhyMatch reason={scores.reason} model={scores.reason_model} />
                 <div className="mt-3">
                   <Tags tags={host.tags} />

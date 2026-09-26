@@ -109,6 +109,18 @@ export type FloorPlan = {
   official?: boolean;
 };
 
+export type HousingItem = { name: string; detail?: string; lines?: string[] };
+
+export type HousingFacts = {
+  page: string;
+  room_style: string;
+  amenities: HousingItem[];
+  furniture: HousingItem[];
+  furniture_note: string;
+  dimensions: HousingItem[];
+  dimensions_source: string;
+};
+
 export type HallSpecs = {
   room: string;
   bath: string;
@@ -137,6 +149,7 @@ export type DormDetail = HallBase & {
   open_units: number;
   floors: FloorPlan[];
   directions?: Route;
+  housing?: HousingFacts | null;
 };
 
 export type DormPin = HallBase & {

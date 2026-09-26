@@ -13,6 +13,8 @@ from .embed import normalize
 from .errors import ApiError
 from .models import LifestyleProfile
 from .rank import order_scored, score_pair
+from .housing import housing_for
+from .muse import is_template_bio
 from .socials import present_socials
 from .vectors import fetch_vectors, upsert_vector
 
@@ -107,7 +109,7 @@ def serialize_user(user: dict, viewer_id: str | None = None, force_socials: bool
         "campus": dorm.get("campus"),
         "address": dorm.get("address"),
         "open_dates": user.get("open_dates") or [],
-        "bio": life.get("bio") or "",
+        "bio": "" if is_template_bio(life.get("bio") or "") else (life.get("bio") or ""),
         "tags": life.get("tags") or [],
         "interests": life.get("interests") or [],
         "hobbies": life.get("hobbies") or [],
@@ -427,6 +429,7 @@ def dorm_detail(dorm_id: str, viewer: dict | None, dates: list[str]) -> dict:
         open_units += floor_open
         floors.append({"floor": floor, "open_units": floor_open, **plan})
     payload = public_dorm(dorm)
+    payload["housing"] = housing_for(dorm_id)
     payload["open_units"] = open_units
     payload["floors"] = floors
     if viewer and viewer.get("dorm_id"):

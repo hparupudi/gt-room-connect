@@ -331,7 +331,7 @@ def test_voice_interview_structures_a_profile(client):
     assert user["sleep_timing"] == "late"
     assert user["cleanliness"] == "relaxed"
     assert user["embedding_model"] == "local-lifestyle-v1"
-    assert user["bio"]
+    assert user["bio"] == ""
     me = client.get("/api/auth/me", headers=auth(token))
     assert "password_hash" not in me.get_json()["user"]
 
@@ -445,6 +445,10 @@ def test_map_and_directions(client):
     glenn_numbers = [room["unit"] for room in glenn_one["rooms"]]
     assert "179A" in glenn_numbers or "178A" in glenn_numbers
     assert len(glenn_numbers) > 16
+    housing = client.get("/api/dorms/glenn", headers=auth(token)).get_json()["dorm"]["housing"]
+    assert housing["room_style"] == "Double Traditional"
+    assert any(item["name"] == "Laundry" and "floors" in item["detail"] for item in housing["amenities"])
+    assert any(item["name"] == "Bed" and any("38 in" in line for line in item["lines"]) for item in housing["dimensions"])
 
 
 def test_inbox_after_a_request_is_accepted(client):

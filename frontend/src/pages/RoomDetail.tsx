@@ -4,13 +4,15 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, ApiError } from "../api";
 import { useAuth } from "../auth";
 import { CampusMap } from "../components/CampusMap";
+import { FloorPlan } from "../components/FloorPlan";
+import { RoomFacts } from "../components/RoomFacts";
 import { SocialLogos } from "../components/SocialLogos";
 import { Shell } from "../components/Shell";
 import { WhyMatch } from "../components/WhyMatch";
 import { Avatar, Banner, Tags, btnGhost, btnPrimary } from "../components/ui";
 import { useDates } from "../dates";
 import { formatDates, matchPercent, sleepLabel, styleLabel } from "../format";
-import type { MapData, Route, Score, User } from "../types";
+import type { DormDetail, MapData, Route, Score, User } from "../types";
 
 export function RoomDetail() {
   const { id } = useParams();
@@ -25,8 +27,12 @@ export function RoomDetail() {
   const [busy, setBusy] = useState(false);
   const [route, setRoute] = useState<Route | null>(null);
   const [map, setMap] = useState<MapData | null>(null);
+  const [dorm, setDorm] = useState<DormDetail | null>(null);
+  const [openUnit, setOpenUnit] = useState("");
 
   useEffect(() => {
+    setOpenUnit("");
+    setDorm(null);
     api<{ host: User; scores?: Score }>(`/api/hosts/${id}`, {}, token)
       .then((body) => {
         setHost(body.host);
@@ -48,6 +54,15 @@ export function RoomDetail() {
       .then(setMap)
       .catch(() => setMap(null));
   }, [host, user, token]);
+
+  useEffect(() => {
+    if (!host?.dorm_id) return;
+    api<{ dorm: DormDetail }>(`/api/dorms/${host.dorm_id}`, {}, token)
+      .then((body) => setDorm(body.dorm))
+      .catch(() => setDorm(null));
+  }, [host?.dorm_id, token]);
+
+  const plan = dorm?.floors.find((level) => level.floor === host?.floor) ?? null;
 
   async function requestStay() {
     if (!host) return;
@@ -81,7 +96,11 @@ export function RoomDetail() {
               <Avatar name={host.name} size="lg" />
               <div>
                 <p className="text-xs tracking-[0.16em] text-gold uppercase">
-                  {host.dorm_name} {host.unit} · floor {host.floor} · {styleLabel(host.style)}
+                  {host.dorm_name}{" "}
+                  <button type="button" className="underline" onClick={() => setOpenUnit(host.unit)}>
+                    {host.unit}
+                  </button>{" "}
+                  · floor {host.floor} · {styleLabel(host.style)}
                 </p>
                 <h1 className="font-serif text-5xl text-navy">{host.name}</h1>
                 <p className="text-muted">
@@ -89,7 +108,21 @@ export function RoomDetail() {
                 </p>
               </div>
             </div>
-            <p className="mt-5 max-w-2xl text-lg leading-8">{host.bio}</p>
+            {host.bio ? <p className="mt-5 max-w-2xl text-lg leading-8">{host.bio}</p> : null}
+            {plan ? (
+              <section className="mt-6">
+                <h2 className="font-serif text-2xl">Floor {plan.floor}</h2>
+                <p className="mb-3 text-sm text-muted">
+                  The Housing drawing for this floor only. Click a room number for its furniture dimensions and the building amenities.
+                </p>
+                <FloorPlan plan={plan} selectedUnit={openUnit || host.unit} onSelect={(room) => setOpenUnit(room.unit)} />
+                {openUnit ? (
+                  <div className="mt-4">
+                    <RoomFacts unit={openUnit} housing={dorm?.housing} />
+                  </div>
+                ) : null}
+              </section>
+            ) : null}
             {scores ? <WhyMatch reason={scores.reason} model={scores.reason_model} /> : null}
             <div className="mt-4">
               <Tags tags={host.tags} />

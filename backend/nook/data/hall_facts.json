@@ -1,0 +1,1780 @@
+{
+  "source": "https://housing.gatech.edu/room-and-furniture",
+  "dimensions": [
+    {
+      "name": "Bed",
+      "lines": [
+        "Width: 38 in",
+        "Length: 85.5 in",
+        "Height: Varies \u2013 see Lofted Beds",
+        "Mattress: Twin XL"
+      ]
+    },
+    {
+      "name": "Wardrobe",
+      "lines": [
+        "Width: 36 in",
+        "Height: 76 in",
+        "Depth: 24 in"
+      ]
+    },
+    {
+      "name": "Desk",
+      "lines": [
+        "Width: 42 in",
+        "Height: 30 in",
+        "Depth: 24 in"
+      ]
+    },
+    {
+      "name": "Chair",
+      "lines": [
+        "Width: 20 in",
+        "Height: 33 in",
+        "Depth: 23 in"
+      ]
+    },
+    {
+      "name": "Dresser/Chest",
+      "lines": [
+        "Width: 30 in",
+        "Height: 30 in",
+        "Depth: 24 in"
+      ]
+    }
+  ],
+  "halls": {
+    "glenn": {
+      "page": "https://housing.gatech.edu/locations/glenn",
+      "room_style": "Double Traditional",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located in the GT Connector."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located on floors 1, 2, 3, 4."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Located on floors 1, 2, 3, 4."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 1, 2, 3, 4."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on floors 1, 2, 3, 4."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked. This description applies to nearly all rooms in this building."
+    },
+    "field": {
+      "page": "https://housing.gatech.edu/locations/field",
+      "room_style": "Double Traditional",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located in nearby GT Connector."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located in adjacent Hopkins Hall."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Located on floors 1 and 3."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 1, 2, 3, and 4."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on floors 1, 2, 3, and 4."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked. This description applies to nearly all rooms in this building. Some pictures are of actual student rooms and may contain additional furniture and decoration provided by the resident."
+    },
+    "hopkins": {
+      "page": "https://housing.gatech.edu/locations/hopkins",
+      "room_style": "Double Traditional",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located in nearby GT Connector."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located on the zero floor."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Located on floors 1 and 3."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 1, 2, 3, 4."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on floors 1, 2, 3, 4."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. The beds can be independently set up in four ways: low, medium, high, and bunked."
+    },
+    "matheson": {
+      "page": "https://housing.gatech.edu/locations/matheson",
+      "room_style": "Double Traditional",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located in nearby GT Connector."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located in adjacent Hopkins Hall."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Located on floors 2, 3, and 4."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 2, 3, and 4."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on floors 2, 3, and 4."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked. This description applies to nearly all rooms in this building."
+    },
+    "perry": {
+      "page": "https://housing.gatech.edu/locations/perry",
+      "room_style": "Double Traditional",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located in nearby GT Connector."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located in Hopkins Hall."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Located on floors 2, 3 and 4."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 1, 2, 3, and 4."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on the first floor."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. The beds can be independently set up in four ways: low, medium, high, and bunked. This description applies to nearly all rooms in the building."
+    },
+    "hanson": {
+      "page": "https://housing.gatech.edu/locations/hanson",
+      "room_style": "Double Traditional",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located in nearby GT Connector."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located in adjacent Hopkins Hall."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Located on floors 1 and 3."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 1, 2, 3, 4."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on floors 1, 2, 3, 4."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked. This description applies to nearly all rooms in this building."
+    },
+    "harrison": {
+      "page": "https://housing.gatech.edu/locations/harrison",
+      "room_style": "Double Traditional",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located in the nearby GT Connector."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located in nearby Brittain Hall."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Located on floors 0, 1, 2, 3."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 2, 3."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on the first floor."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked. This description applies to nearly all rooms in this building."
+    },
+    "howell": {
+      "page": "https://housing.gatech.edu/locations/howell",
+      "room_style": "Double Traditional",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located in the GT Connector."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located in nearby Brittain Hall."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Located on floors 1, 2, and 3."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 0 and 1."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on floors 0 and 1."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked. This description applies to nearly all rooms in this building."
+    },
+    "towers": {
+      "page": "https://housing.gatech.edu/locations/towers",
+      "room_style": "Double Traditional",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located in the GT Connector."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located on floors 1, 2, 3, 4."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Full kitchen on each floor."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 1, 2, 3, 4."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on floors 1, 2, 3, 4."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked. This description applies to nearly all rooms in this building."
+    },
+    "cloudman": {
+      "page": "https://housing.gatech.edu/locations/cloudman",
+      "room_style": "Double Traditional",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located in the GT Connector."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located in Brittain Hall."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Located on floors 1, 2, & 3."
+        },
+        {
+          "name": "Study",
+          "detail": "Learning Center/Study Lounge on floor 0."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on floor 4."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked. This description applies to nearly all rooms in this building."
+    },
+    "brown": {
+      "page": "https://housing.gatech.edu/locations/brown",
+      "room_style": "Double Traditional",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located in Smith Hall."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located in nearby Brittain Hall."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Located on floors 0, 1, 2, and 3."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floor 3."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Lounge on floors 0, 1, 2, and 3."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked. This description applies to nearly all rooms in this building."
+    },
+    "harris": {
+      "page": "https://housing.gatech.edu/locations/harris",
+      "room_style": "Suite",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located on first floor."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located in adjacent Brittain Rec."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Shared kitchens are on floor 1, 2, and 3."
+        },
+        {
+          "name": "Study",
+          "detail": "Study/lounges are on each floor."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Bed",
+          "detail": "extra long mattress"
+        },
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "The beds are adjustable in height. This description applies to nearly all rooms in the building."
+    },
+    "armstrong": {
+      "page": "https://housing.gatech.edu/locations/armstrong",
+      "room_style": "Double Traditional",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located near the Campus Recreation Center"
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located in the West Commons Basement"
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Located on floors 1, 2"
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 1, 2, and 3"
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on floors 1, 2, and 3"
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked."
+    },
+    "caldwell": {
+      "page": "https://housing.gatech.edu/locations/caldwell",
+      "room_style": "Double Traditional",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located near the Campus Recreation Center."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located in the West Commons Basement."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Located on floors 1, 2, and 3."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 1, 2, 3, and 4."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on floors 0, 1, 2, 3, and 4."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked. This description applies to nearly all rooms in this building."
+    },
+    "folk": {
+      "page": "https://housing.gatech.edu/locations/folk",
+      "room_style": "Double Traditional",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located near the Campus Recreation Center."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located in the West Commons Basement."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Located on floors 1, 2, and 3."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 1, 2, 3, and 4."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Lounges are on floors 1, 2, 3 and 4."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked. This description applies to nearly all rooms in this building."
+    },
+    "fitten": {
+      "page": "https://housing.gatech.edu/locations/fitten",
+      "room_style": "Double Traditional",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located near Campus Recreation Center. Stationary bikes located throughout the building."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located on floor 0."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Located on floors 1, 2, 3, and 4."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 0, 1, 2, 3 and 4."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on floors 1, 2, 3, and 4."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked. This description applies to nearly all rooms in this building."
+    },
+    "freeman": {
+      "page": "https://housing.gatech.edu/locations/freeman",
+      "room_style": "Double Traditional",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located near the Campus Recreation Center. Stationary bikes located throughout the building."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located in West Commons Basement."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Located on floors 1, 2, and 3."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 0, 1, 2, and 3."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on floors 0, 1, 2, and 3."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked. This description applies to nearly all rooms in this building."
+    },
+    "fulmer": {
+      "page": "https://housing.gatech.edu/locations/fulmer",
+      "room_style": "Double Traditional",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located near the Campus Recreation Center."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located on floors 2 and 3."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Located on floors 2 and 3."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 2 and 3."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on floors 2 and 3."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked. This description applies to nearly all rooms in this building."
+    },
+    "hefner": {
+      "page": "https://housing.gatech.edu/locations/hefner",
+      "room_style": "Double Traditional",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located near the Campus Recreation Center."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located in the West Commons basement."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Located on floors 1 and 2."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 1, 2, and 3."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on floors 1, 2, and 3."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked. This description applies to nearly all rooms in this building."
+    },
+    "montag": {
+      "page": "https://housing.gatech.edu/locations/montag",
+      "room_style": "Double Traditional",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located near the Campus Recreation Center."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located in nearby Fitten Hall."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Located on floors 1, 2, and 3."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 0, 1, 2, and 3."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on floors 0, 1, 2, and 3."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked. This description applies to nearly all rooms in this building."
+    },
+    "woodruff-north": {
+      "page": "https://housing.gatech.edu/locations/woodruff-north",
+      "room_style": "Suite",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located on the first floor."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located on the first floor of Woodruff South."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "On each floor."
+        },
+        {
+          "name": "Study",
+          "detail": "Lounge/study rooms on floors 2, 3, 4, and 5."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Bed",
+          "detail": "extra long mattress"
+        },
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. The beds are adjustable in height."
+    },
+    "woodruff-south": {
+      "page": "https://housing.gatech.edu/locations/woodruff-south",
+      "room_style": "Suite",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located on the first floor of Woodruff North."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located on the first floor."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "On each floor."
+        },
+        {
+          "name": "Study",
+          "detail": "Lounge/study rooms on floors 2, 3, 4, and 5."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Bed",
+          "detail": "extra long mattress"
+        },
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. The beds are adjustable in height."
+    },
+    "crecine": {
+      "page": "https://housing.gatech.edu/locations/crecine",
+      "room_style": "Apartment",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located on floor 1."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located on floor 1."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Dishwasher, garbage disposal, and microwave as well as a full size stove, oven, and refrigerator."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 1, 2, 3, 4, 5."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on floors 1, 2, 3, 4, 5."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked. Not all rooms have the equipment to raise beds to the \"medium\" position. This description applies to nearly all rooms in this building. Living/dining spaces: sofa, chairs, side tables, and dining table with chairs."
+    },
+    "eighth-east": {
+      "page": "https://housing.gatech.edu/locations/eighth-street-east",
+      "room_style": "Apartment",
+      "amenities": [
+        {
+          "name": "Laundry",
+          "detail": "Located on the zero floor of Eighth Street West."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Dishwasher, garbage disposal, and microwave as well as a full size stove, oven, and refrigerator."
+        },
+        {
+          "name": "Study",
+          "detail": "A study room and/or lounge is on each floor."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on the first floor in the lobby."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked. Not all rooms have the equipment to raise beds to the \"medium\" position. This description applies to nearly all rooms in this building. Living/dining spaces have a sofa, chairs, side tables, and dining table with chairs."
+    },
+    "eighth-west": {
+      "page": "https://housing.gatech.edu/locations/eighth-street-west",
+      "room_style": "Apartment",
+      "amenities": [
+        {
+          "name": "Laundry",
+          "detail": "Located on the zero floor of Eighth Street West."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Dishwasher, garbage disposal, and microwave as well as a full size stove, oven, and refrigerator."
+        },
+        {
+          "name": "Study",
+          "detail": "A study room and/or lounge is on floors 1, 2, and 3."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on the zero floor."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. This description applies to nearly all rooms in this building. Living/dining spaces: sofa, chairs, side tables, and dining table with chairs."
+    },
+    "eighth-south": {
+      "page": "https://housing.gatech.edu/locations/eighth-street-south",
+      "room_style": "Apartment",
+      "amenities": [
+        {
+          "name": "Laundry",
+          "detail": "Located on the zero floor of Eighth Street West."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Dishwasher, garbage disposal, and microwave as well as a full size stove, oven, and refrigerator."
+        },
+        {
+          "name": "Study",
+          "detail": "A study room and/or lounge is on each floor."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Residents have access to activity rooms in 8th St East and West."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked. This description applies to nearly all rooms in this building. Not all rooms have the equipment to raise beds to the \"medium\" position. Living/dining spaces: sofa, chairs, side tables, and dining table with chairs."
+    },
+    "center-north": {
+      "page": "https://housing.gatech.edu/locations/center-street-north",
+      "room_style": "Apartment",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located in the Center Street Atrium."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located on the 0 floor."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Dishwasher, garbage disposal, and microwave as well as a full size stove, oven, and refrigerator."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 1, 2, 3, 4, and 5."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located in the Center Street Atrium."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident."
+    },
+    "center-south": {
+      "page": "https://housing.gatech.edu/locations/center-street-south",
+      "room_style": "Apartment",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located in the Center Street Atrium."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located in the Center Street Atrium."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Dishwasher, garbage disposal, and microwave as well as a full size stove, oven, and refrigerator."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 1, 2, and 3."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located in the Center Street Atrium."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident."
+    },
+    "maulding": {
+      "page": "https://housing.gatech.edu/locations/maulding",
+      "room_style": "Apartment",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located on the first floor."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located on the first floor."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Dishwasher, garbage disposal, and microwave as well as a full size stove, oven, and refrigerator."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on each floor."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on the first floor."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Can be independently set up in four ways: low, medium, high, and bunked. This description applies to nearly all rooms in this building."
+    },
+    "nelson-shell": {
+      "page": "https://housing.gatech.edu/locations/nelson-shell",
+      "room_style": "Apartment",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located on the first floor."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located on the zero floor."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Kitchens include a dishwasher, garbage disposal, and microwave as well as a full size stove, oven, and refrigerator."
+        },
+        {
+          "name": "Study",
+          "detail": "Located at both ends of floors 1, 2, 3, and 4."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on the ground floor lobby."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident Living/dining spaces: sofa, chairs, side tables, and dining table with chairs"
+    },
+    "zbar": {
+      "page": "https://housing.gatech.edu/locations/zbar-apartments",
+      "room_style": "Apartment",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located in Maulding Hall next door."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located on the first floor of Maulding."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Equipped with a dishwasher, garbage disposal, microwave, stove, oven, refrigerator, cabinets, pantry, and washer and dryer."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on each floor."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on the first floor."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "Living/dining spaces: sofa, chairs, side tables, and dining table with chairs."
+    },
+    "graduate-living": {
+      "page": "https://housing.gatech.edu/locations/glc",
+      "room_style": "Apartment",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Located on the first floor."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located on the first floor."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Dishwasher, garbage disposal, and microwave as well as a full size stove, oven, and refrigerator."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 2, 3, 4, 5, and 6."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "Located on the first floor."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. This description applies to nearly all rooms in this building. Living/dining spaces: sofa, chairs, side tables, and dining table with chairs."
+    },
+    "north-ave-east": {
+      "page": "https://housing.gatech.edu/locations/north-avenue-east",
+      "room_style": "Apartment",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Indoor basketball court and workout room in the Recreation Center."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located on the first floor."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Kitchens include a dishwasher, garbage disposal, and microwave as well as a full size stove, oven, and refrigerator."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 2-13."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Living/dining spaces: sofa, chairs, side tables, and dining table with chairs"
+    },
+    "north-ave-north": {
+      "page": "https://housing.gatech.edu/locations/north-avenue-north",
+      "room_style": "Apartment",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Indoor basketball court and workout room in the Recreation Center."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located on the first floor."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Kitchens include a dishwasher, garbage disposal, and microwave as well as a full size stove, oven, and refrigerator."
+        },
+        {
+          "name": "Study",
+          "detail": "Located on floors 2-10."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "On the first floor."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Living/dining spaces: sofa, chairs, side tables, and dining table with chairs"
+    },
+    "north-ave-south": {
+      "page": "https://housing.gatech.edu/locations/north-avenue-south",
+      "room_style": "Apartment",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Indoor basketball court and workout room in the Recreation Center."
+        },
+        {
+          "name": "Laundry",
+          "detail": "On the first floor."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Kitchens include a dishwasher, garbage disposal, and microwave as well as a full size stove, oven, and refrigerator."
+        },
+        {
+          "name": "Study",
+          "detail": "On floors 2-8."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Living/dining spaces: sofa, chairs, side tables, and dining table with chairs"
+    },
+    "north-ave-west": {
+      "page": "https://housing.gatech.edu/locations/north-avenue-west",
+      "room_style": "Apartment",
+      "amenities": [
+        {
+          "name": "Gym",
+          "detail": "Indoor basketball court and workout room in the Recreation Center."
+        },
+        {
+          "name": "Laundry",
+          "detail": "Located in North Avenue North."
+        },
+        {
+          "name": "Kitchen",
+          "detail": "Kitchens include a dishwasher, garbage disposal, and microwave as well as a full size stove, oven, and refrigerator."
+        },
+        {
+          "name": "Study",
+          "detail": "On floors 2-5."
+        },
+        {
+          "name": "Activity Room",
+          "detail": "On first floor."
+        }
+      ],
+      "furniture": [
+        {
+          "name": "Desk",
+          "detail": ""
+        },
+        {
+          "name": "Desk Chair",
+          "detail": ""
+        },
+        {
+          "name": "Dresser",
+          "detail": ""
+        },
+        {
+          "name": "Twin Bed",
+          "detail": "extra-long mattress"
+        },
+        {
+          "name": "Wardrobe",
+          "detail": ""
+        }
+      ],
+      "furniture_note": "per resident. Living/dining spaces: sofa, chairs, side tables, and dining table with chairs"
+    }
+  }
+}
