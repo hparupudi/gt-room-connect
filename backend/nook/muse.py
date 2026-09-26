@@ -235,7 +235,10 @@ def habit_gaps(transcript: str) -> list[str]:
     text = transcript.lower()
     gaps: list[str] = []
     interests = [label for label, words in INTEREST_LEXICON if _has_any(text, words)]
-    if not interests and not _has_any(text, ("into", "hobby", "hobbies", "club", "clubs")):
+    named_interest = bool(interests) or _has_any(text, ("into", "hobby", "hobbies", "club", "clubs"))
+    named_interest = named_interest or re.search(r"\bi (?:really |also )?(?:love|enjoy)\b", text) is not None
+    named_interest = named_interest or re.search(r"\bi (?:really |also )?like (?!it\b|to keep\b|things\b)", text) is not None
+    if not named_interest:
         gaps.append("what you're into")
     if not _has_any(
         text,
