@@ -32,11 +32,12 @@ export function MatchChat({
   const [preview, setPreview] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [picker, setPicker] = useState<string | null>(null);
+  const [menu, setMenu] = useState<{ id: string; top: number; left: number } | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   async function loadMessages() {
     const body = await api<{ messages: ChatMessage[] }>(`/api/bookings/${bookingId}/messages`, {}, token);
@@ -63,6 +64,38 @@ export function MatchChat({
       window.clearInterval(id);
     };
   }, [bookingId, token]);
+
+  useEffect(() => {
+    if (!menu) return;
+    function onPointer(event: PointerEvent) {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      if (menuRef.current?.contains(target)) return;
+      if (target.closest("[data-message-actions]")) return;
+      setMenu(null);
+      setConfirmDelete(false);
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMenu(null);
+        setConfirmDelete(false);
+      }
+    }
+    function close() {
+      setMenu(null);
+      setConfirmDelete(false);
+    }
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    window.addEventListener("resize", close);
+    window.addEventListener("scroll", close, true);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", close);
+      window.removeEventListener("scroll", close, true);
+    };
+  }, [menu]);
 
   useEffect(() => {
     if (!file) {
@@ -126,7 +159,7 @@ export function MatchChat({
         token,
       );
       replaceMessage(saved.message);
-      setPicker(null);
+      setMenu(null);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "That reaction didn't stick.");
     }
@@ -153,13 +186,30 @@ export function MatchChat({
     }
   }
 
+  function openMenu(id: string, anchor: HTMLElement, mine: boolean) {
+    if (menu?.id === id) {
+      setMenu(null);
+      setConfirmDelete(false);
+      return;
+    }
+    const rect = anchor.getBoundingClientRect();
+    const width = 232;
+    let left = mine ? rect.right - width : rect.left;
+    left = Math.max(12, Math.min(left, window.innerWidth - width - 12));
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const top = spaceBelow > 190 ? rect.bottom + 8 : Math.max(12, rect.top - 176);
+    setConfirmDelete(false);
+    setMenu({ id, top, left });
+  }
+
   async function remove(messageId: string) {
     setBusy(true);
     setError("");
     try {
       const saved = await api<{ message: ChatMessage }>(`/api/bookings/${bookingId}/messages/${messageId}`, { method: "DELETE" }, token);
       replaceMessage(saved.message);
-      setConfirmDelete(null);
+      setConfirmDelete(false);
+      setMenu(null);
       if (editingId === messageId) setEditingId(null);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "That message didn't delete.");
@@ -167,6 +217,8 @@ export function MatchChat({
       setBusy(false);
     }
   }
+
+  const menuMessage = messages.find((item) => item.id === menu?.id) ?? null;
 
   return (
     <section className={`${className} rounded-[28px] border border-line bg-card p-5`}>
@@ -181,7 +233,7 @@ export function MatchChat({
           </Link>
         ) : null}
       </div>
-      <p className="mt-1 text-sm text-muted">Only the two of you can see this thread. It stays in Nook.</p>
+      <p className="mt-1 text-sm text-muted">Only the two of you can see this thread. Double-click a message, or the menu beside it, to react, edit, or delete.</p>
       {error ? (
         <div className="mt-3">
           <Banner>{error}</Banner>
@@ -190,109 +242,149 @@ export function MatchChat({
       <ol className="mt-4 max-h-96 space-y-3 overflow-auto">
         {messages.length === 0 ? <li className="text-sm text-muted">No messages yet. Say when you're heading over.</li> : null}
         {messages.map((message) => (
-          <li key={message.id} className={`flex ${message.mine ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${message.mine ? "bg-navy text-paper" : "bg-paper text-ink"}`}>
-              {message.deleted ? (
-                <p className="italic opacity-80">{message.mine ? "You deleted this message" : "This message was deleted"}</p>
-              ) : (
-                <>
-                  {message.image_url ? <MessagePhoto url={message.image_url} token={token} /> : null}
-                  {editingId === message.id ? (
-                    <div className="mt-2 space-y-2">
-                      <textarea rows={3} value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={1000} />
-                      <div className="flex gap-2">
-                        <button type="button" className="rounded-full bg-gold-soft px-3 py-1 text-xs font-medium text-navy" disabled={busy} onClick={() => void saveEdit(message)}>
-                          Save
-                        </button>
-                        <button
-                          type="button"
-                          className="rounded-full px-3 py-1 text-xs underline"
-                          onClick={() => {
-                            setEditingId(null);
-                            setDraft("");
-                          }}
-                        >
-                          Cancel
-                        </button>
+          <li key={message.id} className={`flex items-start gap-1 ${message.mine ? "flex-row-reverse" : ""}`}>
+            <div className="max-w-[85%]">
+              <div
+                data-message-bubble
+                className={`rounded-2xl px-3 py-2 text-sm ${message.mine ? "bg-navy text-paper" : "bg-paper text-ink"}`}
+                onDoubleClick={(event) => {
+                  if (message.deleted || editingId === message.id) return;
+                  openMenu(message.id, event.currentTarget, message.mine);
+                }}
+              >
+                {message.deleted ? (
+                  <p className="italic opacity-80">{message.mine ? "You deleted this message" : "This message was deleted"}</p>
+                ) : (
+                  <>
+                    {message.image_url ? <MessagePhoto url={message.image_url} token={token} /> : null}
+                    {editingId === message.id ? (
+                      <div className="space-y-2">
+                        <textarea rows={3} value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={1000} />
+                        <div className="flex gap-2">
+                          <button type="button" className="rounded-full bg-gold-soft px-3 py-1 text-xs font-medium text-navy" disabled={busy} onClick={() => void saveEdit(message)}>
+                            Save
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded-full px-3 py-1 text-xs underline"
+                            onClick={() => {
+                              setEditingId(null);
+                              setDraft("");
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ) : message.text ? (
-                    <p className={message.image_url ? "mt-2" : ""}>{message.text}</p>
-                  ) : null}
-                </>
-              )}
-              <p className={`mt-1 text-[11px] ${message.mine ? "text-gold-soft" : "text-muted"}`}>
-                In Nook
-                {message.edited_at && !message.deleted ? " · Edited" : ""}
-              </p>
-              {!message.deleted ? (
-                <div className="mt-2 flex flex-wrap items-center gap-1">
+                    ) : message.text ? (
+                      <p className={message.image_url ? "mt-2" : ""}>{message.text}</p>
+                    ) : null}
+                  </>
+                )}
+                <p className={`mt-1 text-[11px] ${message.mine ? "text-gold-soft" : "text-muted"}`}>
+                  In Nook
+                  {message.edited_at && !message.deleted ? " · Edited" : ""}
+                </p>
+              </div>
+              {!message.deleted && message.reactions.length > 0 ? (
+                <div className={`mt-1 flex flex-wrap gap-1 ${message.mine ? "justify-end" : ""}`}>
                   {message.reactions.map((reaction) => (
                     <button
                       key={reaction.emoji}
                       type="button"
-                      className={`rounded-full border px-2 py-0.5 text-xs ${reaction.mine ? "border-gold bg-gold/20" : "border-line bg-white/70"}`}
+                      className={`rounded-full border px-2 py-0.5 text-xs ${reaction.mine ? "border-gold bg-gold/15" : "border-line bg-white"}`}
                       onClick={() => void react(message.id, reaction.emoji)}
                     >
                       {reaction.emoji} {reaction.count}
                     </button>
                   ))}
-                  <button
-                    type="button"
-                    className="rounded-full border border-line bg-white/70 px-2 py-0.5 text-xs text-ink"
-                    aria-expanded={picker === message.id}
-                    onClick={() => setPicker((current) => (current === message.id ? null : message.id))}
-                  >
-                    React
-                  </button>
-                  {message.mine ? (
-                    <>
-                      <button
-                        type="button"
-                        className="rounded-full px-2 py-0.5 text-xs underline"
-                        onClick={() => {
-                          setEditingId(message.id);
-                          setDraft(message.text);
-                          setConfirmDelete(null);
-                        }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        className="rounded-full px-2 py-0.5 text-xs underline"
-                        onClick={() => setConfirmDelete((current) => (current === message.id ? null : message.id))}
-                      >
-                        Delete
-                      </button>
-                    </>
-                  ) : null}
-                </div>
-              ) : null}
-              {picker === message.id && !message.deleted ? (
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {REACTIONS.map((emoji) => (
-                    <button key={emoji} type="button" className="rounded-full bg-white px-2 py-1 text-base leading-none text-ink" aria-label={`React with ${emoji}`} onClick={() => void react(message.id, emoji)}>
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-              {confirmDelete === message.id ? (
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                  <span>Delete this message?</span>
-                  <button type="button" className="rounded-full bg-clay px-2 py-1 text-white" disabled={busy} onClick={() => void remove(message.id)}>
-                    Delete
-                  </button>
-                  <button type="button" className="underline" onClick={() => setConfirmDelete(null)}>
-                    Keep
-                  </button>
                 </div>
               ) : null}
             </div>
+            {!message.deleted && editingId !== message.id ? (
+              <button
+                type="button"
+                data-message-actions
+                className={`mt-1 grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted hover:bg-paper hover:text-navy ${menu?.id === message.id ? "bg-paper text-navy" : ""}`}
+                aria-label="Message actions"
+                aria-haspopup="menu"
+                aria-expanded={menu?.id === message.id}
+                onClick={(event) => {
+                  const bubble = event.currentTarget.parentElement?.querySelector("[data-message-bubble]");
+                  openMenu(message.id, (bubble as HTMLElement) || event.currentTarget, message.mine);
+                }}
+              >
+                <Dots />
+              </button>
+            ) : (
+              <span className="w-7 shrink-0" />
+            )}
           </li>
         ))}
       </ol>
+      {menuMessage ? (
+        <div
+          ref={menuRef}
+          role="menu"
+          className="fixed z-50 w-[232px] rounded-2xl border border-line bg-card p-2 shadow-[0_12px_40px_rgba(28,36,48,0.16)]"
+          style={{ top: menu?.top, left: menu?.left }}
+        >
+          <p className="px-2 pt-1 text-[11px] tracking-[0.14em] text-gold uppercase">React</p>
+          <div className="mt-1 flex justify-between px-1">
+            {REACTIONS.map((emoji) => {
+              const mine = menuMessage.reactions.some((reaction) => reaction.emoji === emoji && reaction.mine);
+              return (
+                <button
+                  key={emoji}
+                  type="button"
+                  role="menuitem"
+                  className={`grid h-8 w-8 place-items-center rounded-full text-base leading-none hover:bg-paper ${mine ? "bg-gold/20 ring-1 ring-gold" : ""}`}
+                  aria-label={`React with ${emoji}`}
+                  onClick={() => void react(menuMessage.id, emoji)}
+                >
+                  {emoji}
+                </button>
+              );
+            })}
+          </div>
+          {menuMessage.mine ? (
+            <div className="mt-1 border-t border-line pt-1">
+              {confirmDelete ? (
+                <div className="px-2 py-2">
+                  <p className="text-sm">Delete this message?</p>
+                  <div className="mt-2 flex gap-2">
+                    <button type="button" className="rounded-full bg-clay px-3 py-1 text-xs text-white" disabled={busy} onClick={() => void remove(menuMessage.id)}>
+                      Delete
+                    </button>
+                    <button type="button" className="rounded-full px-3 py-1 text-xs text-navy underline" onClick={() => setConfirmDelete(false)}>
+                      Keep
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="block w-full rounded-xl px-3 py-2 text-left text-sm hover:bg-paper"
+                    onClick={() => {
+                      setEditingId(menuMessage.id);
+                      setDraft(menuMessage.text);
+                      setMenu(null);
+                      setConfirmDelete(false);
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button type="button" role="menuitem" className="block w-full rounded-xl px-3 py-2 text-left text-sm text-clay hover:bg-paper" onClick={() => setConfirmDelete(true)}>
+                    Delete
+                  </button>
+                </>
+              )}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       <form className="mt-4 space-y-2" onSubmit={send}>
         {file ? (
           <div className="flex items-center gap-3 rounded-2xl border border-line bg-paper p-2">
@@ -315,6 +407,16 @@ export function MatchChat({
         </div>
       </form>
     </section>
+  );
+}
+
+function Dots() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+      <circle cx="8" cy="3.2" r="1.25" fill="currentColor" />
+      <circle cx="8" cy="8" r="1.25" fill="currentColor" />
+      <circle cx="8" cy="12.8" r="1.25" fill="currentColor" />
+    </svg>
   );
 }
 
