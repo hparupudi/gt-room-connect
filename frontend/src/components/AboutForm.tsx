@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { FormEvent } from "react";
+import type { SubmitEvent } from "react";
 
 import { useAuth } from "../auth";
 import type { Socials, User } from "../types";
@@ -36,7 +36,7 @@ export function AboutForm({
   const [discord, setDiscord] = useState(initial?.socials?.discord || "");
   const [busy, setBusy] = useState(false);
 
-  async function submit(event: FormEvent) {
+  async function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     try {
