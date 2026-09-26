@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 from pathlib import Path
 
-from flask import Flask, jsonify, redirect, request
+from flask import Flask, jsonify, request
 
 from .constants import (
     CLEANLINESS,
@@ -50,12 +50,6 @@ from .services import (
 )
 from .vectors import pinecone_configured
 
-_oauth = None
-
-
-def _frontend() -> str:
-    return os.getenv("FRONTEND_URL", "http://127.0.0.1:43123").rstrip("/")
-
 
 def _viewer():
     header = request.headers.get("Authorization", "")
@@ -92,24 +86,6 @@ def _me_payload(user: dict) -> dict:
 
 
 def register_routes(app: Flask) -> None:
-    global _oauth
-    from authlib.integrations.flask_client import OAuth
-
-    _oauth = OAuth(app)
-    client_id = os.getenv("GOOGLE_CLIENT_ID", "").strip()
-    client_secret = os.getenv("GOOGLE_CLIENT_SECRET", "").strip()
-    if client_id and client_secret:
-        _oauth.register(
-            name="google",
-            client_id=client_id,
-            client_secret=client_secret,
-            server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-            client_kwargs={"scope": "openid email profile"},
-        )
-        app.config["GOOGLE_OAUTH"] = True
-    else:
-        app.config["GOOGLE_OAUTH"] = False
-
     @app.errorhandler(ApiError)
     def _api_error(exc: ApiError):
         return jsonify(error=exc.message), exc.status
@@ -127,7 +103,6 @@ def register_routes(app: Flask) -> None:
             muse=muse_configured(),
             pinecone=pinecone_configured(),
             smtp=smtp_configured(),
-            google=bool(app.config.get("GOOGLE_OAUTH")),
             demo=os.getenv("DEMO_LOGIN", "1") != "0",
         )
 
@@ -141,7 +116,6 @@ def register_routes(app: Flask) -> None:
             "cleanliness": CLEANLINESS,
             "styles": STYLES,
             "questions": INTERVIEW_QUESTIONS,
-            "google": bool(app.config.get("GOOGLE_OAUTH")),
             "demo": os.getenv("DEMO_LOGIN", "1") != "0",
         }
         if payload["demo"]:
@@ -249,7 +223,6 @@ def register_routes(app: Flask) -> None:
             "id": uuid.uuid4().hex,
             "email": email,
             "password_hash": hash_password(password),
-            "google_sub": None,
             "email_verified": True,
             "name": "",
             "gender": "",
@@ -278,10 +251,8 @@ def register_routes(app: Flask) -> None:
         email = normalize_email(data.get("email", ""))
         password = data.get("password") or ""
         user = get_db().find_one("users", email=email)
-        if not user:
+        if not user or not user.get("password_hash"):
             raise ApiError("Email or password is wrong.", 401)
-        if not user.get("password_hash"):
-            raise ApiError("This account signs in with Google.", 401)
         if not check_password(password, user["password_hash"]):
             raise ApiError("Email or password is wrong.", 401)
         return jsonify(token=make_token(user["id"]), user=_me_payload(user))
@@ -289,58 +260,6 @@ def register_routes(app: Flask) -> None:
     @app.get("/api/auth/me")
     def me():
         return jsonify(user=_me_payload(_require()))
-
-    @app.get("/api/auth/google")
-    def google_start():
-        if not app.config.get("GOOGLE_OAUTH"):
-            return jsonify(error="Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable Google sign-in."), 503
-        redirect_uri = os.getenv("GOOGLE_REDIRECT_URI", f"{_frontend()}/api/auth/google/callback")
-        return _oauth.google.authorize_redirect(redirect_uri)
-
-    @app.get("/api/auth/google/callback")
-    def google_callback():
-        if not app.config.get("GOOGLE_OAUTH"):
-            return redirect(f"{_frontend()}/login?error=google")
-        try:
-            token = _oauth.google.authorize_access_token()
-            info = token.get("userinfo") or {}
-            email = normalize_email(info.get("email", ""))
-        except ApiError:
-            return redirect(f"{_frontend()}/login?error=gt")
-        except Exception:
-            return redirect(f"{_frontend()}/login?error=google")
-        db = get_db()
-        user = db.find_one("users", email=email)
-        if not user:
-            user = {
-                "id": uuid.uuid4().hex,
-                "email": email,
-                "password_hash": "",
-                "google_sub": info.get("sub"),
-                "email_verified": True,
-                "name": info.get("name") or "",
-                "gender": "",
-                "age": None,
-                "major": "",
-                "year": "",
-                "hometown": "",
-                "socials": {"instagram": "", "phone": "", "discord": ""},
-                "dorm_id": "",
-                "floor": None,
-                "unit": "",
-                "open_dates": [],
-                "lifestyle": None,
-                "transcript": "",
-                "embedding": [],
-                "embedding_model": "",
-                "onboarding_complete": False,
-                "created_at": datetime.now(timezone.utc).isoformat(),
-            }
-            db.insert("users", user)
-        elif info.get("sub") and user.get("google_sub") != info.get("sub"):
-            db.update("users", user["id"], {"google_sub": info.get("sub")})
-        session = make_token(user["id"])
-        return redirect(f"{_frontend()}/auth/callback?token={session}")
 
     @app.post("/api/me/room")
     def update_room():

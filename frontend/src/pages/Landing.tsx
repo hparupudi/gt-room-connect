@@ -5,11 +5,11 @@ import { Mark, btnGhost, btnPrimary } from "../components/ui";
 const STEPS = [
   {
     title: "Prove you're at Tech",
-    copy: "A code goes to your @gatech.edu address before you can make a password.",
+    copy: "We'll send a code to your @gatech.edu email so we know it's you.",
   },
   {
     title: "Talk for a minute",
-    copy: "A short voice note becomes a bio, tags, and a lifestyle vector other students can match against.",
+    copy: "A short voice note becomes a bio, tags, and a lifestyle other students can match against.",
   },
   {
     title: "Ask, then decide",
@@ -30,7 +30,7 @@ export function Landing() {
             Log in
           </Link>
           <Link to="/signup" className={btnPrimary}>
-            Get a code
+            Sign up
           </Link>
         </div>
       </header>
@@ -66,13 +66,12 @@ export function Landing() {
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-xs text-muted">Real profiles show up after you verify your email.</p>
         </aside>
       </section>
       <section className="grid gap-4 md:grid-cols-3">
         {STEPS.map((step, index) => (
           <article key={step.title} className="rounded-[28px] border border-line bg-white/60 p-5">
-            <p className="font-serif text-gold">0{index + 1}</p>
+            <p className="font-serif text-gold">{index + 1}.</p>
             <h2 className="mt-2 font-serif text-2xl">{step.title}</h2>
             <p className="mt-2 text-sm text-muted">{step.copy}</p>
           </article>

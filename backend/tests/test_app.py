@@ -6,7 +6,6 @@ import pytest
 os.environ.setdefault("MONGODB_URI", "")
 os.environ.setdefault("MODEL_API_KEY", "")
 os.environ.setdefault("PINECONE_API_KEY", "")
-os.environ.setdefault("GOOGLE_CLIENT_ID", "")
 os.environ.setdefault("SMTP_HOST", "")
 os.environ.setdefault("FLASK_SECRET_KEY", "test-secret")
 
@@ -17,7 +16,6 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("MONGODB_URI", "")
     monkeypatch.setenv("MODEL_API_KEY", "")
     monkeypatch.setenv("PINECONE_API_KEY", "")
-    monkeypatch.setenv("GOOGLE_CLIENT_ID", "")
     monkeypatch.setenv("SMTP_HOST", "")
     monkeypatch.setenv("FLASK_SECRET_KEY", "test-secret")
     monkeypatch.setenv("DEMO_LOGIN", "1")

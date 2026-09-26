@@ -52,7 +52,6 @@ The login screen can enter as either of them. Set `DEMO_LOGIN=0` to hide those b
 | --- | --- | --- |
 | Accounts | MongoDB | `backend/data/db.json` |
 | Email code | SMTP | Shown on the signup screen |
-| Google sign-in | OAuth, must be a `@gatech.edu` account | Button explains which env vars to add |
 | Interview audio | Muse Voice Transcribe (`muse-voice-transcribe-1.0`) | Browser transcript, or what you type |
 | Profile | Muse Spark 1.3 structured output into a Pydantic `LifestyleProfile` | Same schema, filled by a local parser |
 | Embedding | 32 lifestyle axes from Muse Spark, L2-normalized, upserted to Pinecone | Same 32 axes from the local encoder, stored on the user |
@@ -66,7 +65,7 @@ Demo profiles were embedded with the local encoder. Interviews taken after you a
 ## Flow
 
 1. Enter a `@gatech.edu` address and the code from email (or the on-screen preview).
-2. Create a password. Google is optional once the OAuth keys are set.
+2. Create a password.
 3. Claim your room on the campus map, including the floor and unit. You can open nights now or later.
 4. Fill in name, gender, age, major, year, hometown, and socials.
 5. Record a 30–60 second answer to the interview prompts. If the mic is blocked, type while the timer runs.
