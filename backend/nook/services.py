@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
 
 from .constants import GENDERS, MAJORS, SLEEP, STYLES, YEAR_LABELS, YEARS
-from .db import get_db
+from .db import data_file, get_db
 from .dorms import DORMS, floor_plan, get_dorm, map_payload, public_dorm, walking_route
 from .floorplans import official_floors, room_hotspots
 from .embed import normalize
@@ -644,17 +645,76 @@ def _accepted_booking(user_id: str, booking_id: str) -> dict:
     return booking
 
 
+REACTIONS = ("👍", "❤️", "😂", "😮", "😢", "🔥")
+_IMAGE_TYPES = {"jpeg": "image/jpeg", "png": "image/png", "gif": "image/gif", "webp": "image/webp"}
+_IMAGE_MAX = 4 * 1024 * 1024
+
+
+def _upload_dir() -> Path:
+    folder = data_file().parent / "uploads"
+    folder.mkdir(parents=True, exist_ok=True)
+    return folder
+
+
+def _image_kind(raw: bytes) -> str | None:
+    if raw.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "png"
+    if raw.startswith(b"\xff\xd8\xff"):
+        return "jpeg"
+    if raw.startswith((b"GIF87a", b"GIF89a")):
+        return "gif"
+    if len(raw) >= 12 and raw.startswith(b"RIFF") and raw[8:12] == b"WEBP":
+        return "webp"
+    return None
+
+
+def _message_preview(item: dict | None) -> str:
+    if not item:
+        return ""
+    if item.get("deleted"):
+        return "Message deleted"
+    text = item.get("text") or ""
+    if text:
+        return text
+    if (item.get("image") or {}).get("file"):
+        return "Sent a photo"
+    return ""
+
+
 def _serialize_message(item: dict, viewer_id: str) -> dict:
+    deleted = bool(item.get("deleted"))
+    image = None if deleted else (item.get("image") or None)
+    reactions = []
+    if not deleted:
+        for group in item.get("reactions") or []:
+            people = list(group.get("user_ids") or [])
+            if not people:
+                continue
+            reactions.append({"emoji": group.get("emoji") or "", "count": len(people), "mine": viewer_id in people})
     return {
         "id": item.get("id"),
         "sender_id": item.get("sender_id"),
         "channel": item.get("channel") or "nook",
-        "text": item.get("text") or "",
+        "text": "" if deleted else (item.get("text") or ""),
         "created_at": item.get("created_at"),
+        "edited_at": None if deleted else item.get("edited_at"),
+        "deleted": deleted,
+        "image_url": (
+            f"/api/bookings/{item.get('booking_id')}/messages/{item.get('id')}/image" if image and image.get("file") else None
+        ),
+        "reactions": reactions,
         "delivery": item.get("delivery") or "stored",
         "detail": item.get("detail") or "",
         "mine": item.get("sender_id") == viewer_id,
     }
+
+
+def _thread_message(user_id: str, booking_id: str, message_id: str) -> tuple[dict, dict]:
+    booking = _accepted_booking(user_id, booking_id)
+    item = get_db().find_one("messages", id=message_id)
+    if not item or item.get("booking_id") != booking["id"]:
+        raise ApiError("That message isn't in this thread.", 404)
+    return booking, item
 
 
 def _mark_thread_seen(user_id: str, booking: dict, rows: list[dict]) -> None:
@@ -746,7 +806,7 @@ def inbox_for(user: dict, query: str = "") -> dict:
                     "role": "host" if booking.get("host_id") == uid else "guest",
                     "person": person,
                     "last_message": {
-                        "text": last.get("text") or "",
+                        "text": _message_preview(last),
                         "created_at": last.get("created_at") or "",
                         "mine": last.get("sender_id") == uid,
                     }
@@ -761,7 +821,7 @@ def inbox_for(user: dict, query: str = "") -> dict:
             preview = ""
             for item in reversed(rows):
                 if item.get("sender_id") != uid:
-                    preview = item.get("text") or ""
+                    preview = _message_preview(item)
                     break
             notifications.append(
                 {
@@ -791,25 +851,115 @@ def inbox_for(user: dict, query: str = "") -> dict:
     return {"threads": threads, "notifications": notifications, "unread": len(notifications)}
 
 
-def send_message(user: dict, booking_id: str, channel: str, text: str) -> dict:
+def _clean_text(text: str) -> str:
+    text = " ".join((text or "").split())
+    if len(text) > 1000:
+        raise ApiError("Keep the message under 1000 characters.")
+    return text
+
+
+def _store_image(upload) -> dict | None:
+    if upload is None or not getattr(upload, "filename", None):
+        return None
+    raw = upload.read()
+    if not raw:
+        raise ApiError("That photo was empty.")
+    if len(raw) > _IMAGE_MAX:
+        raise ApiError("Photos need to be under 4 MB.")
+    kind = _image_kind(raw)
+    if not kind:
+        raise ApiError("Use a JPEG, PNG, GIF, or WebP photo.")
+    name = f"{uuid.uuid4().hex}.{'jpg' if kind == 'jpeg' else kind}"
+    (_upload_dir() / name).write_bytes(raw)
+    return {"file": name, "type": _IMAGE_TYPES[kind]}
+
+
+def send_message(user: dict, booking_id: str, channel: str, text: str, image=None) -> dict:
     booking = _accepted_booking(user["id"], booking_id)
     channel = (channel or "nook").strip().lower()
     if channel != "nook":
         raise ApiError("Messages stay in Nook. Instagram, WhatsApp, and Discord open from the logos on this stay.")
-    text = " ".join((text or "").split())
-    if not text:
-        raise ApiError("Write a message first.")
-    if len(text) > 1000:
-        raise ApiError("Keep the message under 1000 characters.")
+    text = _clean_text(text)
+    stored = _store_image(image)
+    if not text and not stored:
+        raise ApiError("Write a message or attach a photo.")
     doc = {
         "id": uuid.uuid4().hex,
         "booking_id": booking["id"],
         "sender_id": user["id"],
         "channel": "nook",
         "text": text,
+        "image": stored,
+        "reactions": [],
         "created_at": now_iso(),
+        "edited_at": None,
+        "deleted": False,
         "delivery": "stored",
         "detail": "Saved in Nook.",
     }
     get_db().insert("messages", doc)
     return _serialize_message(doc, user["id"])
+
+
+def edit_message(user: dict, booking_id: str, message_id: str, text: str) -> dict:
+    _booking, item = _thread_message(user["id"], booking_id, message_id)
+    if item.get("sender_id") != user["id"]:
+        raise ApiError("You can only edit your own messages.")
+    if item.get("deleted"):
+        raise ApiError("That message was deleted.")
+    text = _clean_text(text)
+    if not text and not (item.get("image") or {}).get("file"):
+        raise ApiError("Write a message first.")
+    updated = get_db().update("messages", message_id, {"text": text, "edited_at": now_iso()})
+    return _serialize_message(updated or item, user["id"])
+
+
+def delete_message(user: dict, booking_id: str, message_id: str) -> dict:
+    _booking, item = _thread_message(user["id"], booking_id, message_id)
+    if item.get("sender_id") != user["id"]:
+        raise ApiError("You can only delete your own messages.")
+    image = (item.get("image") or {}).get("file")
+    if image:
+        (_upload_dir() / Path(image).name).unlink(missing_ok=True)
+    updated = get_db().update(
+        "messages",
+        message_id,
+        {"text": "", "image": None, "reactions": [], "deleted": True, "edited_at": None, "deleted_at": now_iso()},
+    )
+    return _serialize_message(updated or item, user["id"])
+
+
+def react_message(user: dict, booking_id: str, message_id: str, emoji: str) -> dict:
+    _booking, item = _thread_message(user["id"], booking_id, message_id)
+    if item.get("deleted"):
+        raise ApiError("That message was deleted.")
+    if emoji not in REACTIONS:
+        raise ApiError("Pick one of the reactions on the message.")
+    reactions = [dict(group) for group in (item.get("reactions") or [])]
+    current = next((group for group in reactions if group.get("emoji") == emoji), None)
+    if current:
+        people = list(current.get("user_ids") or [])
+        if user["id"] in people:
+            people = [person for person in people if person != user["id"]]
+        else:
+            people.append(user["id"])
+        if people:
+            current["user_ids"] = people
+        else:
+            reactions = [group for group in reactions if group.get("emoji") != emoji]
+    else:
+        reactions.append({"emoji": emoji, "user_ids": [user["id"]]})
+    updated = get_db().update("messages", message_id, {"reactions": reactions})
+    return _serialize_message(updated or item, user["id"])
+
+
+def message_image_path(user_id: str, booking_id: str, message_id: str) -> tuple[Path, str]:
+    _booking, item = _thread_message(user_id, booking_id, message_id)
+    if item.get("deleted"):
+        raise ApiError("That photo isn't available.", 404)
+    meta = item.get("image") or {}
+    name = Path(str(meta.get("file") or "")).name
+    path = _upload_dir() / name
+    if not name or not path.is_file():
+        raise ApiError("That photo isn't available.", 404)
+    return path, meta.get("type") or "application/octet-stream"

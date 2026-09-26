@@ -252,12 +252,22 @@ export type Inbox = {
   unread: number;
 };
 
+export type ChatReaction = {
+  emoji: string;
+  count: number;
+  mine: boolean;
+};
+
 export type ChatMessage = {
   id: string;
   sender_id: string;
   channel: "nook";
   text: string;
   created_at: string;
+  edited_at: string | null;
+  deleted: boolean;
+  image_url: string | null;
+  reactions: ChatReaction[];
   delivery: string;
   detail: string;
   mine: boolean;

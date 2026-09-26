@@ -25,8 +25,11 @@ from .muse import (
     compose_bio,
     convert_to_wav,
     extract_profile,
+    direct_entry_error,
+    direct_entry_transcript,
     habit_gaps,
     is_template_bio,
+    question_gap,
     match_sentence,
     muse_configured,
     transcribe_wav,
@@ -48,15 +51,19 @@ from .services import (
     cancel_booking,
     create_booking,
     decline_booking,
+    delete_message,
     dorm_detail,
+    edit_message,
     get_booking,
     inbox_for,
     list_bookings,
     list_messages,
+    message_image_path,
     map_overview,
     onboarding_step,
     parse_dates,
     save_room,
+    react_message,
     search,
     send_message,
     serialize_user,
@@ -387,6 +394,34 @@ def register_routes(app: Flask) -> None:
                 updated = get_db().update("users", user["id"], {"lifestyle": life})
         return jsonify(user=serialize_user(updated, user["id"]))
 
+    def _ready_for_interview(person: dict) -> None:
+        step = onboarding_step(person)
+        if step == "room":
+            raise ApiError("Claim your room before the interview.")
+        if step == "about":
+            raise ApiError("Finish the questionnaire before the interview.")
+
+    def _save_interview(person: dict, transcript: str, source: str):
+        gaps = habit_gaps(transcript)
+        if gaps:
+            missing = "; ".join(gaps)
+            raise ApiError(f"Tell Nook the rest of your habits before this can be saved. Still missing: {missing}.")
+        questionnaire = {
+            "name": person.get("name") or "",
+            "major": person.get("major") or "",
+            "year": person.get("year") or "",
+            "year_label": YEAR_LABELS.get(person.get("year") or "", ""),
+            "hometown": person.get("hometown") or "",
+            "gender": person.get("gender") or "",
+            "age": person.get("age"),
+        }
+        profile, model = extract_profile(transcript, questionnaire)
+        patch = apply_lifestyle(person, profile, model, transcript)
+        updated = get_db().update("users", person["id"], patch)
+        body = serialize_user(updated, person["id"])
+        body["transcript_source"] = source
+        return jsonify(user=body, transcript_source=source, embedding_model=model)
+
     @app.post("/api/me/interview")
     def interview():
         user = _require()
@@ -399,12 +434,12 @@ def register_routes(app: Flask) -> None:
             duration = float(request.form.get("duration_sec") or 0)
         except ValueError as exc:
             raise ApiError("The recording length didn't come through.") from exc
-        if duration < 0 or duration > 30 * 60:
+        if duration < 0:
             raise ApiError("That recording length doesn't look right.")
         transcript = (request.form.get("transcript") or "").strip()
         source = "browser"
         audio = request.files.get("audio")
-        if audio and audio.filename:
+        if audio and audio.filename and not transcript:
             folder = Path(__file__).resolve().parents[1] / "data" / "audio"
             folder.mkdir(parents=True, exist_ok=True)
             raw_path = folder / f"{user['id']}-{uuid.uuid4().hex[:8]}"
@@ -422,25 +457,37 @@ def register_routes(app: Flask) -> None:
                         source = "muse-voice-transcribe-1.0"
                 except Exception as exc:
                     print(f"Muse Voice Transcribe failed, using the browser transcript: {exc}")
-        gaps = habit_gaps(transcript)
-        if gaps:
-            missing = "; ".join(gaps)
-            raise ApiError(f"Tell Nook the rest of your habits before this can be saved. Still missing: {missing}.")
-        questionnaire = {
-            "name": user.get("name"),
-            "major": user.get("major"),
-            "year": user.get("year"),
-            "year_label": YEAR_LABELS.get(user.get("year"), ""),
-            "hometown": user.get("hometown"),
-            "gender": user.get("gender"),
-            "age": user.get("age"),
-        }
-        profile, model = extract_profile(transcript, questionnaire)
-        patch = apply_lifestyle(user, profile, model, transcript)
-        updated = get_db().update("users", user["id"], patch)
-        body = serialize_user(updated, user["id"])
-        body["transcript_source"] = source
-        return jsonify(user=body, transcript_source=source, embedding_model=model)
+        return _save_interview(user, transcript, source)
+
+    @app.post("/api/me/interview/answer")
+    def interview_answer():
+        user = _require()
+        _ready_for_interview(user)
+        data = request.get_json(silent=True) or {}
+        try:
+            index = int(data.get("index"))
+        except (TypeError, ValueError) as exc:
+            raise ApiError("Pick a question first.") from exc
+        gap = question_gap(index, data.get("answer") or "")
+        if gap:
+            raise ApiError(gap)
+        return jsonify(ok=True)
+
+    @app.post("/api/me/interview/direct")
+    def interview_direct():
+        user = _require()
+        _ready_for_interview(user)
+        data = request.get_json(silent=True) or {}
+        interests = data.get("interests") or ""
+        cleanliness = data.get("cleanliness") or ""
+        sleep_timing = data.get("sleep_timing") or ""
+        noise = data.get("noise") or ""
+        guest_notes = data.get("guest_notes") or ""
+        gap = direct_entry_error(interests, cleanliness, sleep_timing, noise, guest_notes)
+        if gap:
+            raise ApiError(gap)
+        transcript = direct_entry_transcript(interests, cleanliness, sleep_timing, noise, guest_notes)
+        return _save_interview(user, transcript, "typed")
 
     @app.patch("/api/me")
     def patch_me():
@@ -593,6 +640,37 @@ def register_routes(app: Flask) -> None:
     @app.post("/api/bookings/<booking_id>/messages")
     def booking_message_send(booking_id: str):
         user = _require()
-        data = request.get_json(silent=True) or {}
-        message = send_message(user, booking_id, data.get("channel") or "nook", data.get("text") or "")
+        if request.files or (request.content_type and "multipart/form-data" in request.content_type):
+            text = request.form.get("text") or ""
+            channel = request.form.get("channel") or "nook"
+            image = request.files.get("image")
+        else:
+            data = request.get_json(silent=True) or {}
+            text = data.get("text") or ""
+            channel = data.get("channel") or "nook"
+            image = None
+        message = send_message(user, booking_id, channel, text, image)
         return jsonify(message=message), 201
+
+    @app.patch("/api/bookings/<booking_id>/messages/<message_id>")
+    def booking_message_edit(booking_id: str, message_id: str):
+        user = _require()
+        data = request.get_json(silent=True) or {}
+        return jsonify(message=edit_message(user, booking_id, message_id, data.get("text") or ""))
+
+    @app.delete("/api/bookings/<booking_id>/messages/<message_id>")
+    def booking_message_delete(booking_id: str, message_id: str):
+        user = _require()
+        return jsonify(message=delete_message(user, booking_id, message_id))
+
+    @app.post("/api/bookings/<booking_id>/messages/<message_id>/reactions")
+    def booking_message_react(booking_id: str, message_id: str):
+        user = _require()
+        data = request.get_json(silent=True) or {}
+        return jsonify(message=react_message(user, booking_id, message_id, data.get("emoji") or ""))
+
+    @app.get("/api/bookings/<booking_id>/messages/<message_id>/image")
+    def booking_message_image(booking_id: str, message_id: str):
+        user = _require()
+        path, kind = message_image_path(user["id"], booking_id, message_id)
+        return send_file(path, mimetype=kind, max_age=0)

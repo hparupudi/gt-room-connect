@@ -1,5 +1,7 @@
+import base64
 import os
 from datetime import date, timedelta
+from io import BytesIO
 
 import pytest
 
@@ -217,8 +219,67 @@ def test_messages_stay_in_nook_and_socials_link_out(client):
         headers=auth(andre),
     )
     assert sent.status_code == 201
+    message_id = sent.get_json()["message"]["id"]
     assert sent.get_json()["message"]["channel"] == "nook"
     assert sent.get_json()["message"]["delivery"] == "stored"
+    assert sent.get_json()["message"]["deleted"] is False
+
+    edited = client.patch(
+        f"/api/bookings/{booking_id}/messages/{message_id}",
+        json={"text": "I'll be at Glenn around 9."},
+        headers=auth(andre),
+    )
+    assert edited.status_code == 200
+    assert edited.get_json()["message"]["text"] == "I'll be at Glenn around 9."
+    assert edited.get_json()["message"]["edited_at"]
+    blocked = client.patch(
+        f"/api/bookings/{booking_id}/messages/{message_id}",
+        json={"text": "Changing someone else's message."},
+        headers=auth(maya),
+    )
+    assert blocked.status_code == 400
+
+    reacted = client.post(
+        f"/api/bookings/{booking_id}/messages/{message_id}/reactions",
+        json={"emoji": "👍"},
+        headers=auth(maya),
+    )
+    assert reacted.status_code == 200
+    reaction = reacted.get_json()["message"]["reactions"][0]
+    assert reaction["emoji"] == "👍"
+    assert reaction["count"] == 1
+    assert reaction["mine"] is True
+    cleared = client.post(
+        f"/api/bookings/{booking_id}/messages/{message_id}/reactions",
+        json={"emoji": "👍"},
+        headers=auth(maya),
+    )
+    assert cleared.get_json()["message"]["reactions"] == []
+
+    png = base64.b64decode(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+    )
+    photo = client.post(
+        f"/api/bookings/{booking_id}/messages",
+        data={"text": "The couch", "image": (BytesIO(png), "room.png")},
+        headers=auth(andre),
+    )
+    assert photo.status_code == 201, photo.get_json()
+    photo_id = photo.get_json()["message"]["id"]
+    assert photo.get_json()["message"]["image_url"].endswith("/image")
+    fetched = client.get(photo.get_json()["message"]["image_url"], headers=auth(maya))
+    assert fetched.status_code == 200
+    assert fetched.mimetype == "image/png"
+    assert fetched.data.startswith(b"\x89PNG")
+
+    removed = client.delete(f"/api/bookings/{booking_id}/messages/{photo_id}", headers=auth(andre))
+    assert removed.status_code == 200
+    assert removed.get_json()["message"]["deleted"] is True
+    assert removed.get_json()["message"]["text"] == ""
+    gone = client.get(photo.get_json()["message"]["image_url"], headers=auth(maya))
+    assert gone.status_code == 404
+    outsider = client.delete(f"/api/bookings/{booking_id}/messages/{message_id}", headers=auth(elena))
+    assert outsider.status_code == 404
 
     updated = client.post(
         "/api/me/questionnaire",
@@ -348,6 +409,37 @@ def test_voice_interview_structures_a_profile(client):
     )
     assert short.status_code == 200, short.get_json()
 
+    long_take = client.post(
+        "/api/me/interview",
+        data={
+            "duration_sec": "99999",
+            "transcript": (
+                "I'm into climbing and jazz. I keep a tidy room, fall asleep around midnight, and wake at 9. "
+                "I like it quiet, and a weekend guest should text me first."
+            ),
+        },
+        headers=auth(token),
+    )
+    assert long_take.status_code == 200, long_take.get_json()
+
+    typed = client.post(
+        "/api/me/interview/direct",
+        json={
+            "interests": "I love climbing and jazz concerts",
+            "cleanliness": "tidy",
+            "sleep_timing": "late",
+            "noise": "quiet",
+            "guest_notes": "Text me before you come over.",
+        },
+        headers=auth(token),
+    )
+    assert typed.status_code == 200, typed.get_json()
+    typed_user = typed.get_json()["user"]
+    assert typed.get_json()["transcript_source"] == "typed"
+    assert typed_user["cleanliness"] == "tidy"
+    assert typed_user["sleep_timing"] == "late"
+    assert "climbing" in typed_user["interests"]
+
 
 def test_voice_interview_rejects_incomplete_habits(client):
     started = client.post("/api/auth/email/start", json={"email": "partial.jacket@gatech.edu"})
@@ -383,6 +475,31 @@ def test_voice_interview_rejects_incomplete_habits(client):
         },
         headers=auth(token),
     )
+    thin = client.post(
+        "/api/me/interview/answer",
+        json={"index": 0, "answer": "idk"},
+        headers=auth(token),
+    )
+    assert thin.status_code == 400
+    good = client.post(
+        "/api/me/interview/answer",
+        json={"index": 0, "answer": "I love climbing and jazz on Friday nights."},
+        headers=auth(token),
+    )
+    assert good.status_code == 200
+    missing_clean = client.post(
+        "/api/me/interview/direct",
+        json={
+            "interests": "I love climbing and jazz",
+            "cleanliness": "",
+            "sleep_timing": "late",
+            "noise": "quiet",
+            "guest_notes": "Text me before you head over.",
+        },
+        headers=auth(token),
+    )
+    assert missing_clean.status_code == 400
+
     early = client.post(
         "/api/me/interview",
         data={"duration_sec": "6", "transcript": "I love climbing and that's about it."},

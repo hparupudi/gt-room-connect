@@ -17,7 +17,7 @@ from pathlib import Path
 import requests
 from pydantic import BaseModel, Field
 
-from .constants import AXIS_NAMES, INTERVIEW_QUESTIONS
+from .constants import AXIS_NAMES, CLEANLINESS, INTERVIEW_QUESTIONS, SLEEP
 from .embed import axes_from_signals
 from .models import LifestyleAxes, LifestyleProfile, MatchSentence, RerankResponse
 
@@ -131,7 +131,9 @@ def local_extract(transcript: str, questionnaire: dict) -> LifestyleProfile:
 
     if _has_any(text, ("spotless", "very clean", "immaculate")):
         cleanliness = "spotless"
-    elif _has_any(text, ("messy", "clutter", "relaxed about")):
+    elif _has_any(text, ("messy", "dirty")):
+        cleanliness = "messy"
+    elif _has_any(text, ("clutter", "relaxed about")):
         cleanliness = "relaxed"
     elif _has_any(text, ("tidy", "neat", "pretty clean")):
         cleanliness = "tidy"
@@ -208,6 +210,62 @@ def muse_extract(transcript: str, questionnaire: dict) -> LifestyleProfile:
     return parsed
 
 
+_CLEAN_WORDS = ("clean", "tidy", "messy", "clutter", "spotless", "neat", "organized", "dirty", "immaculate")
+_SLEEP_WORDS = ("sleep", "asleep", "wake", "waking", "awake", "midnight", "bedtime", "night owl", "nocturnal", "sunrise")
+_NOISE_WORDS = (
+    "quiet",
+    "loud",
+    "noise",
+    "noisy",
+    "headphone",
+    "party",
+    "guest",
+    "people over",
+    "crash",
+    "visitor",
+    "weekend",
+)
+_FILLER = {
+    "idk",
+    "i don't know",
+    "i dont know",
+    "nothing",
+    "n/a",
+    "na",
+    "pass",
+    "skip",
+    "ok",
+    "okay",
+    "yes",
+    "no",
+    "sure",
+    "whatever",
+}
+
+
+def _named_interest(text: str) -> bool:
+    interests = [label for label, words in INTEREST_LEXICON if _has_any(text, words)]
+    if interests or _has_any(text, ("into", "hobby", "hobbies", "club", "clubs")):
+        return True
+    if re.search(r"\bi (?:really |also )?(?:love|enjoy)\b", text):
+        return True
+    return re.search(r"\bi (?:really |also )?like (?!it\b|to keep\b|things\b)", text) is not None
+
+
+def _named_clean(text: str) -> bool:
+    return _has_any(text, _CLEAN_WORDS)
+
+
+def _named_sleep(text: str) -> bool:
+    if re.search(r"\b\d{1,2}(?::\d{2})?\s*(a\.?m\.?|p\.?m\.?)\b", text):
+        return True
+    return _has_any(text, _SLEEP_WORDS)
+
+
+def _named_noise(text: str) -> bool:
+    return _has_any(text, _NOISE_WORDS)
+
+
 def habit_gaps(transcript: str) -> list[str]:
     """Topics the interview still needs before a profile can be saved.
 
@@ -216,41 +274,79 @@ def habit_gaps(transcript: str) -> list[str]:
     """
     text = transcript.lower()
     gaps: list[str] = []
-    interests = [label for label, words in INTEREST_LEXICON if _has_any(text, words)]
-    named_interest = bool(interests) or _has_any(text, ("into", "hobby", "hobbies", "club", "clubs"))
-    named_interest = named_interest or re.search(r"\bi (?:really |also )?(?:love|enjoy)\b", text) is not None
-    named_interest = named_interest or re.search(r"\bi (?:really |also )?like (?!it\b|to keep\b|things\b)", text) is not None
-    if not named_interest:
+    if not _named_interest(text):
         gaps.append("what you're into")
-    if not _has_any(
-        text,
-        ("clean", "tidy", "messy", "clutter", "spotless", "neat", "organized", "dirty", "immaculate"),
-    ):
+    if not _named_clean(text):
         gaps.append("how clean you keep a shared room")
-    has_clock = re.search(r"\b\d{1,2}(?::\d{2})?\s*(a\.?m\.?|p\.?m\.?)\b", text) is not None
-    if not has_clock and not _has_any(
-        text,
-        ("sleep", "asleep", "wake", "waking", "awake", "midnight", "bedtime", "night owl", "nocturnal", "sunrise"),
-    ):
+    if not _named_sleep(text):
         gaps.append("when you fall asleep and wake up")
-    if not _has_any(
-        text,
-        (
-            "quiet",
-            "loud",
-            "noise",
-            "noisy",
-            "headphone",
-            "party",
-            "guest",
-            "people over",
-            "crash",
-            "visitor",
-            "weekend",
-        ),
-    ):
+    if not _named_noise(text):
         gaps.append("how you feel about noise and weekend guests")
     return gaps
+
+
+def question_gap(index: int, answer: str) -> str | None:
+    """Why this one answer is not enough to leave the question, or None."""
+    text = " ".join((answer or "").split())
+    lowered = text.lower().strip(" .!?")
+    if index < 0 or index >= len(INTERVIEW_QUESTIONS):
+        return "That question isn't part of the interview."
+    if len(text) < 12 or lowered in _FILLER:
+        return "Add a real answer before going on."
+    if index == 0 and not _named_interest(lowered):
+        return "Say what you're into — a club, hobby, or the kind of Friday you actually want."
+    if index == 1:
+        missing = []
+        if not _named_clean(lowered):
+            missing.append("how clean you keep a shared room")
+        if not _named_noise(lowered):
+            missing.append("how you feel about noise or guests")
+        if missing:
+            return "This question still needs " + " and ".join(missing) + "."
+    if index == 2 and not _named_sleep(lowered):
+        return "Say when you fall asleep and when you wake up."
+    if index == 3 and len(text) < 20:
+        return "Say what a weekend guest should know before you save."
+    return None
+
+
+def direct_entry_error(interests: str, cleanliness: str, sleep_timing: str, noise: str, guest_notes: str) -> str | None:
+    """Validate a typed habit form. Returns one message, or None when it is complete."""
+    gap = question_gap(0, interests)
+    if gap:
+        return gap
+    if cleanliness not in {item["id"] for item in CLEANLINESS}:
+        return "Pick how clean you keep a shared room."
+    if sleep_timing not in {item["id"] for item in SLEEP}:
+        return "Pick when you usually fall asleep."
+    if noise not in {"quiet", "moderate", "social"}:
+        return "Pick how you feel about noise and guests."
+    return question_gap(3, guest_notes)
+
+
+def direct_entry_transcript(interests: str, cleanliness: str, sleep_timing: str, noise: str, guest_notes: str) -> str:
+    clean_phrase = {
+        "spotless": "I keep a spotless, very clean shared room.",
+        "tidy": "I keep a tidy, neat shared room.",
+        "average": "I keep a shared room at an average level of clean.",
+        "relaxed": "I'm relaxed about clutter in the shared room.",
+        "messy": "I keep a messy shared room.",
+    }[cleanliness]
+    sleep_phrase = {
+        "early": "I fall asleep early and wake up early.",
+        "typical": "I fall asleep and wake up on a typical schedule.",
+        "late": "I stay up late and wake up late.",
+        "nocturnal": "I'm nocturnal and fall asleep after 2.",
+    }[sleep_timing]
+    noise_phrase = {
+        "quiet": "I like quiet nights and a quiet weekend guest.",
+        "moderate": "I'm moderate about noise and weekend guests.",
+        "social": "I'm social and fine with guests over on the weekend.",
+    }[noise]
+    return (
+        f"I'm into {interests.strip()}. {clean_phrase} {sleep_phrase} {noise_phrase} "
+        f"A weekend guest should know: {guest_notes.strip()}"
+    )
 
 
 class ProfileBio(BaseModel):
