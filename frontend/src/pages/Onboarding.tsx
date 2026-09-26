@@ -15,9 +15,9 @@ import { formatDates } from "../format";
 const NO_DATES: string[] = [];
 
 const STEPS = [
-  { id: "room", label: "Your room" },
-  { id: "about", label: "About you" },
-  { id: "voice", label: "Voice" },
+  { id: "room", label: "Your room", title: "Where do you live?" },
+  { id: "about", label: "About you", title: "Let's build your campus profile" },
+  { id: "voice", label: "Voice", title: "Your preferences" },
 ] as const;
 
 type StepId = (typeof STEPS)[number]["id"];
@@ -117,9 +117,7 @@ export function Onboarding() {
           Log out
         </button>
       </div>
-      <p className="text-xs tracking-[0.16em] text-gold uppercase">First time in</p>
-      <h1 className="font-serif text-4xl text-navy">Claim a room, then tell us how you live.</h1>
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <ol className="flex flex-wrap gap-2">
           {STEPS.map((item, itemIndex) => {
             const open = itemIndex <= reached;
@@ -129,7 +127,7 @@ export function Onboarding() {
                   type="button"
                   disabled={!open}
                   onClick={() => goTo(item.id)}
-                  className={`rounded-full px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-45 ${
+                  className={`rounded-full px-3 py-1 text-sm cursor-pointer disabled:cursor-not-allowed disabled:opacity-45 ${
                     step === item.id ? "bg-navy text-paper" : "bg-card text-muted"
                   }`}
                 >
@@ -148,6 +146,7 @@ export function Onboarding() {
           </button>
         </div>
       </div>
+      <h1 className="font-serif text-4xl text-navy mt-4">{STEPS[index].title}</h1>
       {error ? (
         <div className="mt-4">
           <Banner>{error}</Banner>
