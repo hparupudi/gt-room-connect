@@ -19,7 +19,6 @@ export function VoiceInterview({ onDone }: { onDone: (user: User) => void }) {
   const chunks = useRef<Blob[]>([]);
   const stream = useRef<MediaStream | null>(null);
   const recognition = useRef<{ stop: () => void } | null>(null);
-  const transcriptRef = useRef("");
   const interimRef = useRef("");
   const saving = useRef(false);
 
@@ -30,12 +29,6 @@ export function VoiceInterview({ onDone }: { onDone: (user: User) => void }) {
     }, 1000);
     return () => window.clearInterval(id);
   }, [running]);
-
-  function writeTranscript(value: string) {
-    const next = value.replace(/\s+/g, " ").trim();
-    transcriptRef.current = next;
-    setTranscript(next);
-  }
 
   function stopCapture() {
     recognition.current?.stop();
@@ -96,7 +89,7 @@ export function VoiceInterview({ onDone }: { onDone: (user: User) => void }) {
           else interim += piece;
         }
         interimRef.current = interim.trim();
-        if (finalText) writeTranscript(`${transcriptRef.current} ${finalText}`);
+        if (finalText) setTranscript((current) => `${current} ${finalText}`);
       };
       try {
         heard.start();
@@ -111,8 +104,8 @@ export function VoiceInterview({ onDone }: { onDone: (user: User) => void }) {
     const extra = interimRef.current.trim();
     interimRef.current = "";
     if (!extra) return;
-    if (transcriptRef.current.toLowerCase().includes(extra.toLowerCase())) return;
-    writeTranscript(`${transcriptRef.current} ${extra}`);
+    if (transcript.toLowerCase().includes(extra.toLowerCase())) return;
+    setTranscript((current) => `${current} ${extra}`);
   }
 
   async function submit() {
@@ -130,7 +123,7 @@ export function VoiceInterview({ onDone }: { onDone: (user: User) => void }) {
       flushInterim();
       const body = new FormData();
       body.set("duration_sec", String(seconds));
-      body.set("transcript", transcriptRef.current.trim());
+      body.set("transcript", transcript.trim());
       if (chunks.current.length) {
         body.set("audio", new Blob(chunks.current, { type: "audio/webm" }), "interview.webm");
       }
@@ -217,7 +210,7 @@ export function VoiceInterview({ onDone }: { onDone: (user: User) => void }) {
         <textarea
           rows={5}
           value={transcript}
-          onChange={(event) => writeTranscript(event.target.value)}
+          onChange={(event) => setTranscript(event.target.value)}
           placeholder="The mic fills this in. Edit anything it missed, including habits you didn't say out loud."
         />
       </label>

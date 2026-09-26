@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import { useEffect, useState } from "react";
-=======
 import { useState, useEffect } from "react";
->>>>>>> 9ce852633dcfab3959864cdb5ba9ead78a30985f
 import type { SubmitEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
