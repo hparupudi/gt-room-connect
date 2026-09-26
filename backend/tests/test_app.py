@@ -249,12 +249,45 @@ def test_messages_stay_in_nook_and_socials_link_out(client):
     assert reaction["emoji"] == "👍"
     assert reaction["count"] == 1
     assert reaction["mine"] is True
-    cleared = client.post(
+    switched = client.post(
         f"/api/bookings/{booking_id}/messages/{message_id}/reactions",
-        json={"emoji": "👍"},
+        json={"emoji": "❤️"},
         headers=auth(maya),
     )
-    assert cleared.get_json()["message"]["reactions"] == []
+    assert switched.status_code == 200
+    only = switched.get_json()["message"]["reactions"]
+    assert len(only) == 1
+    assert only[0]["emoji"] == "❤️"
+    assert only[0]["count"] == 1
+    assert only[0]["mine"] is True
+    andre_react = client.post(
+        f"/api/bookings/{booking_id}/messages/{message_id}/reactions",
+        json={"emoji": "👍"},
+        headers=auth(andre),
+    )
+    pair = andre_react.get_json()["message"]["reactions"]
+    assert {item["emoji"] for item in pair} == {"❤️", "👍"}
+    assert next(item for item in pair if item["emoji"] == "👍")["mine"] is True
+    moved = client.post(
+        f"/api/bookings/{booking_id}/messages/{message_id}/reactions",
+        json={"emoji": "❤️"},
+        headers=auth(andre),
+    )
+    shared = moved.get_json()["message"]["reactions"]
+    assert len(shared) == 1
+    assert shared[0]["emoji"] == "❤️"
+    assert shared[0]["count"] == 2
+    assert shared[0]["mine"] is True
+    cleared = client.post(
+        f"/api/bookings/{booking_id}/messages/{message_id}/reactions",
+        json={"emoji": "❤️"},
+        headers=auth(maya),
+    )
+    left = cleared.get_json()["message"]["reactions"]
+    assert len(left) == 1
+    assert left[0]["emoji"] == "❤️"
+    assert left[0]["count"] == 1
+    assert left[0]["mine"] is False
 
     png = base64.b64decode(
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="

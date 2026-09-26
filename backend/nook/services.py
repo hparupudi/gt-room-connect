@@ -935,19 +935,19 @@ def react_message(user: dict, booking_id: str, message_id: str, emoji: str) -> d
         raise ApiError("That message was deleted.")
     if emoji not in REACTIONS:
         raise ApiError("Pick one of the reactions on the message.")
-    reactions = [dict(group) for group in (item.get("reactions") or [])]
-    current = next((group for group in reactions if group.get("emoji") == emoji), None)
-    if current:
-        people = list(current.get("user_ids") or [])
-        if user["id"] in people:
-            people = [person for person in people if person != user["id"]]
-        else:
+    reactions = []
+    replaced = False
+    for group in item.get("reactions") or []:
+        people = list(group.get("user_ids") or [])
+        had_me = user["id"] in people
+        people = [person for person in people if person != user["id"]]
+        if group.get("emoji") == emoji and had_me:
+            replaced = True
+        elif group.get("emoji") == emoji:
             people.append(user["id"])
         if people:
-            current["user_ids"] = people
-        else:
-            reactions = [group for group in reactions if group.get("emoji") != emoji]
-    else:
+            reactions.append({"emoji": group.get("emoji"), "user_ids": people})
+    if not replaced and not any(group.get("emoji") == emoji for group in reactions):
         reactions.append({"emoji": emoji, "user_ids": [user["id"]]})
     updated = get_db().update("messages", message_id, {"reactions": reactions})
     return _serialize_message(updated or item, user["id"])
