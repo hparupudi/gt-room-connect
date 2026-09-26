@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { SubmitEvent } from "react";
 
 import { useAuth } from "../auth";
-import type { Socials, User } from "../types";
+import type { User } from "../types";
 import { Field, btnPrimary } from "./ui";
 
 export type AboutPayload = {
@@ -12,7 +12,14 @@ export type AboutPayload = {
   major: string;
   year: string;
   hometown: string;
-  socials: Socials;
+  socials: {
+    instagram: string;
+    instagram_private: boolean;
+    phone: string;
+    discord: string;
+    discord_id: string;
+    discord_friend_request: boolean;
+  };
 };
 
 export function AboutForm({
@@ -32,8 +39,11 @@ export function AboutForm({
   const [year, setYear] = useState(initial?.year || "2");
   const [hometown, setHometown] = useState(initial?.hometown || "");
   const [instagram, setInstagram] = useState(initial?.socials?.instagram || "");
+  const [instagramPrivate, setInstagramPrivate] = useState(Boolean(initial?.socials?.instagram_private));
   const [phone, setPhone] = useState(initial?.socials?.phone || "");
   const [discord, setDiscord] = useState(initial?.socials?.discord || "");
+  const [discordId, setDiscordId] = useState(initial?.socials?.discord_id || "");
+  const [discordFriendRequest, setDiscordFriendRequest] = useState(Boolean(initial?.socials?.discord_friend_request));
   const [busy, setBusy] = useState(false);
 
   async function submit(event: SubmitEvent<HTMLFormElement>) {
@@ -47,7 +57,14 @@ export function AboutForm({
         major,
         year,
         hometown,
-        socials: { instagram, phone, discord },
+        socials: {
+          instagram,
+          instagram_private: instagramPrivate,
+          phone,
+          discord,
+          discord_id: discordId,
+          discord_friend_request: discordFriendRequest,
+        },
       });
     } finally {
       setBusy(false);
@@ -55,7 +72,7 @@ export function AboutForm({
   }
 
   return (
-    <form className="grid gap-4 md:grid-cols-2" onSubmit={submit}>
+    <form id="about-form" className="grid gap-4 md:grid-cols-2" onSubmit={submit}>
       <Field label="Name">
         <input value={name} onChange={(event) => setName(event.target.value)} required />
       </Field>
@@ -95,12 +112,23 @@ export function AboutForm({
       <Field label="Instagram">
         <input value={instagram} onChange={(event) => setInstagram(event.target.value)} placeholder="hidden until you match" />
       </Field>
-      <Field label="Phone">
-        <input value={phone} onChange={(event) => setPhone(event.target.value)} />
+      <Field label="WhatsApp number">
+        <input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="404-555-0142" />
       </Field>
-      <Field label="Discord">
-        <input value={discord} onChange={(event) => setDiscord(event.target.value)} />
+      <Field label="Discord username">
+        <input value={discord} onChange={(event) => setDiscord(event.target.value)} placeholder="maya" />
       </Field>
+      <Field label="Discord user ID">
+        <input value={discordId} onChange={(event) => setDiscordId(event.target.value)} placeholder="the long number from Copy User ID" />
+      </Field>
+      <label className="flex items-start gap-2 text-sm md:col-span-2">
+        <input type="checkbox" className="mt-0.5 h-4 w-4" checked={instagramPrivate} onChange={(event) => setInstagramPrivate(event.target.checked)} />
+        <span>My Instagram is private. Matches open my profile so they can request to follow, instead of a message.</span>
+      </label>
+      <label className="flex items-start gap-2 text-sm md:col-span-2">
+        <input type="checkbox" className="mt-0.5 h-4 w-4" checked={discordFriendRequest} onChange={(event) => setDiscordFriendRequest(event.target.checked)} />
+        <span>People have to friend me on Discord first. The logo opens my profile for a friend request. Leave this off if they can already message me.</span>
+      </label>
       <div className="md:col-span-2">
         <button className={btnPrimary} disabled={busy} type="submit">
           {busy ? "Saving…" : submitLabel}

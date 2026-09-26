@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, ApiError } from "../api";
 import { useAuth } from "../auth";
 import { CampusMap } from "../components/CampusMap";
+import { SocialLogos } from "../components/SocialLogos";
 import { Shell } from "../components/Shell";
 import { WhyMatch } from "../components/WhyMatch";
 import { Avatar, Banner, Tags, btnGhost, btnPrimary } from "../components/ui";
@@ -128,7 +129,7 @@ export function RoomDetail() {
             {host.socials_visible && host.socials ? (
               <div className="mt-4 rounded-2xl bg-moss-soft p-4 text-sm">
                 <p className="font-medium">You're matched. Here's how to coordinate.</p>
-                <Socials socials={host.socials} />
+                <SocialLogos socials={host.socials} />
               </div>
             ) : (
               <p className="mt-4 text-sm text-muted">Socials show up after they accept.</p>
@@ -187,15 +188,5 @@ function Stat({ label, value }: { label: string; value: string }) {
       <dt className="text-xs text-muted">{label}</dt>
       <dd className="capitalize">{value}</dd>
     </div>
-  );
-}
-
-function Socials({ socials }: { socials: { instagram: string; phone: string; discord: string } }) {
-  return (
-    <ul className="mt-2 space-y-1">
-      {socials.instagram ? <li>Instagram · {socials.instagram}</li> : null}
-      {socials.phone ? <li>Phone · {socials.phone}</li> : null}
-      {socials.discord ? <li>Discord · {socials.discord}</li> : null}
-    </ul>
   );
 }

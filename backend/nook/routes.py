@@ -18,7 +18,6 @@ from .constants import (
 )
 from .db import get_db
 from .errors import ApiError
-from .graph import instagram_configured, signature_ok, verify_subscription, whatsapp_configured
 from .mailer import send_verification, smtp_configured
 from .floorplans import image_file
 from .muse import convert_to_wav, extract_profile, habit_gaps, match_sentence, muse_configured, transcribe_wav
@@ -32,6 +31,7 @@ from .security import (
     validate_password,
 )
 from .seed import DEMO_PASSWORD
+from .socials import HANDLE, normalize_socials
 from .services import (
     accept_booking,
     apply_lifestyle,
@@ -40,12 +40,9 @@ from .services import (
     decline_booking,
     dorm_detail,
     get_booking,
-    ingest_graph_webhook,
-    issue_instagram_code,
     list_bookings,
     list_messages,
     map_overview,
-    messaging_status,
     onboarding_step,
     parse_dates,
     save_room,
@@ -110,8 +107,6 @@ def register_routes(app: Flask) -> None:
             muse=muse_configured(),
             pinecone=pinecone_configured(),
             smtp=smtp_configured(),
-            whatsapp=whatsapp_configured(),
-            instagram=instagram_configured(),
             demo=os.getenv("DEMO_LOGIN", "1") != "0",
         )
 
@@ -126,10 +121,6 @@ def register_routes(app: Flask) -> None:
             "styles": STYLES,
             "questions": INTERVIEW_QUESTIONS,
             "demo": os.getenv("DEMO_LOGIN", "1") != "0",
-            "messaging": {
-                "whatsapp": whatsapp_configured(),
-                "instagram": instagram_configured(),
-            },
         }
         if payload["demo"]:
             payload["demo_password"] = DEMO_PASSWORD
@@ -315,11 +306,11 @@ def register_routes(app: Flask) -> None:
         if len(hometown) < 2 or len(hometown) > 80:
             raise ApiError("Add your hometown.")
         socials_in = data.get("socials") or {}
-        socials = {
-            "instagram": str(socials_in.get("instagram") or "").strip()[:80],
-            "phone": str(socials_in.get("phone") or "").strip()[:40],
-            "discord": str(socials_in.get("discord") or "").strip()[:80],
-        }
+        socials = normalize_socials(socials_in)
+        if str(socials_in.get("instagram") or "").strip() and not HANDLE.fullmatch(socials["instagram"]):
+            raise ApiError("Instagram handles use letters, numbers, periods, and underscores.")
+        if str(socials_in.get("discord_id") or "").strip() and not socials["discord_id"]:
+            raise ApiError("A Discord user ID is the long number from Copy User ID, or a discord.com/users link.")
         patch = {
             "name": name,
             "gender": gender,
@@ -557,14 +548,6 @@ def register_routes(app: Flask) -> None:
         user = _require()
         return jsonify(booking=cancel_booking(user, booking_id))
 
-    @app.get("/api/me/messaging")
-    def me_messaging():
-        return jsonify(messaging_status(_require()))
-
-    @app.post("/api/me/messaging/instagram-code")
-    def instagram_code():
-        return jsonify(issue_instagram_code(_require()))
-
     @app.get("/api/bookings/<booking_id>/messages")
     def booking_messages(booking_id: str):
         return jsonify(messages=list_messages(_require(), booking_id))
@@ -575,22 +558,3 @@ def register_routes(app: Flask) -> None:
         data = request.get_json(silent=True) or {}
         message = send_message(user, booking_id, data.get("channel") or "nook", data.get("text") or "")
         return jsonify(message=message), 201
-
-    @app.get("/api/webhooks/meta")
-    def meta_webhook_verify():
-        challenge = verify_subscription(
-            request.args.get("hub.mode", ""),
-            request.args.get("hub.verify_token", ""),
-            request.args.get("hub.challenge", ""),
-        )
-        if challenge is None:
-            return jsonify(error="Webhook verify token did not match."), 403
-        return challenge, 200, {"Content-Type": "text/plain"}
-
-    @app.post("/api/webhooks/meta")
-    def meta_webhook():
-        raw = request.get_data() or b""
-        if not signature_ok(raw, request.headers.get("X-Hub-Signature-256")):
-            return jsonify(error="Bad signature."), 403
-        ingest_graph_webhook(request.get_json(silent=True) or {})
-        return jsonify(ok=True)

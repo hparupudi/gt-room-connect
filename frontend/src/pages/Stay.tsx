@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { api, ApiError } from "../api";
 import { useAuth } from "../auth";
 import { MatchChat } from "../components/MatchChat";
+import { SocialLogos } from "../components/SocialLogos";
 import { Shell } from "../components/Shell";
 import { WhyMatch } from "../components/WhyMatch";
 import { Avatar, Banner } from "../components/ui";
@@ -61,7 +62,10 @@ export function Stay() {
             <div className="mt-6 rounded-[28px] bg-navy p-5 text-paper">
               <p className="text-xs tracking-[0.16em] text-gold-soft uppercase">If you step outside Nook</p>
               <p className="mt-2 font-serif text-3xl">Their socials, now that this is a yes.</p>
-              <SocialList socials={other.socials} />
+              <p className="mt-2 text-sm text-gold-soft">
+                Instagram, WhatsApp, and Discord open in their own apps. A private Instagram, or a Discord profile that still needs a friend request, opens the profile instead of a thread.
+              </p>
+              <SocialLogos socials={other.socials} />
               {user?.socials ? (
                 <p className="mt-4 text-sm text-gold-soft">They can see your socials too: {listed(user.socials)}.</p>
               ) : null}
@@ -77,24 +81,6 @@ export function Stay() {
         </article>
       ) : null}
     </Shell>
-  );
-}
-
-function SocialList({ socials }: { socials: Socials }) {
-  const rows = [
-    socials.instagram ? ["Instagram", socials.instagram] : null,
-    socials.phone ? ["Phone", socials.phone] : null,
-    socials.discord ? ["Discord", socials.discord] : null,
-  ].filter(Boolean) as string[][];
-  return (
-    <ul className="mt-4 space-y-2 text-lg">
-      {rows.map(([label, value]) => (
-        <li key={label}>
-          <span className="text-gold-soft">{label}</span> · {value}
-        </li>
-      ))}
-      {rows.length === 0 ? <li>They haven't added socials yet. You still have their name and hall.</li> : null}
-    </ul>
   );
 }
 

@@ -56,7 +56,7 @@ The login screen can enter as either of them. Set `DEMO_LOGIN=0` to hide those b
 | Profile | Muse Spark 1.3 structured output into a Pydantic `LifestyleProfile` | Same schema, filled by a local parser |
 | Embedding | 32 lifestyle axes from Muse Spark, L2-normalized, upserted to Pinecone | Same 32 axes from the local encoder, stored on the user |
 | Match sort | Cosine similarity, then Muse Spark 1.3 reranks the top bios and writes one sentence about what you have in common | Cosine similarity, then a lifestyle score, with a local one-sentence reason |
-| WhatsApp and Instagram | Graph API sends the thread to their number or linked Instagram, and replies come back through the webhook | The same thread stays inside Nook |
+| Messages | The thread stays in Nook. Instagram, WhatsApp, and Discord logos open those apps after a match | The thread stays in Nook, and the logos still open |
 | Distance sort | Walking estimate via campus hubs, match breaks ties | Same |
 
 Meta's Model API does not ship a separate embeddings endpoint. Nook asks Muse Spark 1.3 for a fixed 32-axis vector inside the structured profile, stores that vector in Pinecone (dimension 32, metric cosine), and compares with cosine similarity. Create the index before setting `PINECONE_API_KEY`.
@@ -69,11 +69,11 @@ Demo profiles were embedded with the local encoder. Interviews taken after you a
 2. Create a password.
 3. Claim your room on the campus map, including the floor and unit. You can open nights now or later.
 4. Fill in name, gender, age, major, year, hometown, and socials.
-5. Record answers to the interview prompts and stop whenever you're done. A short take is saved if it covers your habits (what you're into, cleanliness, sleep, and noise or weekend guests). If one of those is missing, the interview returns an error and keeps the transcript so you can add it. If the mic is blocked, type the same answers.
+5. Record answers to the interview prompts and stop whenever you're done. A short take is saved if it covers your habits (what you're into, cleanliness, sleep, and noise or weekend guests). If one of those is missing, the interview returns an error and keeps the transcript so you can add it. If the mic is blocked, type the same answers. Back and Next move between the room, about, and voice steps, and you can reopen any step you have already finished.
 6. Search by name, hall, unit number, or bio. Dates are required. Filter sleep, cleanliness, year, major (all selected by default), gender, floor, and dorm type (traditional, suite, apartment).
 7. Sort by match or by walking distance. Match runs cosine first, then the bio rerank. Distance walks from the room you claimed.
 8. Request a couch and wait. The host accepts or declines. Accepting closes those nights and declines other requests that overlap.
-9. Once accepted, both people can see Instagram, phone, and Discord, and a thread opens. Send it in Nook, or on WhatsApp and Instagram through the Graph API. Each card also has one sentence on why you matched.
+9. Once accepted, both people can message inside Nook. Instagram, WhatsApp, and Discord logos open a thread in that app. A private Instagram opens the profile for a follow request. Discord opens the profile for a friend request when they are not friends yet, and a message when they are. Each card also has one sentence on why you matched.
 
 ## Campus map
 
@@ -90,7 +90,7 @@ Floor plans are the official drawings published by Georgia Tech Housing (rooms, 
 
 ## Messages after a match
 
-When a host accepts, the stay page opens a thread. In Nook is always available. WhatsApp uses the other person's phone through the WhatsApp Cloud API (`WHATSAPP_PHONE_NUMBER_ID` plus `META_GRAPH_TOKEN`). Instagram uses the Messaging API once they DM the link code shown in the thread to the Nook Instagram account (`INSTAGRAM_ACCOUNT_ID`). Replies arrive at `POST /api/webhooks/meta`. The verify token is `META_WEBHOOK_VERIFY_TOKEN`. If `META_APP_SECRET` is set, webhook posts must carry `X-Hub-Signature-256`.
+When a host accepts, the stay page opens a thread that stays in Nook. Instagram, WhatsApp, and Discord are logos next to that thread. A public Instagram opens `ig.me` to that handle. A private Instagram opens `instagram.com` so you can request to follow. WhatsApp opens `wa.me` for their number. Discord uses the user ID from Copy User ID: the logo opens their profile, where Message starts a thread if you are already friends. If they checked that people have to friend them first, the same profile is where you send the friend request. Onboarding has Back and Next across the room, about, and voice steps, and you can return to any step you have already reached.
 
 Muse Spark 1.3 writes the one-sentence "why you match" line when `MODEL_API_KEY` is set. Without it, Nook writes that sentence from shared interests, sleep, cleanliness, major, and hometown.
 
