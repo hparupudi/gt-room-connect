@@ -90,19 +90,15 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
   }
 
   return (
-    <div className="mx-auto grid min-h-screen max-w-6xl items-stretch md:grid-cols-2">
-      <section className="hidden flex-col justify-between bg-navy px-10 py-12 text-paper md:flex">
+    <div className="mx-auto grid min-h-screen items-stretch md:grid-cols-2">
+      <section className="hidden flex-col justify-center bg-navy px-10 py-12 text-paper md:flex">
         <Link to="/" className="flex items-center gap-2">
           <Mark />
           <span className="font-serif text-2xl">Nook</span>
         </Link>
         <div>
           <p className="font-serif text-5xl leading-tight">A couch with a person attached.</p>
-          <p className="mt-4 max-w-sm text-gold-soft">
-            Verify the GT email first. The rest — your room, your habits, who you want to stay with — comes after.
-          </p>
         </div>
-        <p className="text-sm text-gold-soft">East campus to west campus is a walk, not a lease.</p>
       </section>
       <section className="px-5 py-10 md:px-12">
         <Link to="/" className="mb-8 flex items-center gap-2 md:hidden">
