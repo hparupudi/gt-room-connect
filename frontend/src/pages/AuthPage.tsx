@@ -132,7 +132,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
 
             <p className="text-sm text-muted">Don't have an account? <Link to="/signup" className="text-navy">Sign up</Link></p>
           </form>
-        ) : !preview && !verificationToken ? (
+        ) : !delivery && !verificationToken ? (
           <form className="space-y-4" onSubmit={sendCode}>
             <Field label="Georgia Tech email">
               <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@gatech.edu" required />
@@ -154,11 +154,34 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
               <Banner tone="note">Check {email} for a 6-digit code. It expires in 15 minutes.</Banner>
             )}
             <Field label="Code">
-              <input inputMode="numeric" value={code} onChange={(event) => setCode(event.target.value)} required />
+              <input
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                value={code}
+                onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
+                placeholder="123456"
+                required
+              />
             </Field>
-            <button className={btnPrimary} disabled={busy} type="submit">
-              Verify email
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button className={btnPrimary} disabled={busy} type="submit">
+                {busy ? "Checking…" : "Verify email"}
+              </button>
+              <button
+                type="button"
+                className={btnGhost}
+                disabled={busy}
+                onClick={() => {
+                  setDelivery("");
+                  setPreview("");
+                  setCode("");
+                  setError("");
+                }}
+              >
+                Use a different email
+              </button>
+            </div>
           </form>
         ) : (
           <form className="space-y-4" onSubmit={register}>
