@@ -313,15 +313,19 @@ function framed(items: Drawn[]) {
   const shiftY = top + pad - minY;
   const moved = items.map((item) => ({ ...item, x: item.x + shiftX, y: item.y + shiftY }));
   const room = { x: left, y: top, w: maxX - minX + pad * 2, h: maxY - minY + pad * 2 };
-  const elevY = room.y + room.h + 14;
-  const elevH = 58;
+  const elevX = room.x + room.w + 12;
+  const elevY = room.y;
+  const elevW = 86;
+  const elevH = Math.min(78, room.h);
   return {
     items: moved,
     room,
+    elevX,
     elevY,
+    elevW,
     elevH,
-    width: room.x + room.w + 14,
-    height: elevY + elevH + 8,
+    width: elevX + elevW + 8,
+    height: room.y + room.h + 10,
   };
 }
 
@@ -518,7 +522,7 @@ export function RoomLayoutDialog({
             <line x1={plan.room.x + 10} y1={plan.room.y + 3.5} x2={plan.room.x + plan.room.w - 10} y2={plan.room.y + 3.5} />
             <line x1={plan.room.x + 10} y1={plan.room.y + 5.4} x2={plan.room.x + plan.room.w - 10} y2={plan.room.y + 5.4} strokeWidth={0.25} />
           </g>
-          <SideView x={plan.room.x} y={plan.elevY} w={plan.room.w} h={plan.elevH} setup={setup} />
+          <SideView x={plan.elevX} y={plan.elevY} w={plan.elevW} h={plan.elevH} setup={setup} />
         </svg>
         <p className="mt-2 text-xs text-muted">Drawn to the furniture sizes Housing publishes.</p>
       </div>
