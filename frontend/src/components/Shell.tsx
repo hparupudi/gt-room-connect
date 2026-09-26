@@ -5,16 +5,18 @@ import { useAuth } from "../auth";
 import { Mark } from "./ui";
 
 const LINKS = [
-  { to: "/discover", label: "Discover" },
-  { to: "/map", label: "Map" },
-  { to: "/host", label: "Your couch" },
-  { to: "/requests", label: "Requests" },
-  { to: "/profile", label: "Profile" },
+  { to: "/discover", label: "Discover", short: "Discover" },
+  { to: "/map", label: "Map", short: "Map" },
+  { to: "/host", label: "Your couch", short: "Couch" },
+  { to: "/requests", label: "Requests", short: "Requests" },
+  { to: "/messages", label: "Messages", short: "Messages" },
+  { to: "/profile", label: "Profile", short: "Profile" },
 ];
 
 export function Shell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const pending = user?.incoming_pending ?? 0;
+  const unread = user?.inbox_unread ?? 0;
 
   return (
     <div className="mx-auto min-h-screen max-w-6xl px-4 pb-24 md:pb-10">
@@ -33,7 +35,7 @@ export function Shell({ children }: { children: ReactNode }) {
               }
             >
               {link.label}
-              {link.to === "/host" && pending ? ` (${pending})` : ""}
+              <Count link={link.to} pending={pending} unread={unread} />
             </NavLink>
           ))}
         </nav>
@@ -42,18 +44,28 @@ export function Shell({ children }: { children: ReactNode }) {
         </button>
       </header>
       {children}
-      <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-line bg-paper/95 backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-6 border-t border-line bg-paper/95 backdrop-blur md:hidden">
         {LINKS.map((link) => (
           <NavLink
             key={link.to}
             to={link.to}
-            className={({ isActive }) => `px-1 py-3 text-center text-[11px] ${isActive ? "text-navy font-semibold" : "text-muted"}`}
+            className={({ isActive }) => `flex flex-col items-center px-0.5 py-2 text-center text-[10px] leading-tight ${isActive ? "text-navy font-semibold" : "text-muted"}`}
           >
-            {link.label}
-            {link.to === "/host" && pending ? ` ${pending}` : ""}
+            {link.short}
+            <Count link={link.to} pending={pending} unread={unread} stacked />
           </NavLink>
         ))}
       </nav>
     </div>
+  );
+}
+
+function Count({ link, pending, unread, stacked = false }: { link: string; pending: number; unread: number; stacked?: boolean }) {
+  const count = link === "/host" ? pending : link === "/messages" ? unread : 0;
+  if (!count) return null;
+  return (
+    <span className={`${stacked ? "mt-0.5" : "ml-1"} rounded-full bg-gold-soft px-1.5 text-[10px] leading-none text-navy`}>
+      {count}
+    </span>
   );
 }

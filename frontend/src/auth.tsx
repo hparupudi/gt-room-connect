@@ -68,6 +68,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [refresh]);
 
+  useEffect(() => {
+    if (!token) return;
+    const id = window.setInterval(() => {
+      if (document.hidden) return;
+      refresh();
+    }, 12000);
+    return () => window.clearInterval(id);
+  }, [token, refresh]);
+
   const commit = useCallback((next: string, nextUser: User) => {
     epoch.current += 1;
     localStorage.setItem(TOKEN_KEY, next);

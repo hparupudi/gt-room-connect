@@ -50,6 +50,7 @@ export type User = {
   socials?: Socials;
   transcript?: string;
   incoming_pending?: number;
+  inbox_unread?: number;
 };
 
 export type Score = {
@@ -201,6 +202,40 @@ export type Meta = {
   demo: boolean;
   demo_password?: string;
   demo_accounts?: { name: string; email: string; blurb: string }[];
+};
+
+export type InboxPerson = {
+  id: string;
+  name: string;
+  dorm_name: string;
+  unit: string;
+  major: string;
+  year_label: string;
+};
+
+export type InboxThread = {
+  booking_id: string;
+  dates: string[];
+  role: "host" | "guest";
+  person: InboxPerson;
+  last_message: { text: string; created_at: string; mine: boolean } | null;
+  unread: number;
+  opened: boolean;
+};
+
+export type InboxNote = {
+  id: string;
+  kind: "message" | "accepted" | "request";
+  title: string;
+  body: string;
+  booking_id: string;
+  created_at: string;
+};
+
+export type Inbox = {
+  threads: InboxThread[];
+  notifications: InboxNote[];
+  unread: number;
 };
 
 export type ChatMessage = {

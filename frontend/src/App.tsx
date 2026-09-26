@@ -8,6 +8,7 @@ import { Discover } from "./pages/Discover";
 import { Host } from "./pages/Host";
 import { Landing } from "./pages/Landing";
 import { MapPage } from "./pages/MapPage";
+import { Messages } from "./pages/Messages";
 import { Onboarding } from "./pages/Onboarding";
 import { Profile } from "./pages/Profile";
 import { Requests } from "./pages/Requests";
@@ -59,6 +60,8 @@ function RoutedApp() {
       <Route path="/room/:id" element={<Gate><RoomDetail /></Gate>} />
       <Route path="/host" element={<Gate><Host /></Gate>} />
       <Route path="/requests" element={<Gate><Requests /></Gate>} />
+      <Route path="/messages" element={<Gate><Messages /></Gate>} />
+      <Route path="/messages/:bookingId" element={<Gate><Messages /></Gate>} />
       <Route path="/stay/:id" element={<Gate><Stay /></Gate>} />
       <Route path="/profile" element={<Gate><Profile /></Gate>} />
       <Route path="*" element={<Navigate to="/" replace />} />

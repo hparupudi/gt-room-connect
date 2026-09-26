@@ -653,11 +653,138 @@ def _serialize_message(item: dict, viewer_id: str) -> dict:
     }
 
 
+def _mark_thread_seen(user_id: str, booking: dict, rows: list[dict]) -> None:
+    db = get_db()
+    for item in rows:
+        if item.get("sender_id") == user_id or not item.get("id"):
+            continue
+        read_by = list(item.get("read_by") or [])
+        if user_id in read_by:
+            continue
+        read_by.append(user_id)
+        db.update("messages", item["id"], {"read_by": read_by})
+        item["read_by"] = read_by
+    opened = list(booking.get("opened_by") or [])
+    if user_id not in opened:
+        opened.append(user_id)
+        db.update("bookings", booking["id"], {"opened_by": opened})
+
+
 def list_messages(user: dict, booking_id: str) -> list[dict]:
     booking = _accepted_booking(user["id"], booking_id)
     rows = [item for item in get_db().find_all("messages") if item.get("booking_id") == booking["id"]]
     rows.sort(key=lambda item: item.get("created_at") or "")
+    _mark_thread_seen(user["id"], booking, rows)
     return [_serialize_message(item, user["id"]) for item in rows]
+
+
+def _unread_count(rows: list[dict], user_id: str) -> int:
+    return sum(1 for item in rows if item.get("sender_id") != user_id and user_id not in (item.get("read_by") or []))
+
+
+def _person_card(user: dict | None) -> dict:
+    if not user:
+        return {"id": "", "name": "Someone", "dorm_name": "", "unit": "", "major": "", "year_label": ""}
+    dorm = get_dorm(user.get("dorm_id") or "") or {}
+    return {
+        "id": user.get("id") or "",
+        "name": user.get("name") or "Someone",
+        "dorm_name": dorm.get("name") or "",
+        "unit": user.get("unit") or "",
+        "major": user.get("major") or "",
+        "year_label": YEAR_LABELS.get(user.get("year"), ""),
+    }
+
+
+def inbox_for(user: dict, query: str = "") -> dict:
+    """Threads that opened because a rooming request was accepted, plus alerts."""
+    db = get_db()
+    uid = user["id"]
+    grouped: dict[str, list] = {}
+    for item in db.find_all("messages"):
+        grouped.setdefault(item.get("booking_id") or "", []).append(item)
+    tokens = (query or "").lower().split()
+    threads = []
+    notifications = []
+    for booking in db.find_all("bookings"):
+        if uid not in (booking.get("guest_id"), booking.get("host_id")):
+            continue
+        status = booking.get("status")
+        if status == "pending" and booking.get("host_id") == uid:
+            guest = _person_card(db.find_one("users", id=booking.get("guest_id")))
+            dates = booking.get("dates") or []
+            notifications.append(
+                {
+                    "id": f"request:{booking['id']}",
+                    "kind": "request",
+                    "title": f"{guest['name']} asked to stay",
+                    "body": ", ".join(dates) if dates else "New rooming request",
+                    "booking_id": booking["id"],
+                    "created_at": booking.get("created_at") or "",
+                }
+            )
+            continue
+        if status != "accepted":
+            continue
+        other_id = booking["guest_id"] if booking.get("host_id") == uid else booking["host_id"]
+        person = _person_card(db.find_one("users", id=other_id))
+        rows = list(grouped.get(booking["id"]) or [])
+        rows.sort(key=lambda item: item.get("created_at") or "")
+        unread = _unread_count(rows, uid)
+        last = rows[-1] if rows else None
+        opened = uid in (booking.get("opened_by") or [])
+        hay = " ".join([person["name"], person["dorm_name"], person["unit"], person["major"]]).lower()
+        if not tokens or all(token in hay for token in tokens):
+            threads.append(
+                {
+                    "booking_id": booking["id"],
+                    "dates": booking.get("dates") or [],
+                    "role": "host" if booking.get("host_id") == uid else "guest",
+                    "person": person,
+                    "last_message": {
+                        "text": last.get("text") or "",
+                        "created_at": last.get("created_at") or "",
+                        "mine": last.get("sender_id") == uid,
+                    }
+                    if last
+                    else None,
+                    "unread": unread,
+                    "opened": opened,
+                    "_activity": (last or {}).get("created_at") or booking.get("responded_at") or booking.get("created_at") or "",
+                }
+            )
+        if unread:
+            preview = ""
+            for item in reversed(rows):
+                if item.get("sender_id") != uid:
+                    preview = item.get("text") or ""
+                    break
+            notifications.append(
+                {
+                    "id": f"message:{booking['id']}",
+                    "kind": "message",
+                    "title": f"New message from {person['name']}",
+                    "body": preview,
+                    "booking_id": booking["id"],
+                    "created_at": (last or {}).get("created_at") or booking.get("responded_at") or "",
+                }
+            )
+        elif booking.get("guest_id") == uid and not opened:
+            notifications.append(
+                {
+                    "id": f"accepted:{booking['id']}",
+                    "kind": "accepted",
+                    "title": f"{person['name']} accepted your request",
+                    "body": "You can message them now.",
+                    "booking_id": booking["id"],
+                    "created_at": booking.get("responded_at") or booking.get("created_at") or "",
+                }
+            )
+    threads.sort(key=lambda item: item.get("_activity") or "", reverse=True)
+    for thread in threads:
+        thread.pop("_activity", None)
+    notifications.sort(key=lambda item: item.get("created_at") or "", reverse=True)
+    return {"threads": threads, "notifications": notifications, "unread": len(notifications)}
 
 
 def send_message(user: dict, booking_id: str, channel: str, text: str) -> dict:

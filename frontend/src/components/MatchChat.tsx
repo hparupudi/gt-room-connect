@@ -1,13 +1,28 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { Link } from "react-router-dom";
 
 import { api, ApiError } from "../api";
 import { useAuth } from "../auth";
 import type { ChatMessage } from "../types";
 import { Banner, btnPrimary } from "./ui";
 
-export function MatchChat({ bookingId }: { bookingId: string }) {
+export function MatchChat({
+  bookingId,
+  showInboxLink = true,
+  onSeen,
+  className = "mt-6",
+}: {
+  bookingId: string;
+  showInboxLink?: boolean;
+  onSeen?: () => void;
+  className?: string;
+}) {
   const { token } = useAuth();
+  const onSeenRef = useRef(onSeen);
+  useEffect(() => {
+    onSeenRef.current = onSeen;
+  }, [onSeen]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [text, setText] = useState("");
   const [error, setError] = useState("");
@@ -20,12 +35,18 @@ export function MatchChat({ bookingId }: { bookingId: string }) {
 
   useEffect(() => {
     let stop = false;
-    loadMessages().catch((err: unknown) => {
-      if (!stop) setError(err instanceof ApiError ? err.message : "The thread didn't load.");
-    });
+    loadMessages()
+      .then(() => {
+        if (!stop) onSeenRef.current?.();
+      })
+      .catch((err: unknown) => {
+        if (!stop) setError(err instanceof ApiError ? err.message : "The thread didn't load.");
+      });
     const id = window.setInterval(() => {
       if (document.hidden) return;
-      loadMessages().catch(() => undefined);
+      loadMessages()
+        .then(() => onSeenRef.current?.())
+        .catch(() => undefined);
     }, 4000);
     return () => {
       stop = true;
@@ -47,6 +68,7 @@ export function MatchChat({ bookingId }: { bookingId: string }) {
       );
       setText("");
       setMessages((current) => [...current.filter((item) => item.id !== saved.message.id), saved.message]);
+      onSeen?.();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "That message didn't send.");
     } finally {
@@ -55,9 +77,18 @@ export function MatchChat({ bookingId }: { bookingId: string }) {
   }
 
   return (
-    <section className="mt-6 rounded-[28px] border border-line bg-card p-5">
-      <p className="text-xs tracking-[0.16em] text-gold uppercase">After you match</p>
-      <h2 className="font-serif text-3xl text-navy">Message them here</h2>
+    <section className={`${className} rounded-[28px] border border-line bg-card p-5`}>
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <p className="text-xs tracking-[0.16em] text-gold uppercase">After you match</p>
+          <h2 className="font-serif text-3xl text-navy">Message them here</h2>
+        </div>
+        {showInboxLink ? (
+          <Link to={`/messages/${bookingId}`} className="text-sm text-navy underline">
+            Open in Messages
+          </Link>
+        ) : null}
+      </div>
       <p className="mt-1 text-sm text-muted">Only the two of you can see this thread. It stays in Nook.</p>
       {error ? (
         <div className="mt-3">

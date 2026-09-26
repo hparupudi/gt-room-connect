@@ -137,9 +137,14 @@ export function Host() {
                 </div>
               ) : null}
               {booking.status === "accepted" ? (
-                <Link to={`/stay/${booking.id}`} className="mt-3 inline-block text-sm text-navy underline">
-                  Coordinate
-                </Link>
+                <div className="mt-3 flex gap-3 text-sm">
+                  <Link to={`/stay/${booking.id}`} className="text-navy underline">
+                    Coordinate
+                  </Link>
+                  <Link to={`/messages/${booking.id}`} className="text-navy underline">
+                    Messages
+                  </Link>
+                </div>
               ) : null}
             </article>
           ))}

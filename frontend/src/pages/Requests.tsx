@@ -57,6 +57,11 @@ export function Requests() {
                 <Link to={`/stay/${booking.id}`} className={btnGhost}>
                   Open
                 </Link>
+                {booking.status === "accepted" ? (
+                  <Link to={`/messages/${booking.id}`} className={btnGhost}>
+                    Messages
+                  </Link>
+                ) : null}
                 {booking.status === "pending" ? (
                   <button type="button" className={btnGhost} onClick={() => cancel(booking.id)}>
                     Cancel
@@ -66,7 +71,15 @@ export function Requests() {
             </div>
             <WhyMatch reason={booking.reason} model={booking.reason_model} />
             {booking.decline_reason ? <p className="mt-2 text-sm text-muted">{booking.decline_reason}</p> : null}
-            {booking.status === "accepted" ? <p className="mt-2 text-sm text-moss">You're in. Open the stay to see how to reach them.</p> : null}
+            {booking.status === "accepted" ? (
+              <p className="mt-2 text-sm text-moss">
+                You're in. The thread stays on this stay, and it's also in{" "}
+                <Link to={`/messages/${booking.id}`} className="underline">
+                  Messages
+                </Link>
+                .
+              </p>
+            ) : null}
           </article>
         ))}
       </div>

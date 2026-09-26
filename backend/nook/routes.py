@@ -40,6 +40,7 @@ from .services import (
     decline_booking,
     dorm_detail,
     get_booking,
+    inbox_for,
     list_bookings,
     list_messages,
     map_overview,
@@ -86,6 +87,7 @@ def _me_payload(user: dict) -> dict:
         for booking in get_db().find_all("bookings")
         if booking.get("host_id") == user["id"] and booking.get("status") == "pending"
     )
+    payload["inbox_unread"] = inbox_for(user)["unread"]
     return payload
 
 
@@ -517,6 +519,11 @@ def register_routes(app: Flask) -> None:
         user = _require()
         data = request.get_json(silent=True) or {}
         return jsonify(booking=create_booking(user, data.get("host_id") or "", data.get("dates") or [], data.get("message") or "")), 201
+
+    @app.get("/api/inbox")
+    def inbox():
+        user = _require()
+        return jsonify(inbox_for(user, request.args.get("q") or ""))
 
     @app.get("/api/bookings/incoming")
     def incoming():

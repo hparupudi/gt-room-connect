@@ -445,3 +445,70 @@ def test_map_and_directions(client):
     glenn_numbers = [room["unit"] for room in glenn_one["rooms"]]
     assert "179A" in glenn_numbers or "178A" in glenn_numbers
     assert len(glenn_numbers) > 16
+
+
+def test_inbox_after_a_request_is_accepted(client):
+    andre = login(client, "andre.wallace@gatech.edu")
+    maya = login(client, "maya.chen@gatech.edu")
+    elena = login(client, "elena.vasquez@gatech.edu")
+
+    quiet = client.get("/api/inbox", headers=auth(andre))
+    assert quiet.status_code == 200
+    assert quiet.get_json()["threads"] == []
+    assert quiet.get_json()["unread"] == 0
+
+    requested = client.post(
+        "/api/bookings",
+        json={"host_id": "maya-chen", "dates": [day(7)], "message": "Friday night?"},
+        headers=auth(andre),
+    )
+    assert requested.status_code == 201, requested.get_json()
+    booking_id = requested.get_json()["booking"]["id"]
+
+    waiting = client.get("/api/inbox", headers=auth(maya)).get_json()
+    assert waiting["threads"] == []
+    assert waiting["notifications"][0]["kind"] == "request"
+    assert waiting["notifications"][0]["title"] == "Andre Wallace asked to stay"
+    assert waiting["unread"] == 1
+    me = client.get("/api/auth/me", headers=auth(maya)).get_json()["user"]
+    assert me["inbox_unread"] == 1
+    assert me["incoming_pending"] == 1
+    assert client.get("/api/inbox", headers=auth(andre)).get_json()["threads"] == []
+
+    accepted = client.post(f"/api/bookings/{booking_id}/accept", headers=auth(maya))
+    assert accepted.status_code == 200
+
+    opened = client.get("/api/inbox", headers=auth(andre)).get_json()
+    assert opened["threads"][0]["person"]["name"] == "Maya Chen"
+    assert opened["threads"][0]["person"]["unit"] == "314"
+    assert opened["threads"][0]["last_message"] is None
+    assert opened["notifications"][0]["kind"] == "accepted"
+    assert client.get("/api/inbox", headers=auth(andre), query_string={"q": "glenn 314"}).get_json()["threads"]
+    assert client.get("/api/inbox", headers=auth(andre), query_string={"q": "priya"}).get_json()["threads"] == []
+    # A search hides people, not the alerts.
+    filtered = client.get("/api/inbox", headers=auth(andre), query_string={"q": "zzzz"}).get_json()
+    assert filtered["threads"] == []
+    assert filtered["notifications"][0]["kind"] == "accepted"
+
+    sent = client.post(
+        f"/api/bookings/{booking_id}/messages",
+        json={"text": "Door's open after 8."},
+        headers=auth(maya),
+    )
+    assert sent.status_code == 201
+    guest = client.get("/api/inbox", headers=auth(andre)).get_json()
+    assert guest["threads"][0]["unread"] == 1
+    assert guest["notifications"][0]["kind"] == "message"
+    assert "Door's open" in guest["notifications"][0]["body"]
+
+    read = client.get(f"/api/bookings/{booking_id}/messages", headers=auth(andre))
+    assert read.status_code == 200
+    cleared = client.get("/api/inbox", headers=auth(andre)).get_json()
+    assert cleared["threads"][0]["unread"] == 0
+    assert cleared["threads"][0]["opened"] is True
+    assert cleared["notifications"] == []
+    assert client.get("/api/auth/me", headers=auth(andre)).get_json()["user"]["inbox_unread"] == 0
+
+    outsider = client.get("/api/inbox", headers=auth(elena)).get_json()
+    assert all(thread["booking_id"] != booking_id for thread in outsider["threads"])
+    assert client.get(f"/api/bookings/{booking_id}/messages", headers=auth(elena)).status_code == 404
