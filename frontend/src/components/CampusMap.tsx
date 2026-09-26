@@ -31,6 +31,7 @@ function hallTone(dorm: { yours: boolean; open_units: number }): keyof typeof FI
 export function CampusMap({
   dorms,
   selectedId,
+  zoomToId,
   onSelect,
   route,
   focus,
@@ -39,6 +40,8 @@ export function CampusMap({
 }: {
   dorms: DormPin[];
   selectedId?: string;
+  /** Set only from a user action; the initial view keeps the whole campus in frame. */
+  zoomToId?: string;
   onSelect?: (id: string) => void;
   route?: Route | null;
   focus?: [number, number][] | null;
@@ -134,30 +137,27 @@ export function CampusMap({
             </CircleMarker>
           </>
         ) : null}
-        <Focus points={focus ?? (route && route.points.length > 1 ? route.points : null)} selectedId={selectedId} dorms={dorms} />
+        <Focus points={focus ?? (route && route.points.length > 1 ? route.points : null)} zoomToId={zoomToId} dorms={dorms} />
       </MapContainer>
     </div>
   );
 }
 
-function Focus({ points, selectedId, dorms }: { points: [number, number][] | null; selectedId?: string; dorms: DormPin[] }) {
+function Focus({ points, zoomToId, dorms }: { points: [number, number][] | null; zoomToId?: string; dorms: DormPin[] }) {
   const map = useMap();
-  const firstSelection = useRef(true);
+  const lastZoom = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (points && points.length > 1) {
       map.fitBounds(points, { padding: [48, 48], maxZoom: 17 });
       return;
     }
-    // The whole campus stays in view on load; only a later click zooms in.
-    if (firstSelection.current) {
-      firstSelection.current = false;
-      return;
-    }
-    const dorm = dorms.find((item) => item.id === selectedId);
+    if (!zoomToId || zoomToId === lastZoom.current) return;
+    lastZoom.current = zoomToId;
+    const dorm = dorms.find((item) => item.id === zoomToId);
     if (dorm) {
       map.flyTo([dorm.lat, dorm.lng], Math.max(map.getZoom(), 16), { duration: 0.6 });
     }
-  }, [points, selectedId, dorms, map]);
+  }, [points, zoomToId, dorms, map]);
   useEffect(() => {
     const handle = window.setTimeout(() => map.invalidateSize(), 50);
     return () => window.clearTimeout(handle);

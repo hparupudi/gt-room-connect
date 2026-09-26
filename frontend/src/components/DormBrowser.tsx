@@ -26,6 +26,7 @@ export function DormBrowser({
   const { token, user } = useAuth();
   const [map, setMap] = useState<MapData | null>(null);
   const [selectedId, setSelectedId] = useState("");
+  const [zoomToId, setZoomToId] = useState("");
   const [detail, setDetail] = useState<DormDetail | null>(null);
   const [floor, setFloor] = useState<number | null>(null);
   const [error, setError] = useState("");
@@ -93,6 +94,7 @@ export function DormBrowser({
 
   function selectHall(id: string) {
     setSelectedId(id);
+    setZoomToId(id);
     setFloor(null);
   }
 
@@ -157,10 +159,15 @@ export function DormBrowser({
               </li>
             </ul>
           </div>
-          <CampusMap dorms={dorms} selectedId={selectedId} onSelect={selectHall} route={mode === "browse" ? route : null} />
+          <CampusMap
+            dorms={dorms}
+            selectedId={selectedId}
+            zoomToId={zoomToId}
+            onSelect={selectHall}
+            route={mode === "browse" ? route : null}
+          />
           <p className="text-xs text-muted">
-            Base map © OpenStreetMap contributors, CARTO. Building outlines from OpenStreetMap. Walking routes from OpenStreetMap
-            paths via Valhalla.
+            Map data and building outlines © OpenStreetMap contributors. Walking routes follow OpenStreetMap paths via Valhalla.
           </p>
         </div>
         <aside className="space-y-4 rounded-[28px] border border-line bg-card p-5">
