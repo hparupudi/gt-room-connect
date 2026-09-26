@@ -156,7 +156,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
         ) : null}
         {mode === "login" ? (
           <form className="space-y-4" method="get" action="/login" onSubmit={onLogin}>
-            <Field label="Georgia Tech email">
+            <Field label="School email">
               <input type="email" autoComplete="username" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@school.edu" required />
             </Field>
             <Field label="Password">
@@ -170,7 +170,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
           </form>
         ) : phase === "email" ? (
           <form className="space-y-4" method="get" action="/signup" onSubmit={sendCode}>
-            <Field label="Georgia Tech email">
+            <Field label="School email">
               <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@school.edu" required />
             </Field>
             <p className="text-sm text-muted">We'll send a 6-digit code before you can create a password.</p>
@@ -211,7 +211,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
         ) : (
           <form className="space-y-4" method="get" action="/signup" onSubmit={register}>
             <p className="text-sm text-muted">Set a password with at least 8 characters, a letter, and a number.</p>
-            <Field label="Georgia Tech email">
+            <Field label="School email">
               <input type="email" name="username" autoComplete="username" value={email} readOnly />
             </Field>
             <Field label="Password">
