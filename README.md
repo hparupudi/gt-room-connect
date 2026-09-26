@@ -22,6 +22,17 @@ npm run dev
 
 The app is served at [http://127.0.0.1:43123](http://127.0.0.1:43123). The Vite dev server proxies `/api` to Flask on port 5317.
 
+## Step through it
+
+The `.vscode` folder is the IDE setup for Cursor and VS Code. After the install steps above:
+
+1. Open the repo folder. If Cursor asks, use the interpreter at `backend/.venv` (on Windows that file is `backend\.venv\Scripts\python.exe`; point **Python: Select Interpreter** at it).
+2. Install the recommended Python and Python Debugger extensions if they are not already there.
+3. Open **Run and Debug** and choose **Nook: API + UI**. That starts Vite, then launches Flask under the debugger.
+4. Set a breakpoint in `backend/nook/routes.py` (search, bookings, and the interview all land there) and use the app at [http://127.0.0.1:43123](http://127.0.0.1:43123). The request will stop on that line.
+
+**Nook: Flask API** is the same debugger without starting the UI, for when Vite is already running in a terminal.
+
 Copy `.env.example` to `.env` in the repo root. Every API key is blank on purpose. The app still runs: profiles, search, the dorm map, and bookings use the local file store and a local lifestyle vector.
 
 ## Demo accounts
