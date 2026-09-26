@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { useAuth } from "./auth";
-import { AuthCallback, AuthPage } from "./pages/AuthPage";
+import { AuthPage } from "./pages/AuthPage";
 import { Discover } from "./pages/Discover";
 import { Host } from "./pages/Host";
 import { Landing } from "./pages/Landing";
@@ -29,7 +29,6 @@ export default function App() {
       <Route path="/" element={loading ? <p className="px-4 py-10 text-sm">Opening Nook…</p> : user ? <Navigate to={user.onboarding_complete ? "/discover" : "/onboarding"} replace /> : <Landing />} />
       <Route path="/login" element={<AuthPage mode="login" />} />
       <Route path="/signup" element={<AuthPage mode="signup" />} />
-      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/onboarding" element={<Gate requireProfile={false}><Onboarding /></Gate>} />
       <Route path="/discover" element={<Gate><Discover /></Gate>} />
       <Route path="/map" element={<Gate><MapPage /></Gate>} />

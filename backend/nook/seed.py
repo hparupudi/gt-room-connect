@@ -75,7 +75,6 @@ def _person(
         "id": user_id,
         "email": email,
         "password_hash": password_hash,
-        "google_sub": None,
         "email_verified": True,
         "name": name,
         "gender": gender,

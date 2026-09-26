@@ -164,7 +164,6 @@ export type Meta = {
   cleanliness: Option[];
   styles: Option[];
   questions: string[];
-  google: boolean;
   demo: boolean;
   demo_password?: string;
   demo_accounts?: { name: string; email: string; blurb: string }[];

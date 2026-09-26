@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { api, ApiError } from "../api";
 import { useAuth } from "../auth";
@@ -9,20 +9,13 @@ import { Banner, Field, Mark, btnGhost, btnPrimary } from "../components/ui";
 export function AuthPage({ mode }: { mode: "login" | "signup" }) {
   const { login, meta, setSession } = useAuth();
   const navigate = useNavigate();
-  const [params] = useSearchParams();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [preview, setPreview] = useState("");
   const [delivery, setDelivery] = useState("");
   const [verificationToken, setVerificationToken] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(
-    params.get("error") === "gt"
-      ? "Google sign-in has to use a @gatech.edu account."
-      : params.get("error") === "google"
-        ? "Google sign-in didn't finish. Check the client id and secret."
-        : "",
-  );
+  const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function afterLogin(userStep: string) {
@@ -95,8 +88,6 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
       setBusy(false);
     }
   }
-
-  const googleOff = !meta?.google;
 
   return (
     <div className="mx-auto grid min-h-screen max-w-6xl items-stretch md:grid-cols-2">
@@ -180,17 +171,6 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
             </button>
           </form>
         )}
-        <div className="mt-8 border-t border-line pt-6">
-          {googleOff ? (
-            <p className="text-sm text-muted">
-              Google sign-in is wired up and waiting. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET, then use a @gatech.edu Google account.
-            </p>
-          ) : (
-            <a className={btnGhost} href="/api/auth/google">
-              Continue with Google
-            </a>
-          )}
-        </div>
         {mode === "login" && meta?.demo && meta.demo_accounts ? (
           <div className="mt-6 space-y-2">
             <p className="text-xs tracking-[0.16em] text-gold uppercase">Demo Jackets</p>
@@ -222,30 +202,6 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
           </div>
         ) : null}
       </section>
-    </div>
-  );
-}
-
-export function AuthCallback() {
-  const { setSession } = useAuth();
-  const [params] = useSearchParams();
-  const navigate = useNavigate();
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const token = params.get("token");
-    if (!token) {
-      setError("Google didn't return a session.");
-      return;
-    }
-    setSession(token)
-      .then((user) => navigate(user.onboarding_step === "done" ? "/discover" : "/onboarding", { replace: true }))
-      .catch(() => setError("That Google session couldn't be opened."));
-  }, [navigate, params, setSession]);
-
-  return (
-    <div className="mx-auto max-w-md px-4 py-16">
-      {error ? <Banner>{error}</Banner> : <p>Finishing Google sign-in…</p>}
     </div>
   );
 }
