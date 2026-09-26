@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 import { useEffect, useState } from "react";
-import type { FormEvent } from "react";
-=======
-import { useState } from "react";
 import type { SubmitEvent } from "react";
->>>>>>> cc0fc8974ab62721cb8101e9f4b6a3c79f915491
 import { Link, useNavigate } from "react-router-dom";
 
 import { api, ApiError } from "../api";
