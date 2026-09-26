@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { useEffect, useState } from "react";
+=======
+import { useState, useEffect } from "react";
+>>>>>>> 9ce852633dcfab3959864cdb5ba9ead78a30985f
 import type { SubmitEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -186,7 +190,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
                 Mail isn't configured, so the code that would have been emailed to {email} is <strong>{preview}</strong>. Add SMTP settings to send it for real.
               </Banner>
             ) : (
-              <Banner tone="note">Check {email} for a 6-digit code. It expires in 15 minutes.</Banner>
+              <Banner tone="note">Check <strong>{email}</strong> for a 6-digit code. It expires in 15 minutes.</Banner>
             )}
             <Field label="Code">
               <input inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(event) => setCode(event.target.value)} required />
@@ -196,7 +200,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
             </button>
             <button
               type="button"
-              className="text-sm text-navy underline"
+              className="text-sm text-navy underline ml-3"
               onClick={() => {
                 setPhase("email");
                 setPreview("");

@@ -184,6 +184,7 @@ def register_routes(app: Flask) -> None:
             print(f"SMTP failed, showing the code in the app instead: {exc}")
             delivery = "preview"
         body = {"ok": True, "email": email, "delivery": delivery}
+        print(body, "that's the body")
         if delivery == "preview" or os.getenv("DEV_EXPOSE_EMAIL_CODES") == "1":
             body["preview_code"] = code_value
         return jsonify(body)
