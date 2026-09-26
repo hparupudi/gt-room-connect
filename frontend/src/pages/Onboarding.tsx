@@ -16,7 +16,7 @@ const NO_DATES: string[] = [];
 
 const STEPS = [
   { id: "room", label: "Your room", title: "Where do you live?" },
-  { id: "about", label: "About you", title: "Let's build your campus profile" },
+  { id: "about", label: "About you", title: "Let's build your profile" },
   { id: "voice", label: "Voice", title: "Your preferences" },
 ] as const;
 
