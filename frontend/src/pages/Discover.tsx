@@ -110,16 +110,20 @@ export function Discover() {
           <FilterGroup label="Gender" options={(meta?.genders ?? []).map((item) => item.id)} selected={genders} onChange={setGenders} labelOf={(id) => meta?.genders.find((item) => item.id === id)?.label || id} />
           <FilterGroup label="Floor" options={["1", "2", "3", "4", "5", "6", "7", "8"]} selected={floors} onChange={setFloors} />
           <FilterGroup label="Dorm type" options={(meta?.styles ?? []).map((item) => item.id)} selected={styles} onChange={setStyles} labelOf={(id) => styleLabel(id)} />
-          <details className="rounded-3xl border border-line bg-card p-4">
-            <summary className="cursor-pointer text-sm font-medium">Majors {majors ? `(${majors.length})` : "(all)"}</summary>
-            <div className="mt-3 flex gap-2">
-              <button type="button" className={btnGhost} onClick={() => setMajors(null)}>
-                Select all
+          <div className="rounded-3xl border border-line bg-card p-4">
+            <p className="text-sm font-medium">Majors</p>
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => setMajors(null)}
+                className={`rounded-full px-2.5 py-1 text-xs ${majors === null ? "bg-navy text-paper" : "bg-paper"}`}
+              >
+                All
               </button>
             </div>
             <ul className="mt-3 max-h-56 space-y-1 overflow-auto text-sm">
               {(meta?.majors ?? []).map((major) => {
-                const on = majors === null || majors.includes(major);
+                const on = majors?.includes(major) ?? false;
                 return (
                   <li key={major}>
                     <label className="flex items-center gap-2">
@@ -127,12 +131,7 @@ export function Discover() {
                         type="checkbox"
                         className="h-4 w-4"
                         checked={on}
-                        onChange={() => {
-                          const all = meta?.majors ?? [];
-                          const current = majors ?? all;
-                          const next = current.includes(major) ? current.filter((item) => item !== major) : [...current, major];
-                          setMajors(next.length === all.length ? null : next);
-                        }}
+                        onChange={() => setMajors(toggleFilter(majors, major))}
                       />
                       {major}
                     </label>
@@ -140,7 +139,7 @@ export function Discover() {
                 );
               })}
             </ul>
-          </details>
+          </div>
         </aside>
         <section>
           {!dates.length ? <Banner tone="note">Pick at least one date. Nook won't guess which night you need.</Banner> : null}
@@ -208,6 +207,12 @@ export function Discover() {
   );
 }
 
+function toggleFilter(selected: Multi, option: string): Multi {
+  const current = selected ?? [];
+  const next = current.includes(option) ? current.filter((item) => item !== option) : [...current, option];
+  return next.length === 0 ? null : next;
+}
+
 function FilterGroup({
   label,
   options,
@@ -222,25 +227,19 @@ function FilterGroup({
   labelOf?: (id: string) => string;
 }) {
   return (
-    <fieldset className="rounded-3xl border border-line bg-card p-4">
-      <legend className="px-1 text-sm font-medium">
-        {label} <span className="font-normal text-muted">{selected ? "" : "· all"}</span>
-      </legend>
-      <div className="mt-2 flex flex-wrap gap-1.5">
+    <div className="rounded-3xl border border-line bg-card p-4">
+      <p className="text-sm font-medium">{label}</p>
+      <div className="mt-3 flex flex-wrap gap-1.5">
         <button type="button" onClick={() => onChange(null)} className={`rounded-full px-2.5 py-1 text-xs ${selected === null ? "bg-navy text-paper" : "bg-paper"}`}>
           All
         </button>
         {options.map((option) => {
-          const on = selected === null || selected.includes(option);
+          const on = selected?.includes(option) ?? false;
           return (
             <button
               key={option}
               type="button"
-              onClick={() => {
-                const current = selected ?? options;
-                const next = current.includes(option) ? current.filter((item) => item !== option) : [...current, option];
-                onChange(next.length === 0 || next.length === options.length ? null : next);
-              }}
+              onClick={() => onChange(toggleFilter(selected, option))}
               className={`rounded-full px-2.5 py-1 text-xs ${on ? "bg-navy text-paper" : "bg-paper"}`}
             >
               {labelOf ? labelOf(option) : option}
@@ -248,6 +247,6 @@ function FilterGroup({
           );
         })}
       </div>
-    </fieldset>
+    </div>
   );
 }
