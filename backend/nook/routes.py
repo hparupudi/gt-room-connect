@@ -18,8 +18,9 @@ from .constants import (
 )
 from .db import get_db
 from .errors import ApiError
+from .graph import instagram_configured, signature_ok, verify_subscription, whatsapp_configured
 from .mailer import send_verification, smtp_configured
-from .muse import convert_to_wav, extract_profile, muse_configured, transcribe_wav
+from .muse import convert_to_wav, extract_profile, match_sentence, muse_configured, transcribe_wav
 from .security import (
     check_password,
     hash_password,
@@ -38,12 +39,17 @@ from .services import (
     decline_booking,
     dorm_detail,
     get_booking,
+    ingest_graph_webhook,
+    issue_instagram_code,
     list_bookings,
+    list_messages,
     map_overview,
+    messaging_status,
     onboarding_step,
     parse_dates,
     save_room,
     search,
+    send_message,
     serialize_user,
     set_availability,
     tag_list,
@@ -103,6 +109,8 @@ def register_routes(app: Flask) -> None:
             muse=muse_configured(),
             pinecone=pinecone_configured(),
             smtp=smtp_configured(),
+            whatsapp=whatsapp_configured(),
+            instagram=instagram_configured(),
             demo=os.getenv("DEMO_LOGIN", "1") != "0",
         )
 
@@ -117,6 +125,10 @@ def register_routes(app: Flask) -> None:
             "styles": STYLES,
             "questions": INTERVIEW_QUESTIONS,
             "demo": os.getenv("DEMO_LOGIN", "1") != "0",
+            "messaging": {
+                "whatsapp": whatsapp_configured(),
+                "instagram": instagram_configured(),
+            },
         }
         if payload["demo"]:
             payload["demo_password"] = DEMO_PASSWORD
@@ -467,17 +479,28 @@ def register_routes(app: Flask) -> None:
         if not host or not host.get("onboarding_complete"):
             raise ApiError("That profile isn't available.", 404)
         payload = {"host": serialize_user(host, user["id"])}
+        sentence, model = match_sentence(user, host)
+        scores_payload = {
+            "cosine": 0,
+            "match": 0,
+            "meters": 0,
+            "minutes": 0,
+            "reason": sentence,
+            "reason_model": model,
+        }
         if user.get("embedding") and host.get("embedding") and user.get("dorm_id") and host.get("dorm_id"):
             from .rank import score_pair
 
             scores = score_pair(user, host, {user["id"]: user["embedding"], host["id"]: host["embedding"]})
-            payload["scores"] = {
-                "cosine": round(scores["cosine"], 3),
-                "match": round(scores["local"], 3),
-                "meters": scores["meters"],
-                "minutes": scores["minutes"],
-                "reason": scores["reason"],
-            }
+            scores_payload.update(
+                {
+                    "cosine": round(scores["cosine"], 3),
+                    "match": round(scores["local"], 3),
+                    "meters": scores["meters"],
+                    "minutes": scores["minutes"],
+                }
+            )
+        payload["scores"] = scores_payload
         return jsonify(payload)
 
     @app.post("/api/bookings")
@@ -515,3 +538,41 @@ def register_routes(app: Flask) -> None:
     def cancel(booking_id: str):
         user = _require()
         return jsonify(booking=cancel_booking(user, booking_id))
+
+    @app.get("/api/me/messaging")
+    def me_messaging():
+        return jsonify(messaging_status(_require()))
+
+    @app.post("/api/me/messaging/instagram-code")
+    def instagram_code():
+        return jsonify(issue_instagram_code(_require()))
+
+    @app.get("/api/bookings/<booking_id>/messages")
+    def booking_messages(booking_id: str):
+        return jsonify(messages=list_messages(_require(), booking_id))
+
+    @app.post("/api/bookings/<booking_id>/messages")
+    def booking_message_send(booking_id: str):
+        user = _require()
+        data = request.get_json(silent=True) or {}
+        message = send_message(user, booking_id, data.get("channel") or "nook", data.get("text") or "")
+        return jsonify(message=message), 201
+
+    @app.get("/api/webhooks/meta")
+    def meta_webhook_verify():
+        challenge = verify_subscription(
+            request.args.get("hub.mode", ""),
+            request.args.get("hub.verify_token", ""),
+            request.args.get("hub.challenge", ""),
+        )
+        if challenge is None:
+            return jsonify(error="Webhook verify token did not match."), 403
+        return challenge, 200, {"Content-Type": "text/plain"}
+
+    @app.post("/api/webhooks/meta")
+    def meta_webhook():
+        raw = request.get_data() or b""
+        if not signature_ok(raw, request.headers.get("X-Hub-Signature-256")):
+            return jsonify(error="Bad signature."), 403
+        ingest_graph_webhook(request.get_json(silent=True) or {})
+        return jsonify(ok=True)

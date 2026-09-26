@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { api, ApiError } from "../api";
@@ -11,6 +11,8 @@ import { Banner, Mark, btnPrimary } from "../components/ui";
 import { VoiceInterview } from "../components/VoiceInterview";
 import { useDates } from "../dates";
 import { formatDates } from "../format";
+
+const NO_DATES: string[] = [];
 
 const STEPS = [
   { id: "room", label: "Your room" },
@@ -29,6 +31,7 @@ export function Onboarding() {
   const [offer, setOffer] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const roomDates = useMemo(() => (offer ? dates : NO_DATES), [offer, dates]);
 
   async function saveRoom() {
     if (!pick) return;
@@ -91,7 +94,7 @@ export function Onboarding() {
       {step === "room" ? (
         <div className="mt-6 space-y-4">
           <DormBrowser
-            dates={offer ? dates : []}
+            dates={roomDates}
             mode="pick"
             pickedUnit={pick?.unit}
             onPick={setPick}

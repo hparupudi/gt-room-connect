@@ -93,6 +93,9 @@ def test_search_keyword_filters_and_sort(client):
     assert match.status_code == 200
     payload = match.get_json()
     assert payload["ranker"] == "local-lifestyle-v1"
+    assert payload["results"][0]["scores"]["reason"].endswith(".")
+    assert "\n" not in payload["results"][0]["scores"]["reason"]
+    assert payload["results"][0]["scores"]["reason_model"] == "local-lifestyle-v1"
     ids = [item["host"]["id"] for item in payload["results"]]
     assert "andre-wallace" not in ids
     assert "elena-vasquez" in ids
@@ -168,6 +171,155 @@ def test_booking_hides_socials_until_accept(client):
 
     guest_view = client.get(f"/api/bookings/{booking_id}", headers=auth(andre))
     assert guest_view.get_json()["booking"]["host"]["socials_visible"] is True
+    assert guest_view.get_json()["booking"]["reason"].endswith(".")
+
+
+def test_messages_use_graph_when_configured(client, monkeypatch):
+    andre = login(client, "andre.wallace@gatech.edu")
+    maya = login(client, "maya.chen@gatech.edu")
+    elena = login(client, "elena.vasquez@gatech.edu")
+    requested = client.post(
+        "/api/bookings",
+        json={"host_id": "maya-chen", "dates": [day(7)], "message": "Friday?"},
+        headers=auth(andre),
+    )
+    assert requested.status_code == 201, requested.get_json()
+    booking = requested.get_json()["booking"]
+    booking_id = booking["id"]
+    assert booking["reason"].endswith(".")
+    assert booking["reason_model"] == "local-lifestyle-v1"
+
+    too_soon = client.post(
+        f"/api/bookings/{booking_id}/messages",
+        json={"channel": "nook", "text": "hey"},
+        headers=auth(andre),
+    )
+    assert too_soon.status_code == 400
+
+    accepted = client.post(f"/api/bookings/{booking_id}/accept", headers=auth(maya))
+    assert accepted.status_code == 200
+
+    held = client.post(
+        f"/api/bookings/{booking_id}/messages",
+        json={"channel": "whatsapp", "text": "I'll be at Glenn around 8."},
+        headers=auth(andre),
+    )
+    assert held.status_code == 201
+    assert held.get_json()["message"]["delivery"] == "local"
+    assert "META_GRAPH_TOKEN" in held.get_json()["message"]["detail"]
+
+    calls = {}
+
+    class FakeResponse:
+        status_code = 200
+        text = ""
+
+        def json(self):
+            return {"messages": [{"id": "wamid.TEST"}]}
+
+    def fake_post(url, json=None, headers=None, timeout=None):
+        calls["url"] = url
+        calls["json"] = json
+        calls["auth"] = (headers or {}).get("Authorization")
+        if json and json.get("recipient"):
+            return type("IG", (), {"status_code": 200, "text": "", "json": lambda self: {"message_id": "mid.1"}})()
+        return FakeResponse()
+
+    monkeypatch.setenv("META_GRAPH_TOKEN", "test-token")
+    monkeypatch.setenv("WHATSAPP_PHONE_NUMBER_ID", "12345")
+    monkeypatch.setattr("nook.graph.requests.post", fake_post)
+    sent = client.post(
+        f"/api/bookings/{booking_id}/messages",
+        json={"channel": "whatsapp", "text": "On my way."},
+        headers=auth(andre),
+    )
+    assert sent.status_code == 201
+    assert sent.get_json()["message"]["delivery"] == "sent"
+    assert calls["json"]["to"] == "14045550142"
+    assert calls["json"]["text"]["body"].startswith("Andre on Nook:")
+    assert calls["auth"] == "Bearer test-token"
+    assert calls["url"].endswith("/12345/messages")
+
+    unlinked = client.post(
+        f"/api/bookings/{booking_id}/messages",
+        json={"channel": "instagram", "text": "See you downstairs."},
+        headers=auth(andre),
+    )
+    assert unlinked.get_json()["message"]["delivery"] == "local"
+
+    code = client.post("/api/me/messaging/instagram-code", headers=auth(maya)).get_json()["instagram_code"]
+    linked = client.post(
+        "/api/webhooks/meta",
+        json={
+            "object": "instagram",
+            "entry": [{"messaging": [{"sender": {"id": "IGSID1"}, "message": {"mid": "m1", "text": f"code {code}"}}]}],
+        },
+    )
+    assert linked.status_code == 200
+    status = client.get("/api/me/messaging", headers=auth(maya))
+    assert status.get_json()["instagram_linked"] is True
+
+    monkeypatch.setenv("INSTAGRAM_ACCOUNT_ID", "1789")
+    ig = client.post(
+        f"/api/bookings/{booking_id}/messages",
+        json={"channel": "instagram", "text": "Elevator's slow."},
+        headers=auth(andre),
+    )
+    assert ig.status_code == 201
+    assert ig.get_json()["message"]["delivery"] == "sent"
+    assert calls["json"]["recipient"]["id"] == "IGSID1"
+
+    inbound = client.post(
+        "/api/webhooks/meta",
+        json={
+            "object": "whatsapp_business_account",
+            "entry": [
+                {
+                    "changes": [
+                        {
+                            "value": {
+                                "messages": [
+                                    {
+                                        "from": "14045550142",
+                                        "id": "wamid.in",
+                                        "type": "text",
+                                        "text": {"body": "Door's open."},
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ],
+        },
+    )
+    assert inbound.status_code == 200
+    thread = client.get(f"/api/bookings/{booking_id}/messages", headers=auth(andre)).get_json()["messages"]
+    assert any(item["text"] == "Door's open." and item["mine"] is False for item in thread)
+
+    hidden = client.get(f"/api/bookings/{booking_id}/messages", headers=auth(elena))
+    assert hidden.status_code == 404
+
+    monkeypatch.setenv("META_WEBHOOK_VERIFY_TOKEN", "nook-verify")
+    bad = client.get(
+        "/api/webhooks/meta",
+        query_string={"hub.mode": "subscribe", "hub.verify_token": "nope", "hub.challenge": "abc"},
+    )
+    assert bad.status_code == 403
+    ok = client.get(
+        "/api/webhooks/meta",
+        query_string={"hub.mode": "subscribe", "hub.verify_token": "nook-verify", "hub.challenge": "12345"},
+    )
+    assert ok.status_code == 200
+    assert ok.get_data(as_text=True) == "12345"
+
+    monkeypatch.setenv("META_APP_SECRET", "shhh")
+    forged = client.post(
+        "/api/webhooks/meta",
+        data=b"{}",
+        headers={"Content-Type": "application/json", "X-Hub-Signature-256": "sha256=dead"},
+    )
+    assert forged.status_code == 403
 
 
 def test_voice_interview_structures_a_profile(client):

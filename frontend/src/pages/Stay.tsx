@@ -3,7 +3,9 @@ import { Link, useParams } from "react-router-dom";
 
 import { api, ApiError } from "../api";
 import { useAuth } from "../auth";
+import { MatchChat } from "../components/MatchChat";
 import { Shell } from "../components/Shell";
+import { WhyMatch } from "../components/WhyMatch";
 import { Avatar, Banner } from "../components/ui";
 import { formatDates } from "../format";
 import type { Booking, Socials } from "../types";
@@ -52,23 +54,26 @@ export function Stay() {
             </div>
           </div>
           <p className="mt-4 leading-7">{other.bio}</p>
+          <WhyMatch reason={booking.reason} model={booking.reason_model} />
           {booking.message ? <p className="mt-3 text-sm text-navy">Note: {booking.message}</p> : null}
+          {booking.status === "accepted" ? <MatchChat bookingId={booking.id} /> : null}
           {booking.status === "accepted" && other.socials ? (
             <div className="mt-6 rounded-[28px] bg-navy p-5 text-paper">
-              <p className="text-xs tracking-[0.16em] text-gold-soft uppercase">Coordinate from here</p>
-              <p className="mt-2 font-serif text-3xl">Trade the details yourselves.</p>
+              <p className="text-xs tracking-[0.16em] text-gold-soft uppercase">If you step outside Nook</p>
+              <p className="mt-2 font-serif text-3xl">Their socials, now that this is a yes.</p>
               <SocialList socials={other.socials} />
               {user?.socials ? (
                 <p className="mt-4 text-sm text-gold-soft">They can see your socials too: {listed(user.socials)}.</p>
               ) : null}
             </div>
-          ) : (
+          ) : null}
+          {booking.status !== "accepted" ? (
             <p className="mt-6 text-sm text-muted">
               {booking.status === "pending"
-                ? "Still waiting. Socials stay hidden until this is accepted."
+                ? "Still waiting. Socials and messages stay closed until this is accepted."
                 : booking.decline_reason || "This one didn't turn into a stay."}
             </p>
-          )}
+          ) : null}
         </article>
       ) : null}
     </Shell>

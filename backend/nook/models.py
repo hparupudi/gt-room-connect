@@ -68,8 +68,16 @@ class LifestyleProfile(BaseModel):
 class HostRank(BaseModel):
     user_id: str
     score: float = Field(ge=0, le=1)
-    reason: str
+    reason: str = Field(
+        description="Exactly one sentence naming concrete things the guest and this host have in common."
+    )
 
 
 class RerankResponse(BaseModel):
     rankings: list[HostRank]
+
+
+class MatchSentence(BaseModel):
+    sentence: str = Field(
+        description="Exactly one sentence, under 200 characters, naming what these two students have in common."
+    )

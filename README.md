@@ -55,7 +55,8 @@ The login screen can enter as either of them. Set `DEMO_LOGIN=0` to hide those b
 | Interview audio | Muse Voice Transcribe (`muse-voice-transcribe-1.0`) | Browser transcript, or what you type |
 | Profile | Muse Spark 1.3 structured output into a Pydantic `LifestyleProfile` | Same schema, filled by a local parser |
 | Embedding | 32 lifestyle axes from Muse Spark, L2-normalized, upserted to Pinecone | Same 32 axes from the local encoder, stored on the user |
-| Match sort | Cosine similarity, then Muse Spark 1.3 reranks the top bios | Cosine similarity, then a lifestyle score (sleep and cleanliness) |
+| Match sort | Cosine similarity, then Muse Spark 1.3 reranks the top bios and writes one sentence about what you have in common | Cosine similarity, then a lifestyle score, with a local one-sentence reason |
+| WhatsApp and Instagram | Graph API sends the thread to their number or linked Instagram, and replies come back through the webhook | The same thread stays inside Nook |
 | Distance sort | Walking estimate via campus hubs, match breaks ties | Same |
 
 Meta's Model API does not ship a separate embeddings endpoint. Nook asks Muse Spark 1.3 for a fixed 32-axis vector inside the structured profile, stores that vector in Pinecone (dimension 32, metric cosine), and compares with cosine similarity. Create the index before setting `PINECONE_API_KEY`.
@@ -72,7 +73,7 @@ Demo profiles were embedded with the local encoder. Interviews taken after you a
 6. Search by name, hall, unit number, or bio. Dates are required. Filter sleep, cleanliness, year, major (all selected by default), gender, floor, and dorm type (traditional, suite, apartment).
 7. Sort by match or by walking distance. Match runs cosine first, then the bio rerank. Distance walks from the room you claimed.
 8. Request a couch and wait. The host accepts or declines. Accepting closes those nights and declines other requests that overlap.
-9. Once accepted, both people can see Instagram, phone, and Discord.
+9. Once accepted, both people can see Instagram, phone, and Discord, and a thread opens. Send it in Nook, or on WhatsApp and Instagram through the Graph API. Each card also has one sentence on why you matched.
 
 ## Campus map
 
@@ -86,6 +87,12 @@ The map is a real base map (Leaflet with CARTO Voyager tiles on OpenStreetMap da
 Directions come from free public routers with no API key. Valhalla's pedestrian profile (FOSSGIS server) is tried first and follows walkways, stairs, and crosswalks. OSRM's demo server is the backup; its public instance only has a car profile, so Nook uses its distance and recomputes time at walking pace. If neither answers, a straight-line estimate is drawn as a dashed line. `VALHALLA_URL` and `OSRM_URL` in `.env` point at self-hosted servers if you outgrow the public ones, and `LIVE_ROUTING=0` keeps everything offline. Search's distance sort uses the offline estimate so results never wait on the network.
 
 Floor diagrams are original schematics, not official housing plans.
+
+## Messages after a match
+
+When a host accepts, the stay page opens a thread. In Nook is always available. WhatsApp uses the other person's phone through the WhatsApp Cloud API (`WHATSAPP_PHONE_NUMBER_ID` plus `META_GRAPH_TOKEN`). Instagram uses the Messaging API once they DM the link code shown in the thread to the Nook Instagram account (`INSTAGRAM_ACCOUNT_ID`). Replies arrive at `POST /api/webhooks/meta`. The verify token is `META_WEBHOOK_VERIFY_TOKEN`. If `META_APP_SECRET` is set, webhook posts must carry `X-Hub-Signature-256`.
+
+Muse Spark 1.3 writes the one-sentence "why you match" line when `MODEL_API_KEY` is set. Without it, Nook writes that sentence from shared interests, sleep, cleanliness, major, and hometown.
 
 ## Tests
 

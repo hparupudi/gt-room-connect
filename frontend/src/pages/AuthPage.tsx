@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -6,17 +6,49 @@ import { api, ApiError } from "../api";
 import { useAuth } from "../auth";
 import { Banner, Field, Mark, btnGhost, btnPrimary } from "../components/ui";
 
+type Phase = "email" | "code" | "password";
+const DRAFT_KEY = "nook-signup-draft";
+
+function readDraft(): { email: string; phase: Phase; preview: string; delivery: string; verificationToken: string } | null {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<{ email: string; phase: Phase; preview: string; delivery: string; verificationToken: string }>;
+    if ((parsed.phase !== "code" && parsed.phase !== "password") || typeof parsed.email !== "string" || !parsed.email) return null;
+    return {
+      email: parsed.email,
+      phase: parsed.phase,
+      preview: parsed.preview || "",
+      delivery: parsed.delivery || "",
+      verificationToken: parsed.verificationToken || "",
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function AuthPage({ mode }: { mode: "login" | "signup" }) {
   const { login, meta, setSession } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const draft = mode === "signup" ? readDraft() : null;
+  const [email, setEmail] = useState(draft?.email || "");
   const [code, setCode] = useState("");
-  const [preview, setPreview] = useState("");
-  const [delivery, setDelivery] = useState("");
-  const [verificationToken, setVerificationToken] = useState("");
+  const [preview, setPreview] = useState(draft?.preview || "");
+  const [delivery, setDelivery] = useState(draft?.delivery || "");
+  const [verificationToken, setVerificationToken] = useState(draft?.verificationToken || "");
+  const [phase, setPhase] = useState<Phase>(draft?.phase || "email");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (mode !== "signup") return;
+    if (phase === "email") {
+      sessionStorage.removeItem(DRAFT_KEY);
+      return;
+    }
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ email, phase, preview, delivery, verificationToken }));
+  }, [mode, phase, email, preview, delivery, verificationToken]);
 
   async function afterLogin(userStep: string) {
     navigate(userStep === "done" ? "/discover" : "/onboarding");
@@ -47,6 +79,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
       });
       setDelivery(body.delivery);
       setPreview(body.preview_code || "");
+      setPhase("code");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Couldn't send a code.");
     } finally {
@@ -64,6 +97,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
         body: JSON.stringify({ email, code }),
       });
       setVerificationToken(body.verification_token);
+      setPhase("password");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "That code didn't work.");
     } finally {
@@ -81,6 +115,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
         body: JSON.stringify({ email, password, verification_token: verificationToken }),
       });
       const user = await setSession(body.token);
+      sessionStorage.removeItem(DRAFT_KEY);
       await afterLogin(user.onboarding_step);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Couldn't create the account.");
@@ -119,7 +154,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
           </div>
         ) : null}
         {mode === "login" ? (
-          <form className="space-y-4" onSubmit={onLogin}>
+          <form className="space-y-4" method="get" action="/login" onSubmit={onLogin}>
             <Field label="Georgia Tech email">
               <input type="email" autoComplete="username" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@gatech.edu" required />
             </Field>
@@ -132,8 +167,8 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
 
             <p className="text-sm text-muted">Don't have an account? <Link to="/signup" className="text-navy">Sign up</Link></p>
           </form>
-        ) : !preview && !verificationToken ? (
-          <form className="space-y-4" onSubmit={sendCode}>
+        ) : phase === "email" ? (
+          <form className="space-y-4" method="get" action="/signup" onSubmit={sendCode}>
             <Field label="Georgia Tech email">
               <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@gatech.edu" required />
             </Field>
@@ -144,9 +179,9 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
 
             <p className="text-sm text-muted">Already have an account? <Link to="/login" className="text-navy">Log in</Link></p>
           </form>
-        ) : !verificationToken ? (
-          <form className="space-y-4" onSubmit={verify}>
-            {delivery === "preview" ? (
+        ) : phase === "code" ? (
+          <form className="space-y-4" method="get" action="/signup" onSubmit={verify}>
+            {delivery === "preview" && preview ? (
               <Banner tone="note">
                 Mail isn't configured, so the code that would have been emailed to {email} is <strong>{preview}</strong>. Add SMTP settings to send it for real.
               </Banner>
@@ -154,15 +189,30 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
               <Banner tone="note">Check {email} for a 6-digit code. It expires in 15 minutes.</Banner>
             )}
             <Field label="Code">
-              <input inputMode="numeric" value={code} onChange={(event) => setCode(event.target.value)} required />
+              <input inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(event) => setCode(event.target.value)} required />
             </Field>
             <button className={btnPrimary} disabled={busy} type="submit">
               Verify email
             </button>
+            <button
+              type="button"
+              className="text-sm text-navy underline"
+              onClick={() => {
+                setPhase("email");
+                setPreview("");
+                setCode("");
+                setVerificationToken("");
+              }}
+            >
+              Use a different email
+            </button>
           </form>
         ) : (
-          <form className="space-y-4" onSubmit={register}>
-            <p className="text-sm text-muted">{email} is verified. Set a password with at least 8 characters, a letter, and a number.</p>
+          <form className="space-y-4" method="get" action="/signup" onSubmit={register}>
+            <p className="text-sm text-muted">Set a password with at least 8 characters, a letter, and a number.</p>
+            <Field label="Georgia Tech email">
+              <input type="email" name="username" autoComplete="username" value={email} readOnly />
+            </Field>
             <Field label="Password">
               <input type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} required />
             </Field>

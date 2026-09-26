@@ -18,7 +18,7 @@ import requests
 
 from .constants import AXIS_NAMES, INTERVIEW_QUESTIONS
 from .embed import axes_from_signals
-from .models import LifestyleAxes, LifestyleProfile, RerankResponse
+from .models import LifestyleAxes, LifestyleProfile, MatchSentence, RerankResponse
 
 SLEEP_CLOCK = {
     "early": ("22:30", "07:00"),
@@ -247,28 +247,36 @@ def muse_rerank(seeker: dict, hosts: list[dict]) -> RerankResponse:
                 "name": host.get("name"),
                 "year": host.get("year"),
                 "major": host.get("major"),
+                "hometown": host.get("hometown"),
                 "bio": life.get("bio"),
                 "interests": life.get("interests"),
+                "hobbies": life.get("hobbies"),
                 "cleanliness": life.get("cleanliness"),
                 "sleep_timing": life.get("sleep_timing"),
+                "noise": life.get("noise"),
                 "guest_notes": life.get("guest_notes"),
             }
         )
     system = (
         "Rank potential weekend hosts for a Georgia Tech student. "
-        "Score each host from 0 to 1 for how comfortably the guest would share their room, "
-        "using interests, cleanliness, sleep, and the tone of the bios. "
-        "Include every user_id exactly once. reason is one sentence the guest will read."
+        "Score each host from 0 to 1 for how comfortably the guest would share their room. "
+        "Include every user_id exactly once. "
+        "reason is exactly one sentence the guest will read, naming concrete things they have in common "
+        "(shared interests or hobbies, similar sleep, cleanliness, noise, major, or hometown). "
+        "Do not invent overlap. If they share little, name the closest real alignment. No second sentence."
     )
     user = json.dumps(
         {
             "guest": {
                 "name": seeker.get("name"),
                 "major": seeker.get("major"),
+                "hometown": seeker.get("hometown"),
                 "bio": seeker_life.get("bio"),
                 "interests": seeker_life.get("interests"),
+                "hobbies": seeker_life.get("hobbies"),
                 "cleanliness": seeker_life.get("cleanliness"),
                 "sleep_timing": seeker_life.get("sleep_timing"),
+                "noise": seeker_life.get("noise"),
             },
             "hosts": packets,
         }
@@ -282,3 +290,58 @@ def muse_rerank(seeker: dict, hosts: list[dict]) -> RerankResponse:
     if parsed is None:
         raise RuntimeError("Muse Spark returned an empty ranking")
     return parsed
+
+
+def _packet(person: dict) -> dict:
+    life = person.get("lifestyle") or {}
+    return {
+        "name": person.get("name"),
+        "major": person.get("major"),
+        "hometown": person.get("hometown"),
+        "year": person.get("year"),
+        "bio": life.get("bio"),
+        "interests": life.get("interests"),
+        "hobbies": life.get("hobbies"),
+        "cleanliness": life.get("cleanliness"),
+        "sleep_timing": life.get("sleep_timing"),
+        "noise": life.get("noise"),
+        "guest_notes": life.get("guest_notes"),
+    }
+
+
+def muse_match_sentence(seeker: dict, host: dict) -> str:
+    client = _client()
+    system = (
+        "You explain why two Georgia Tech students matched for a weekend room share. "
+        "Write exactly one sentence naming concrete things they have in common: shared interests or hobbies, "
+        "similar sleep, cleanliness, noise, the same major, or the same hometown. "
+        "Use only facts in the profiles. Do not invent overlap. "
+        "If they share little, name the closest real alignment. No greeting and no second sentence."
+    )
+    response = client.beta.chat.completions.parse(
+        model="muse-spark-1.3",
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": json.dumps({"guest": _packet(seeker), "host": _packet(host)})},
+        ],
+        response_format=MatchSentence,
+    )
+    parsed = response.choices[0].message.parsed
+    if parsed is None or not parsed.sentence.strip():
+        raise RuntimeError("Muse Spark returned an empty match sentence")
+    sentence = " ".join(parsed.sentence.split())
+    if sentence[-1] not in ".!?":
+        sentence += "."
+    return sentence
+
+
+def match_sentence(seeker: dict, host: dict) -> tuple[str, str]:
+    from .rank import match_reason
+
+    local = match_reason(seeker, host)
+    if muse_configured():
+        try:
+            return muse_match_sentence(seeker, host), "muse-spark-1.3"
+        except Exception as exc:
+            print(f"Muse Spark match sentence failed, using the local one: {exc}")
+    return local, "local-lifestyle-v1"
