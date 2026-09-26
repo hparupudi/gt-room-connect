@@ -39,22 +39,24 @@ export function DormBrowser({
     if (user?.dorm_id && user.unit && !origin) setOrigin({ dormId: user.dorm_id, unit: user.unit });
   }, [user, origin]);
 
+  const dateKey = dates.join(",");
+
   useEffect(() => {
-    const query = dates.length ? `?dates=${dates.join(",")}` : "";
+    const query = dateKey ? `?dates=${dateKey}` : "";
     api<MapData>(`/api/map${query}`, {}, token)
       .then((data) => {
         setMap(data);
         setSelectedId((current) => current || data.home || "");
       })
       .catch((err: unknown) => setError(err instanceof ApiError ? err.message : "The map didn't load."));
-  }, [dates, token]);
+  }, [dateKey, token]);
 
   useEffect(() => {
     if (!selectedId) {
       setDetail(null);
       return;
     }
-    const query = dates.length ? `?dates=${dates.join(",")}` : "";
+    const query = dateKey ? `?dates=${dateKey}` : "";
     api<{ dorm: DormDetail }>(`/api/dorms/${selectedId}${query}`, {}, token)
       .then((body) => {
         setDetail(body.dorm);
@@ -63,7 +65,7 @@ export function DormBrowser({
         );
       })
       .catch((err: unknown) => setError(err instanceof ApiError ? err.message : "That hall didn't load."));
-  }, [selectedId, dates, token]);
+  }, [selectedId, dateKey, token]);
 
   useEffect(() => {
     if (mode !== "browse" || !origin?.dormId || !destination?.dormId) {

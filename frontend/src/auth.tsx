@@ -1,7 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
-import { api } from "./api";
+import { ApiError, api } from "./api";
 import type { Meta, User } from "./types";
 
 const TOKEN_KEY = "nook_token";
@@ -24,6 +24,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [meta, setMeta] = useState<Meta | null>(null);
   const [loading, setLoading] = useState(true);
+  // Bumped whenever a newer session is committed, so a slow /api/auth/me from
+  // page load cannot log out the account that was just created.
+  const epoch = useRef(0);
 
   useEffect(() => {
     api<Meta>("/api/meta")
@@ -32,34 +35,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refresh = useCallback(async () => {
+    const generation = epoch.current;
     const current = localStorage.getItem(TOKEN_KEY);
     if (!current) {
+      if (epoch.current !== generation) return;
       setUser(null);
       setToken(null);
       return;
     }
-    const body = await api<{ user: User }>("/api/auth/me", {}, current);
-    setToken(current);
-    setUser(body.user);
-  }, []);
-
-  useEffect(() => {
-    refresh()
-      .catch(() => {
+    try {
+      const body = await api<{ user: User }>("/api/auth/me", {}, current);
+      if (epoch.current !== generation || localStorage.getItem(TOKEN_KEY) !== current) return;
+      setToken(current);
+      setUser(body.user);
+    } catch (error) {
+      if (epoch.current !== generation || localStorage.getItem(TOKEN_KEY) !== current) return;
+      if (error instanceof ApiError && error.status === 401) {
         localStorage.removeItem(TOKEN_KEY);
         setToken(null);
         setUser(null);
-      })
-      .finally(() => setLoading(false));
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+    refresh().finally(() => {
+      if (alive) setLoading(false);
+    });
+    return () => {
+      alive = false;
+    };
   }, [refresh]);
 
-  const setSession = useCallback(async (next: string) => {
+  const commit = useCallback((next: string, nextUser: User) => {
+    epoch.current += 1;
     localStorage.setItem(TOKEN_KEY, next);
     setToken(next);
-    const body = await api<{ user: User }>("/api/auth/me", {}, next);
-    setUser(body.user);
-    return body.user;
+    setUser(nextUser);
+    setLoading(false);
   }, []);
+
+  const setSession = useCallback(
+    async (next: string) => {
+      const body = await api<{ user: User }>("/api/auth/me", {}, next);
+      commit(next, body.user);
+      return body.user;
+    },
+    [commit],
+  );
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -67,15 +91,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
-      localStorage.setItem(TOKEN_KEY, body.token);
-      setToken(body.token);
-      setUser(body.user);
+      commit(body.token, body.user);
       return body.user;
     },
-    [],
+    [commit],
   );
 
   const logout = useCallback(() => {
+    epoch.current += 1;
     localStorage.removeItem(TOKEN_KEY);
     setToken(null);
     setUser(null);

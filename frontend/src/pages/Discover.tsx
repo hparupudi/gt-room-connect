@@ -5,6 +5,7 @@ import { api, ApiError } from "../api";
 import { useAuth } from "../auth";
 import { DatePicker } from "../components/DatePicker";
 import { Shell } from "../components/Shell";
+import { WhyMatch } from "../components/WhyMatch";
 import { Avatar, Banner, Tags, btnGhost, btnPrimary } from "../components/ui";
 import { useDates } from "../dates";
 import { formatDates, matchPercent, sleepLabel, styleLabel } from "../format";
@@ -172,7 +173,7 @@ export function Discover() {
                   </div>
                 </div>
                 <p className="mt-3 text-sm leading-6">{host.bio}</p>
-                <p className="mt-2 text-sm text-navy">{scores.reason}</p>
+                <WhyMatch reason={scores.reason} model={scores.reason_model} />
                 <div className="mt-3">
                   <Tags tags={host.tags} />
                 </div>

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { api, ApiError } from "../api";
 import { useAuth } from "../auth";
 import { Shell } from "../components/Shell";
+import { WhyMatch } from "../components/WhyMatch";
 import { Avatar, Banner, btnDanger, btnPrimary } from "../components/ui";
 import { formatDates, isoDate, matchPercent, upcomingDays } from "../format";
 import type { Booking, User } from "../types";
@@ -121,6 +122,7 @@ export function Host() {
                   <p className="text-sm">{formatDates(booking.dates)} · {matchPercent(booking.match)} match</p>
                 </div>
               </div>
+              <WhyMatch reason={booking.reason} model={booking.reason_model} />
               <p className="mt-2 text-sm">{booking.guest.bio}</p>
               {booking.message ? <p className="mt-2 text-sm text-navy">“{booking.message}”</p> : null}
               <p className="mt-2 text-xs tracking-wide text-muted uppercase">{booking.status}</p>

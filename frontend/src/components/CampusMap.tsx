@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { Component, useEffect, useRef } from "react";
+import type { ReactNode } from "react";
 import { CircleMarker, MapContainer, Polygon, Polyline, TileLayer, Tooltip, useMap } from "react-leaflet";
 import type { LatLngBoundsExpression, LatLngExpression } from "leaflet";
 
@@ -28,7 +29,7 @@ function hallTone(dorm: { yours: boolean; open_units: number }): keyof typeof FI
   return "idle";
 }
 
-export function CampusMap({
+function CampusMapView({
   dorms,
   selectedId,
   zoomToId,
@@ -163,4 +164,31 @@ function Focus({ points, zoomToId, dorms }: { points: [number, number][] | null;
     return () => window.clearTimeout(handle);
   }, [map]);
   return null;
+}
+
+class MapBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  render() {
+    if (this.state.failed) {
+      return (
+        <p className="rounded-[28px] border border-line bg-card px-4 py-8 text-sm text-muted">
+          The campus map couldn't be drawn. The hall list still works.
+        </p>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export function CampusMap(props: Parameters<typeof CampusMapView>[0]) {
+  return (
+    <MapBoundary>
+      <CampusMapView {...props} />
+    </MapBoundary>
+  );
 }

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { api, ApiError } from "../api";
 import { useAuth } from "../auth";
 import { Shell } from "../components/Shell";
+import { WhyMatch } from "../components/WhyMatch";
 import { Banner, btnGhost } from "../components/ui";
 import { formatDates, matchPercent } from "../format";
 import type { Booking } from "../types";
@@ -63,6 +64,7 @@ export function Requests() {
                 ) : null}
               </div>
             </div>
+            <WhyMatch reason={booking.reason} model={booking.reason_model} />
             {booking.decline_reason ? <p className="mt-2 text-sm text-muted">{booking.decline_reason}</p> : null}
             {booking.status === "accepted" ? <p className="mt-2 text-sm text-moss">You're in. Open the stay to see how to reach them.</p> : null}
           </article>

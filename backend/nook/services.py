@@ -262,9 +262,15 @@ def search(seeker: dict, body: dict) -> dict:
 
     ranker = "local-lifestyle-v1"
     if mode == "match":
-        from .muse import muse_configured, muse_rerank
+        from .muse import match_sentence, muse_configured, muse_rerank
 
-        if muse_configured() and len(scored) > 1:
+        if muse_configured() and len(scored) == 1:
+            sentence, model = match_sentence(seeker, scored[0]["host"])
+            scored[0]["reason"] = sentence
+            scored[0]["reason_model"] = model
+            if model == "muse-spark-1.3":
+                ranker = model
+        elif muse_configured() and len(scored) > 1:
             head = scored[:12]
             try:
                 ranking = muse_rerank(seeker, [item["host"] for item in head])
@@ -275,7 +281,10 @@ def search(seeker: dict, body: dict) -> dict:
                     item = by_id.get(row.user_id)
                     if not item or row.user_id in seen:
                         continue
-                    item["reason"] = row.reason
+                    item["reason"] = " ".join((row.reason or "").split())
+                    if item["reason"] and item["reason"][-1] not in ".!?":
+                        item["reason"] += "."
+                    item["reason_model"] = "muse-spark-1.3"
                     item["local"] = float(row.score)
                     reranked.append(item)
                     seen.add(row.user_id)
@@ -301,6 +310,7 @@ def search(seeker: dict, body: dict) -> dict:
                     "meters": item["meters"],
                     "minutes": item["minutes"],
                     "reason": item["reason"],
+                    "reason_model": item.get("reason_model") or "local-lifestyle-v1",
                 },
             }
         )
@@ -445,6 +455,9 @@ def create_booking(guest: dict, host_id: str, dates: list[str], message: str) ->
         host["id"]: host.get("embedding") or [],
     }
     scores = score_pair(guest, host, vectors)
+    from .muse import match_sentence
+
+    sentence, reason_model = match_sentence(guest, host)
     booking = {
         "id": uuid.uuid4().hex,
         "guest_id": guest["id"],
@@ -456,7 +469,8 @@ def create_booking(guest: dict, host_id: str, dates: list[str], message: str) ->
         "message": message,
         "match": round(scores["local"], 3),
         "minutes": scores["minutes"],
-        "reason": scores["reason"],
+        "reason": sentence,
+        "reason_model": reason_model,
         "created_at": now_iso(),
     }
     get_db().insert("bookings", booking)
@@ -476,6 +490,7 @@ def serialize_booking(booking: dict, viewer_id: str) -> dict:
         "match": booking.get("match"),
         "minutes": booking.get("minutes"),
         "reason": booking.get("reason") or "",
+        "reason_model": booking.get("reason_model") or "local-lifestyle-v1",
         "decline_reason": booking.get("decline_reason") or "",
         "created_at": booking.get("created_at"),
         "guest": serialize_user(guest, viewer_id, force_socials=accepted) if guest else None,
@@ -590,3 +605,230 @@ def save_room(user: dict, dorm_id: str, floor: int, unit: str, open_dates: list[
         patch["open_dates"] = parse_dates(open_dates, require=False)
     updated = get_db().update("users", user["id"], patch)
     return serialize_user(updated, user["id"])
+
+
+def messaging_status(user: dict) -> dict:
+    from .graph import instagram_configured, normalize_phone, whatsapp_configured
+
+    socials = user.get("socials") or {}
+    messaging = user.get("messaging") or {}
+    phone = normalize_phone(socials.get("phone") or "")
+    return {
+        "phone": socials.get("phone") or "",
+        "phone_ready": bool(phone),
+        "instagram": socials.get("instagram") or "",
+        "instagram_linked": bool(messaging.get("instagram_id")),
+        "instagram_code": messaging.get("instagram_code") or "",
+        "whatsapp_api": whatsapp_configured(),
+        "instagram_api": instagram_configured(),
+    }
+
+
+def issue_instagram_code(user: dict) -> dict:
+    import secrets
+
+    messaging = dict(user.get("messaging") or {})
+    messaging["instagram_code"] = secrets.token_hex(3).upper()
+    updated = get_db().update("users", user["id"], {"messaging": messaging})
+    return messaging_status(updated)
+
+
+def _accepted_booking(user_id: str, booking_id: str) -> dict:
+    booking = get_db().find_one("bookings", id=booking_id)
+    if not booking or user_id not in (booking.get("guest_id"), booking.get("host_id")):
+        raise ApiError("That stay isn't yours.", 404)
+    if booking.get("status") != "accepted":
+        raise ApiError("Messages open after the host accepts.")
+    return booking
+
+
+def _serialize_message(item: dict, viewer_id: str) -> dict:
+    return {
+        "id": item.get("id"),
+        "sender_id": item.get("sender_id"),
+        "channel": item.get("channel") or "nook",
+        "text": item.get("text") or "",
+        "created_at": item.get("created_at"),
+        "delivery": item.get("delivery") or "stored",
+        "detail": item.get("detail") or "",
+        "mine": item.get("sender_id") == viewer_id,
+    }
+
+
+def list_messages(user: dict, booking_id: str) -> list[dict]:
+    booking = _accepted_booking(user["id"], booking_id)
+    rows = [item for item in get_db().find_all("messages") if item.get("booking_id") == booking["id"]]
+    rows.sort(key=lambda item: item.get("created_at") or "")
+    return [_serialize_message(item, user["id"]) for item in rows]
+
+
+def send_message(user: dict, booking_id: str, channel: str, text: str) -> dict:
+    from .graph import instagram_configured, normalize_phone, send_instagram, send_whatsapp, whatsapp_configured
+
+    booking = _accepted_booking(user["id"], booking_id)
+    channel = (channel or "nook").strip().lower()
+    if channel not in ("nook", "whatsapp", "instagram"):
+        raise ApiError("Pick Nook, WhatsApp, or Instagram.")
+    text = " ".join((text or "").split())
+    if not text:
+        raise ApiError("Write a message first.")
+    if len(text) > 1000:
+        raise ApiError("Keep the message under 1000 characters.")
+    other_id = booking["host_id"] if user["id"] == booking.get("guest_id") else booking["guest_id"]
+    other = get_db().find_one("users", id=other_id)
+    if not other:
+        raise ApiError("That person isn't on Nook anymore.", 404)
+    delivery = "stored"
+    detail = "Saved in Nook."
+    graph_id = ""
+    sender_name = ((user.get("name") or "Someone").split() or ["Someone"])[0]
+    outbound = f"{sender_name} on Nook: {text}"
+    if channel == "whatsapp":
+        phone = normalize_phone((other.get("socials") or {}).get("phone") or "")
+        if not phone:
+            delivery = "local"
+            detail = "They haven't added a phone number, so this stays in Nook."
+        elif not whatsapp_configured():
+            delivery = "local"
+            detail = "WhatsApp sends once META_GRAPH_TOKEN and WHATSAPP_PHONE_NUMBER_ID are set. This stays in Nook."
+        else:
+            result = send_whatsapp(phone, outbound)
+            delivery = "sent" if result["ok"] else "failed"
+            detail = "Sent on WhatsApp." if result["ok"] else (result["error"] or "WhatsApp didn't take the message.")
+            graph_id = result.get("id") or ""
+    elif channel == "instagram":
+        ig_id = (other.get("messaging") or {}).get("instagram_id") or ""
+        handle = (other.get("socials") or {}).get("instagram") or ""
+        if not ig_id:
+            delivery = "local"
+            who = f"@{handle.lstrip('@')}" if handle else "They"
+            detail = f"{who} still needs to link Instagram. This stays in Nook."
+        elif not instagram_configured():
+            delivery = "local"
+            detail = "Instagram sends once META_GRAPH_TOKEN and INSTAGRAM_ACCOUNT_ID are set. This stays in Nook."
+        else:
+            result = send_instagram(ig_id, outbound)
+            delivery = "sent" if result["ok"] else "failed"
+            detail = "Sent on Instagram." if result["ok"] else (result["error"] or "Instagram didn't take the message.")
+            graph_id = result.get("id") or ""
+    doc = {
+        "id": uuid.uuid4().hex,
+        "booking_id": booking["id"],
+        "sender_id": user["id"],
+        "channel": channel,
+        "text": text,
+        "created_at": now_iso(),
+        "delivery": delivery,
+        "detail": detail,
+        "graph_id": graph_id,
+    }
+    get_db().insert("messages", doc)
+    return _serialize_message(doc, user["id"])
+
+
+def _latest_accepted(user_id: str) -> dict | None:
+    rows = [
+        item
+        for item in get_db().find_all("bookings")
+        if item.get("status") == "accepted" and user_id in (item.get("guest_id"), item.get("host_id"))
+    ]
+    if not rows:
+        return None
+    rows.sort(key=lambda item: item.get("created_at") or "", reverse=True)
+    return rows[0]
+
+
+def _claim_instagram(igsid: str, text: str) -> bool:
+    import re
+
+    folded = (text or "").upper()
+    if not folded:
+        return False
+    db = get_db()
+    for user in db.find_all("users"):
+        messaging = dict(user.get("messaging") or {})
+        code = (messaging.get("instagram_code") or "").upper()
+        if not code or not re.search(rf"(?<![A-Z0-9]){re.escape(code)}(?![A-Z0-9])", folded):
+            continue
+        messaging["instagram_id"] = igsid
+        messaging["instagram_code"] = ""
+        db.update("users", user["id"], {"messaging": messaging})
+        return True
+    return False
+
+
+def _record_inbound(channel: str, sender_key: str, text: str, graph_id: str) -> bool:
+    from .graph import normalize_phone
+
+    db = get_db()
+    if graph_id and any(item.get("graph_id") == graph_id for item in db.find_all("messages")):
+        return False
+    user = None
+    if channel == "whatsapp":
+        target = normalize_phone(sender_key)
+        if not target:
+            return False
+        for candidate in db.find_all("users"):
+            if normalize_phone((candidate.get("socials") or {}).get("phone") or "") == target:
+                user = candidate
+                break
+    else:
+        for candidate in db.find_all("users"):
+            if (candidate.get("messaging") or {}).get("instagram_id") == sender_key:
+                user = candidate
+                break
+    if not user:
+        return False
+    booking = _latest_accepted(user["id"])
+    if not booking:
+        return False
+    cleaned = " ".join((text or "").split())[:1000]
+    if not cleaned:
+        return False
+    db.insert(
+        "messages",
+        {
+            "id": uuid.uuid4().hex,
+            "booking_id": booking["id"],
+            "sender_id": user["id"],
+            "channel": channel,
+            "text": cleaned,
+            "created_at": now_iso(),
+            "delivery": "sent",
+            "detail": "Replied on WhatsApp." if channel == "whatsapp" else "Replied on Instagram.",
+            "graph_id": graph_id,
+        },
+    )
+    return True
+
+
+def ingest_graph_webhook(payload: dict) -> int:
+    saved = 0
+    kind = payload.get("object")
+    if kind == "whatsapp_business_account":
+        for entry in payload.get("entry") or []:
+            for change in entry.get("changes") or []:
+                value = change.get("value") or {}
+                for message in value.get("messages") or []:
+                    if message.get("type") not in (None, "text"):
+                        continue
+                    text = ((message.get("text") or {}).get("body") or "").strip()
+                    sender = message.get("from") or ""
+                    if text and _record_inbound("whatsapp", sender, text, message.get("id") or ""):
+                        saved += 1
+    elif kind == "instagram":
+        for entry in payload.get("entry") or []:
+            for event in entry.get("messaging") or []:
+                message = event.get("message") or {}
+                if message.get("is_echo"):
+                    continue
+                text = (message.get("text") or "").strip()
+                sender = (event.get("sender") or {}).get("id") or ""
+                if not text or not sender:
+                    continue
+                if _claim_instagram(sender, text):
+                    saved += 1
+                    continue
+                if _record_inbound("instagram", sender, text, message.get("mid") or ""):
+                    saved += 1
+    return saved

@@ -1,5 +1,6 @@
+import { Component } from "react";
 import type { ReactNode } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import { useAuth } from "./auth";
 import { AuthPage } from "./pages/AuthPage";
@@ -22,9 +23,32 @@ function Gate({ children, requireProfile = true }: { children: ReactNode; requir
   return children;
 }
 
-export default function App() {
+class RouteBoundary extends Component<{ children: ReactNode }, { message: string }> {
+  state = { message: "" };
+
+  static getDerivedStateFromError(error: Error) {
+    return { message: error.message || "This screen hit a snag." };
+  }
+
+  render() {
+    if (!this.state.message) return this.props.children;
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16">
+        <h1 className="font-serif text-4xl text-navy">This screen hit a snag.</h1>
+        <p className="mt-3 text-sm text-muted">{this.state.message}</p>
+        <a href="/discover" className="mt-6 inline-block text-sm text-navy underline">
+          Back to Nook
+        </a>
+      </div>
+    );
+  }
+}
+
+function RoutedApp() {
+  const location = useLocation();
   const { user, loading } = useAuth();
   return (
+    <RouteBoundary key={location.pathname}>
     <Routes>
       <Route path="/" element={loading ? <p className="px-4 py-10 text-sm">Opening Nook…</p> : user ? <Navigate to={user.onboarding_complete ? "/discover" : "/onboarding"} replace /> : <Landing />} />
       <Route path="/login" element={<AuthPage mode="login" />} />
@@ -39,5 +63,10 @@ export default function App() {
       <Route path="/profile" element={<Gate><Profile /></Gate>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </RouteBoundary>
   );
+}
+
+export default function App() {
+  return <RoutedApp />;
 }

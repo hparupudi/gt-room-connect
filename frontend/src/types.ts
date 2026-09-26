@@ -48,6 +48,7 @@ export type Score = {
   meters: number;
   minutes: number;
   reason: string;
+  reason_model?: string;
 };
 
 export type SearchResponse = {
@@ -165,6 +166,7 @@ export type Booking = {
   match: number;
   minutes: number;
   reason: string;
+  reason_model?: string;
   decline_reason: string;
   created_at: string;
   guest: User;
@@ -185,4 +187,26 @@ export type Meta = {
   demo: boolean;
   demo_password?: string;
   demo_accounts?: { name: string; email: string; blurb: string }[];
+  messaging?: { whatsapp: boolean; instagram: boolean };
+};
+
+export type ChatMessage = {
+  id: string;
+  sender_id: string;
+  channel: "nook" | "whatsapp" | "instagram";
+  text: string;
+  created_at: string;
+  delivery: string;
+  detail: string;
+  mine: boolean;
+};
+
+export type MessagingStatus = {
+  phone: string;
+  phone_ready: boolean;
+  instagram: string;
+  instagram_linked: boolean;
+  instagram_code: string;
+  whatsapp_api: boolean;
+  instagram_api: boolean;
 };

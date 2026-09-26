@@ -37,6 +37,12 @@ def match_reason(seeker: dict, host: dict) -> str:
         parts.append(f"you keep {host_life['sleep_timing']} hours")
     if seeker_life.get("cleanliness") and seeker_life.get("cleanliness") == host_life.get("cleanliness"):
         parts.append(f"you both keep a {host_life['cleanliness']} room")
+    if seeker.get("major") and seeker.get("major") == host.get("major"):
+        parts.append(f"you both study {host.get('major')}")
+    seeker_home = (seeker.get("hometown") or "").strip().lower()
+    host_home = (host.get("hometown") or "").strip()
+    if seeker_home and seeker_home == host_home.lower():
+        parts.append(f"you're both from {host_home}")
     if not parts:
         year = YEAR_LABELS.get(host.get("year"), "")
         return f"Your dates line up with {host.get('name', 'this host').split()[0]}, a {year.lower()} in {host.get('major')}."
@@ -63,6 +69,7 @@ def score_pair(seeker: dict, host: dict, vectors: dict[str, list[float]]) -> dic
         "meters": route["meters"],
         "minutes": route["minutes"],
         "reason": match_reason(seeker, host),
+        "reason_model": "local-lifestyle-v1",
     }
 
 

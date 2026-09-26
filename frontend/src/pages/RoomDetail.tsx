@@ -5,6 +5,7 @@ import { api, ApiError } from "../api";
 import { useAuth } from "../auth";
 import { CampusMap } from "../components/CampusMap";
 import { Shell } from "../components/Shell";
+import { WhyMatch } from "../components/WhyMatch";
 import { Avatar, Banner, Tags, btnGhost, btnPrimary } from "../components/ui";
 import { useDates } from "../dates";
 import { formatDates, matchPercent, sleepLabel, styleLabel } from "../format";
@@ -88,7 +89,7 @@ export function RoomDetail() {
               </div>
             </div>
             <p className="mt-5 max-w-2xl text-lg leading-8">{host.bio}</p>
-            {scores ? <p className="mt-3 text-navy">{scores.reason}</p> : null}
+            {scores ? <WhyMatch reason={scores.reason} model={scores.reason_model} /> : null}
             <div className="mt-4">
               <Tags tags={host.tags} />
             </div>
