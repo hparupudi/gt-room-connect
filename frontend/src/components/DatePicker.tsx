@@ -44,7 +44,7 @@ export function DatePicker() {
       <div className="flex items-baseline justify-between gap-3">
         <div>
           <p className="text-xs font-medium tracking-[0.16em] text-gold uppercase">Dates</p>
-          <p className="mt-1 text-sm text-muted">Required. A couch has to be free every night you pick.</p>
+          <p className="mt-1 text-sm text-muted">Required. A bed has to be free every night you pick.</p>
         </div>
         <p className="text-sm font-medium">{dates.length ? formatDates(dates) : "None yet"}</p>
       </div>

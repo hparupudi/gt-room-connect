@@ -97,7 +97,7 @@ def transcribe_wav(wav_bytes: bytes) -> str | None:
         "model": "muse-voice-transcribe-1.0",
         "audioEncoding": "WAV",
         "languageBias": ["English"],
-        "keywords": ["Georgia Tech", "Yellow Jacket", "Dormsurf", "couch", "dorm", "suite"],
+        "keywords": ["Georgia Tech", "Yellow Jacket", "Dormsurf", "bed", "space", "dorm", "suite"],
     }
     response = requests.post(
         "https://api.meta.ai/v1/asr/transcribe",
@@ -189,7 +189,7 @@ def muse_extract(transcript: str, questionnaire: dict) -> LifestyleProfile:
     client = _client()
     questions = "\n".join(f"{index}. {question}" for index, question in enumerate(INTERVIEW_QUESTIONS, start=1))
     system = (
-        "You write structured roommate profiles for Dormsurf, a weekend couch-surfing app for Georgia Tech halls. "
+        "You write structured roommate profiles for Dormsurf, a weekend bed-sharing app for Georgia Tech halls. "
         "Turn the interview transcript into the schema. The axes are a 32-dimensional lifestyle embedding "
         "between 0 and 1: higher means the person more strongly fits that trait. "
         "Make the bio two or three specific sentences in the third person. Do not invent social media handles."

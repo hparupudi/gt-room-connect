@@ -90,7 +90,7 @@ STYLE_SPECS = {
         "room": "Two to four bedrooms with a living room",
         "bath": "One or two baths inside the apartment",
         "kitchen": "Full kitchen in the unit",
-        "guest_space": "Living-room couch",
+        "guest_space": "Living-room space",
     },
 }
 

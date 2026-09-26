@@ -144,7 +144,7 @@ export function Onboarding() {
       <p className="text-xs tracking-[0.16em] text-gold uppercase">First time in</p>
       <h1 className="font-serif text-4xl text-navy">Tell us where you live, then how you live.</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">
-        A Georgia Tech room is optional. Off-campus Yellow Jackets and students from other schools can skip it and still request a couch.
+        A Georgia Tech room is optional. Off-campus Yellow Jackets and students from other schools can skip it and still request a bed.
       </p>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <ol className="flex flex-wrap gap-2">
@@ -189,7 +189,7 @@ export function Onboarding() {
           />
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" className="h-4 w-4" checked={offer} onChange={(event) => setOffer(event.target.checked)} />
-            My couch is free on the dates below. You can change this later.
+            My bed is free on the dates below. A shared room stays hidden until your roommate agrees.
           </label>
           {offer ? <DatePicker /> : null}
           <div className="flex flex-wrap items-center gap-3">

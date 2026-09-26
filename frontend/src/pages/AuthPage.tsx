@@ -133,7 +133,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
           <span className="font-serif text-2xl">Dormsurf</span>
         </Link>
         <div>
-          <p className="font-serif text-5xl leading-tight">A couch with a person attached.</p>
+          <p className="font-serif text-5xl leading-tight">A bed with a person attached.</p>
         </div>
       </section>
       <section className="px-5 py-10 md:px-12">

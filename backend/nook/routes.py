@@ -62,9 +62,13 @@ from .services import (
     map_overview,
     onboarding_step,
     parse_dates,
+    invite_roommate,
+    respond_roommate,
+    roommate_asks_for,
     save_room,
     set_typing,
     skip_room,
+    withdraw_roommate,
     react_message,
     typing_peers,
     search,
@@ -175,7 +179,7 @@ def register_routes(app: Flask) -> None:
                 {
                     "name": "Andre Wallace",
                     "email": "andre.wallace@gatech.edu",
-                    "blurb": "Looking for a couch",
+                    "blurb": "Looking for a bed",
                 },
             ]
         return jsonify(payload)
@@ -321,6 +325,37 @@ def register_routes(app: Flask) -> None:
         open_dates = data.get("open_dates") if "open_dates" in data else None
         profile = save_room(user, data.get("dorm_id") or "", floor, str(data.get("unit") or ""), open_dates)
         return jsonify(user=profile)
+
+    @app.get("/api/me/roommates")
+    def my_roommates():
+        user = _require()
+        return jsonify(roommates=serialize_user(user, user["id"]).get("roommates") or [])
+
+    @app.post("/api/me/roommates")
+    def add_roommate():
+        user = _require()
+        data = request.get_json(silent=True) or {}
+        return jsonify(user=invite_roommate(user, data.get("email") or "")), 201
+
+    @app.delete("/api/me/roommates/<consent_id>")
+    def remove_roommate(consent_id: str):
+        user = _require()
+        return jsonify(user=withdraw_roommate(user, consent_id))
+
+    @app.get("/api/roommate-asks")
+    def roommate_asks():
+        user = _require()
+        return jsonify(asks=roommate_asks_for(user))
+
+    @app.post("/api/roommate-asks/<consent_id>/accept")
+    def roommate_accept(consent_id: str):
+        user = _require()
+        return jsonify(ask=respond_roommate(user, consent_id, True))
+
+    @app.post("/api/roommate-asks/<consent_id>/decline")
+    def roommate_decline(consent_id: str):
+        user = _require()
+        return jsonify(ask=respond_roommate(user, consent_id, False))
 
     @app.post("/api/me/questionnaire")
     def questionnaire():
@@ -502,7 +537,7 @@ def register_routes(app: Flask) -> None:
     def availability():
         user = _require()
         if not user.get("onboarding_complete"):
-            raise ApiError("Finish your profile before opening your couch.")
+            raise ApiError("Finish your profile before opening your space.")
         data = request.get_json(silent=True) or {}
         return jsonify(user=set_availability(user, data.get("dates") or []))
 

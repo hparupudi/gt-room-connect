@@ -339,7 +339,7 @@ function Navigator({
             ) : null}
             {host ? (
               <Link to={`/room/${host.id}`} className={btnPrimary}>
-                View {host.name.split(" ")[0]}'s couch
+                View {host.name.split(" ")[0]}'s space
               </Link>
             ) : null}
           </div>

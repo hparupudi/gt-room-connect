@@ -1,6 +1,6 @@
 # Dormsurf
 
-Dormsurf helps students find a friendly couch for the weekend in a Georgia Tech hall—especially for those times when your roommate is out of town and you’d rather not be alone. Sign-up accepts an .edu address when the school in that address is a recognized accredited university. A residence hall is optional, so off-campus Yellow Jackets and students from other schools can still request a stay. You can host your room for someone else once you claim a hall. Matching is based on lifestyle or proximity (like an easy walk from your own dorm). Social details are kept private until a host agrees, keeping things safe and comfortable.
+Dormsurf helps students find a weekend bed in a Georgia Tech hall—especially for those times when your roommate is out of town and you’d rather not be alone. Sign-up accepts an .edu address when the school in that address is a recognized accredited university. A residence hall is optional, so off-campus Yellow Jackets and students from other schools can still request a stay. You can host your room for someone else once you claim a hall. Matching is based on lifestyle or proximity (like an easy walk from your own dorm). Social details are kept private until a host agrees, keeping things safe and comfortable.
 
 ## Run it
 
@@ -42,7 +42,7 @@ Both use the password `WeekendNook!`.
 | Who | Email | What they're for |
 | --- | --- | --- |
 | Maya Chen | maya.chen@gatech.edu | Hosting in Glenn |
-| Andre Wallace | andre.wallace@gatech.edu | Looking for a couch |
+| Andre Wallace | andre.wallace@gatech.edu | Looking for a bed |
 
 The login screen can enter as either of them. Set `DEMO_LOGIN=0` to hide those buttons. The password still works until you change the seed.
 
@@ -67,12 +67,12 @@ Demo profiles were embedded with the local encoder. Interviews taken after you a
 
 1. Enter an .edu address from a recognized accredited university (Georgia Tech, Stanford, and the rest of the school list) and the code from email (or the on-screen preview).
 2. Create a password.
-3. Claim your room on the campus map, including the floor and unit, or skip it if you live off campus or don't have a Georgia Tech hall. You can open nights later, after a room is claimed.
+3. Claim your room on the campus map, including the floor and unit, or skip it if you live off campus or don't have a Georgia Tech hall. You can open nights later, after a room is claimed. A shared room stays hidden until each roommate you add agrees. From Your space, invite them by the school email on their Dormsurf account. They accept or decline on Requests. A decline keeps the bed hidden until you remove that person and someone agrees. A bedroom Housing lists for one person can be booked without a roommate.
 4. Fill in name, gender, age, major, year, hometown, and socials.
 5. Answer the interview one question at a time. Talk for as long as you want, then click Next. If an answer is too thin, Dormsurf shows an error and stays on that question. You can type the answer under the question, or switch to a form and enter interests, cleanliness, sleep, noise, and guest notes directly. Back and Next also move between the room, about, and voice steps, and you can reopen any step you have already finished.
 6. Search by name, hall, unit number, or bio. Dates are required. Filter sleep, cleanliness, year, major (all selected by default), gender, floor, and dorm type (traditional, suite, apartment).
 7. Sort by match or by walking distance. Match runs cosine first, then the bio rerank. Distance walks from the room you claimed.
-8. Request a couch and wait. The host accepts or declines. Accepting closes those nights and declines other requests that overlap.
+8. Request a bed and wait. The host accepts or declines. Accepting closes those nights and declines other requests that overlap.
 9. Once accepted, both people can message inside Dormsurf: text, photos, one emoji reaction each, and edits or deletes of their own messages. Double-click a message, or the ••• beside it, to open those actions. Instagram, WhatsApp, and Discord logos open a thread in that app. A private Instagram opens the profile for a follow request. Discord opens the profile for a friend request when they are not friends yet, and a message when they are. Each card also has one sentence on why you matched.
 
 ## Campus map
@@ -82,7 +82,7 @@ The map is a real base map (Leaflet with CARTO Voyager tiles on OpenStreetMap da
 - Click a hall for its specs (style, floors, units per floor, bath, kitchen, where a guest sleeps) and a floor-by-floor layout.
 - Hover a unit for who's hosting. Green is open, amber has a request waiting, navy is your room.
 - Click any unit, or pick a hall and unit in the From / To selectors, to get walking directions from one room to another. The gold line is the path, and the steps include the indoor part: leave your unit, walk, enter the other hall, go to that floor and unit.
-- Every couch page shows the walk from your room to that host's unit.
+- Every bed page shows the walk from your room to that host's unit.
 
 Directions come from free public routers with no API key. Valhalla's pedestrian profile (FOSSGIS server) is tried first and follows walkways, stairs, and crosswalks. OSRM's demo server is the backup; its public instance only has a car profile, so Dormsurf uses its distance and recomputes time at walking pace. If neither answers, a straight-line estimate is drawn as a dashed line. `VALHALLA_URL` and `OSRM_URL` in `.env` point at self-hosted servers if you outgrow the public ones, and `LIVE_ROUTING=0` keeps everything offline. Search's distance sort uses the offline estimate so results never wait on the network.
 
@@ -90,7 +90,7 @@ Floor plans are the official drawings published by Georgia Tech Housing (rooms, 
 
 ## Messages after a match
 
-When a host accepts, the stay page opens a thread that stays in Dormsurf. While the other person is typing, their side of the thread shows a bubble with their name and animated dots. Send text or a photo (JPEG, PNG, GIF, or WebP, up to 4 MB). Double-click a message, or the ••• beside it, to leave one reaction, or to edit or delete your own messages. Choosing another emoji replaces the one you already left. A deleted message stays in the thread as a note that it was removed. Requests keeps that stay open, with a link into the Messages tab. Messages lists everyone you can talk to after an acceptance, and you can search them by name, hall, unit, or major. That tab also shows notifications: unread messages, a host's acceptance until you open the thread, and rooming requests still waiting on your couch. Instagram, WhatsApp, and Discord are logos next to the stay thread. A public Instagram opens `ig.me` to that handle. A private Instagram opens `instagram.com` so you can request to follow. WhatsApp opens `wa.me` for their number. Discord uses the user ID from Copy User ID: the logo opens their profile, where Message starts a thread if you are already friends. If they checked that people have to friend them first, the same profile is where you send the friend request. Onboarding has Back and Next across the room, about, and voice steps, and you can return to any step you have already reached.
+When a host accepts, the stay page opens a thread that stays in Dormsurf. While the other person is typing, their side of the thread shows a bubble with their name and animated dots. Send text or a photo (JPEG, PNG, GIF, or WebP, up to 4 MB). Double-click a message, or the ••• beside it, to leave one reaction, or to edit or delete your own messages. Choosing another emoji replaces the one you already left. A deleted message stays in the thread as a note that it was removed. Requests keeps that stay open, with a link into the Messages tab. Messages lists everyone you can talk to after an acceptance, and you can search them by name, hall, unit, or major. That tab also shows notifications: unread messages, a host's acceptance until you open the thread, and rooming requests still waiting on your space. Instagram, WhatsApp, and Discord are logos next to the stay thread. A public Instagram opens `ig.me` to that handle. A private Instagram opens `instagram.com` so you can request to follow. WhatsApp opens `wa.me` for their number. Discord uses the user ID from Copy User ID: the logo opens their profile, where Message starts a thread if you are already friends. If they checked that people have to friend them first, the same profile is where you send the friend request. Onboarding has Back and Next across the room, about, and voice steps, and you can return to any step you have already reached.
 
 Muse Spark 1.3 writes the one-sentence "why you match" line when `MODEL_API_KEY` is set. Without it, Dormsurf writes that sentence from shared interests, sleep, cleanliness, major, and hometown.
 

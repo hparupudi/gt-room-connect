@@ -7,7 +7,7 @@ import { Mark } from "./ui";
 const LINKS = [
   { to: "/discover", label: "Discover", short: "Discover" },
   { to: "/map", label: "Map", short: "Map" },
-  { to: "/host", label: "Your couch", short: "Couch" },
+  { to: "/host", label: "Your space", short: "Space" },
   { to: "/requests", label: "Requests", short: "Requests" },
   { to: "/messages", label: "Messages", short: "Messages" },
   { to: "/profile", label: "Profile", short: "Profile" },
@@ -17,6 +17,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const pending = user?.incoming_pending ?? 0;
   const unread = user?.inbox_unread ?? 0;
+  const asks = user?.roommate_asks?.length ?? 0;
 
   return (
     <div className="mx-auto min-h-screen max-w-6xl px-4 pb-24 md:pb-10">
@@ -35,7 +36,7 @@ export function Shell({ children }: { children: ReactNode }) {
               }
             >
               {link.label}
-              <Count link={link.to} pending={pending} unread={unread} />
+              <Count link={link.to} pending={pending} unread={unread} asks={asks} />
             </NavLink>
           ))}
         </nav>
@@ -52,7 +53,7 @@ export function Shell({ children }: { children: ReactNode }) {
             className={({ isActive }) => `flex flex-col items-center px-0.5 py-2 text-center text-[10px] leading-tight ${isActive ? "text-navy font-semibold" : "text-muted"}`}
           >
             {link.short}
-            <Count link={link.to} pending={pending} unread={unread} stacked />
+            <Count link={link.to} pending={pending} unread={unread} asks={asks} stacked />
           </NavLink>
         ))}
       </nav>
@@ -60,8 +61,20 @@ export function Shell({ children }: { children: ReactNode }) {
   );
 }
 
-function Count({ link, pending, unread, stacked = false }: { link: string; pending: number; unread: number; stacked?: boolean }) {
-  const count = link === "/host" ? pending : link === "/messages" ? unread : 0;
+function Count({
+  link,
+  pending,
+  unread,
+  asks,
+  stacked = false,
+}: {
+  link: string;
+  pending: number;
+  unread: number;
+  asks: number;
+  stacked?: boolean;
+}) {
+  const count = link === "/host" ? pending : link === "/messages" ? unread : link === "/requests" ? asks : 0;
   if (!count) return null;
   return (
     <span className={`${stacked ? "mt-0.5" : "ml-1"} rounded-full bg-gold-soft px-1.5 text-[10px] leading-none text-navy`}>

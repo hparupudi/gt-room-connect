@@ -5,23 +5,39 @@ import { api, ApiError } from "../api";
 import { useAuth } from "../auth";
 import { Shell } from "../components/Shell";
 import { WhyMatch } from "../components/WhyMatch";
-import { Banner, btnGhost } from "../components/ui";
+import { Banner, btnGhost, btnPrimary } from "../components/ui";
 import { formatDates, matchPercent } from "../format";
-import type { Booking } from "../types";
+import type { Booking, RoommateAsk } from "../types";
 
 export function Requests() {
-  const { token } = useAuth();
+  const { token, refresh } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [asks, setAsks] = useState<RoommateAsk[]>([]);
   const [error, setError] = useState("");
 
   async function load() {
-    const body = await api<{ bookings: Booking[] }>("/api/bookings/outgoing", {}, token);
+    const [body, consent] = await Promise.all([
+      api<{ bookings: Booking[] }>("/api/bookings/outgoing", {}, token),
+      api<{ asks: RoommateAsk[] }>("/api/roommate-asks", {}, token),
+    ]);
     setBookings(body.bookings);
+    setAsks(consent.asks);
   }
 
   useEffect(() => {
     load().catch((err: unknown) => setError(err instanceof ApiError ? err.message : "Couldn't load requests."));
   }, [token]);
+
+  async function answer(id: string, accept: boolean) {
+    setError("");
+    try {
+      await api(`/api/roommate-asks/${id}/${accept ? "accept" : "decline"}`, { method: "POST" }, token);
+      await load();
+      await refresh();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Couldn't update that agreement.");
+    }
+  }
 
   async function cancel(id: string) {
     try {
@@ -41,8 +57,30 @@ export function Requests() {
           <Banner>{error}</Banner>
         </div>
       ) : null}
+      {asks.length ? (
+        <section className="mt-6 space-y-3">
+          <h2 className="font-serif text-2xl">Roommate agreement</h2>
+          {asks.map((ask) => (
+            <article key={ask.id} className="rounded-[28px] border border-line bg-card p-5">
+              <p className="text-xs tracking-[0.14em] text-gold uppercase">Waiting on you</p>
+              <h3 className="font-serif text-3xl">{ask.host_name}</h3>
+              <p className="text-sm text-muted">
+                {ask.dorm_name} {ask.unit} can be booked after you agree.
+              </p>
+              <div className="mt-3 flex gap-2">
+                <button type="button" className={btnPrimary} onClick={() => void answer(ask.id, true)}>
+                  I agree
+                </button>
+                <button type="button" className={btnGhost} onClick={() => void answer(ask.id, false)}>
+                  Decline
+                </button>
+              </div>
+            </article>
+          ))}
+        </section>
+      ) : null}
       <div className="mt-6 grid gap-3">
-        {bookings.length === 0 ? <p className="text-sm text-muted">You haven't asked anyone yet. Discover is where the open couches are.</p> : null}
+        {bookings.length === 0 ? <p className="text-sm text-muted">You haven't asked anyone yet. Discover is where the open beds are.</p> : null}
         {bookings.map((booking) => (
           <article key={booking.id} className="rounded-[28px] border border-line bg-card p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">

@@ -146,7 +146,7 @@ export function Discover() {
           {error ? <Banner>{error}</Banner> : null}
           {data ? (
             <p className="mb-3 text-sm text-muted">
-              {data.total} couch{data.total === 1 ? "" : "es"} · {data.sort === "match" ? "best match first" : "closest walk first"} ·{" "}
+              {data.total} bed{data.total === 1 ? "" : "s"} · {data.sort === "match" ? "best match first" : "closest walk first"} ·{" "}
               {data.ranker === "muse-spark-1.3" ? "reranked by Muse Spark 1.3" : "ranked with lifestyle vectors"}
             </p>
           ) : null}
@@ -179,7 +179,7 @@ export function Discover() {
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm text-muted">Open {formatDates(host.open_dates.filter((day) => dates.includes(day)))}</p>
                   <Link to={`/room/${host.id}`} className={btnPrimary}>
-                    View couch
+                    View bed
                   </Link>
                 </div>
               </article>

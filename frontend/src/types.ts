@@ -14,6 +14,22 @@ export type Socials = {
   links?: Partial<Record<"instagram" | "whatsapp" | "discord", SocialLink>>;
 };
 
+export type RoommateConsent = {
+  id: string;
+  email: string;
+  name: string;
+  status: "pending" | "accepted" | "declined";
+};
+
+export type RoommateAsk = {
+  id: string;
+  host_id: string;
+  host_name: string;
+  dorm_name: string;
+  unit: string;
+  status: "pending" | "accepted" | "declined";
+};
+
 export type User = {
   id: string;
   email?: string;
@@ -44,6 +60,10 @@ export type User = {
   noise?: string;
   guest_notes: string;
   room_skipped?: boolean;
+  roommates_needed?: number;
+  room_bookable?: boolean;
+  roommates?: RoommateConsent[];
+  roommate_asks?: RoommateAsk[];
   onboarding_complete: boolean;
   onboarding_step: "room" | "about" | "voice" | "done";
   embedding_model?: string;

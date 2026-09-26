@@ -168,7 +168,7 @@ export function RoomDetail() {
               <>
                 <p className="font-serif text-2xl">This is your room.</p>
                 <Link to="/host" className={`${btnPrimary} mt-4`}>
-                  Manage your couch
+                  Manage your space
                 </Link>
               </>
             ) : (
@@ -199,7 +199,7 @@ export function RoomDetail() {
                   <textarea rows={4} value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Why these nights, and anything they should know." />
                 </label>
                 <button type="button" className={`${btnPrimary} mt-4 w-full`} disabled={busy || chosen.length === 0} onClick={requestStay}>
-                  {busy ? "Sending…" : "Request this couch"}
+                  {busy ? "Sending…" : "Request this bed"}
                 </button>
               </>
             )}

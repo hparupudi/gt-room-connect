@@ -15,7 +15,8 @@ from .embed import normalize
 from .errors import ApiError
 from .models import LifestyleProfile
 from .rank import order_scored, score_pair
-from .housing import housing_for
+from .housing import housing_for, room_footprint
+from .security import normalize_email
 from .muse import is_template_bio
 from .socials import present_socials
 from .vectors import fetch_vectors, upsert_vector
@@ -36,7 +37,7 @@ def today() -> date:
 
 def parse_dates(values: list[str], require: bool = True) -> list[str]:
     if require and not values:
-        raise ApiError("Pick at least one date. That's how Dormsurf knows which couch is free.")
+        raise ApiError("Pick at least one date. That's how Dormsurf knows which bed is free.")
     cleaned = []
     for value in values:
         try:
@@ -132,6 +133,10 @@ def serialize_user(user: dict, viewer_id: str | None = None, force_socials: bool
     if viewer_id == user.get("id"):
         payload["email"] = user.get("email")
         payload["transcript"] = user.get("transcript") or ""
+        payload["roommates_needed"] = roommates_needed(user)
+        payload["room_bookable"] = room_is_bookable(user)
+        payload["roommates"] = roommate_rows_for_host(user)
+        payload["roommate_asks"] = roommate_asks_for(user)
     return payload
 
 
@@ -242,6 +247,8 @@ def search(seeker: dict, body: dict) -> dict:
     hosts = []
     for user in get_db().find_all("users"):
         if user["id"] == seeker["id"] or not user.get("onboarding_complete"):
+            continue
+        if not room_is_bookable(user):
             continue
         if not set(dates).issubset(set(user.get("open_dates") or [])):
             continue
@@ -364,6 +371,8 @@ def unit_view(residents: list[dict], viewer_id: str | None, dates: list[str]) ->
     for resident in residents:
         if resident["id"] == viewer_id:
             yours = True
+        if not room_is_bookable(resident):
+            continue
         open_dates = set(resident.get("open_dates") or [])
         if dates:
             if not set(dates).issubset(open_dates):
@@ -472,12 +481,12 @@ def map_overview(viewer: dict | None, dates: list[str]) -> dict:
 
 def create_booking(guest: dict, host_id: str, dates: list[str], message: str) -> dict:
     if not guest.get("onboarding_complete"):
-        raise ApiError("Finish your profile before requesting a couch.")
+        raise ApiError("Finish your profile before requesting a bed.")
     if guest["id"] == host_id:
         raise ApiError("You already live there.")
     host = get_db().find_one("users", id=host_id)
-    if not host or not host.get("onboarding_complete"):
-        raise ApiError("That couch isn't available.", 404)
+    if not host or not host.get("onboarding_complete") or not room_is_bookable(host):
+        raise ApiError("That bed isn't available.", 404)
     dates = parse_dates(dates)
     if not set(dates).issubset(set(host.get("open_dates") or [])):
         raise ApiError("Those nights aren't open. Pick from the dates on their card.")
@@ -622,8 +631,10 @@ def cancel_booking(guest: dict, booking_id: str) -> dict:
 
 def set_availability(user: dict, dates: list[str]) -> dict:
     if not has_claimed_room(user):
-        raise ApiError("Claim a Georgia Tech room before opening your couch. You can still request a stay from Discover.")
+        raise ApiError("Claim a Georgia Tech room before opening your space. You can still request a bed from Discover.")
     dates = parse_dates(dates, require=False)
+    if dates and not room_is_bookable(user):
+        raise ApiError(consent_block_reason(user))
     accepted = set()
     for booking in get_db().find_all("bookings"):
         if booking.get("host_id") == user["id"] and booking.get("status") == "accepted":
@@ -641,20 +652,194 @@ def save_room(user: dict, dorm_id: str, floor: int, unit: str, open_dates: list[
         raise ApiError("Pick a residence hall on the map.")
     if not any(item["id"] == unit and item["floor"] == floor for item in dorm["units"]):
         raise ApiError("That unit isn't on this floor.")
+    same_room = user.get("dorm_id") == dorm_id and user.get("unit") == unit
+    if not same_room:
+        _withdraw_consents(user["id"], keep_dorm=dorm_id, keep_unit=unit)
     patch = {"dorm_id": dorm_id, "floor": floor, "unit": unit, "room_skipped": False}
     if open_dates is not None:
-        patch["open_dates"] = parse_dates(open_dates, require=False)
+        parsed = parse_dates(open_dates, require=False)
+        candidate = {**user, **patch}
+        patch["open_dates"] = parsed if parsed and room_is_bookable(candidate) else []
+    elif not same_room:
+        patch["open_dates"] = []
     updated = get_db().update("users", user["id"], patch)
     return serialize_user(updated, user["id"])
 
 
 def skip_room(user: dict) -> dict:
+    _withdraw_consents(user["id"])
     updated = get_db().update(
         "users",
         user["id"],
         {"dorm_id": "", "floor": None, "unit": "", "open_dates": [], "room_skipped": True},
     )
     return serialize_user(updated, user["id"])
+
+
+def roommates_needed(user: dict) -> int:
+    if not has_claimed_room(user):
+        return 0
+    foot = room_footprint(user.get("dorm_id") or "") or {}
+    return max(0, int(foot.get("occupants") or 1) - 1)
+
+
+def _room_consents(host_id: str, dorm_id: str, unit: str) -> list[dict]:
+    rows = []
+    for row in get_db().find_all("consents"):
+        if row.get("status") == "withdrawn" or row.get("host_id") != host_id:
+            continue
+        if row.get("dorm_id") != dorm_id or row.get("unit") != unit:
+            continue
+        rows.append(row)
+    rows.sort(key=lambda item: item.get("created_at") or "")
+    return rows
+
+
+def room_is_bookable(user: dict) -> bool:
+    if not has_claimed_room(user):
+        return False
+    rows = _room_consents(user["id"], user.get("dorm_id") or "", user.get("unit") or "")
+    if any(row.get("status") in ("pending", "declined") for row in rows):
+        return False
+    accepted = sum(1 for row in rows if row.get("status") == "accepted")
+    return accepted >= roommates_needed(user)
+
+
+def consent_block_reason(user: dict) -> str:
+    needed = roommates_needed(user)
+    rows = _room_consents(user["id"], user.get("dorm_id") or "", user.get("unit") or "")
+    if any(row.get("status") == "declined" for row in rows):
+        return "A roommate declined. Remove them and add someone who agrees before this bed can be booked."
+    if any(row.get("status") == "pending" for row in rows):
+        return "This bed stays hidden until your roommate agrees."
+    if needed == 1:
+        return "Add your roommate and wait for them to agree before this bed can be booked."
+    if needed > 1:
+        return f"Add {needed} roommates and wait for them to agree before this bed can be booked."
+    return "This bed stays hidden until every roommate you added agrees."
+
+
+def _close_if_unbookable(host_id: str) -> None:
+    host = get_db().find_one("users", id=host_id)
+    if host and host.get("open_dates") and not room_is_bookable(host):
+        get_db().update("users", host_id, {"open_dates": []})
+
+
+def _withdraw_consents(host_id: str, keep_dorm: str | None = None, keep_unit: str | None = None) -> None:
+    db = get_db()
+    for row in db.find_all("consents"):
+        if row.get("host_id") != host_id or row.get("status") == "withdrawn":
+            continue
+        if keep_dorm is not None and row.get("dorm_id") == keep_dorm and row.get("unit") == keep_unit:
+            continue
+        db.update("consents", row["id"], {"status": "withdrawn", "responded_at": now_iso()})
+
+
+def _person_name(user_id: str, fallback: str) -> str:
+    person = get_db().find_one("users", id=user_id) or {}
+    return person.get("name") or fallback
+
+
+def roommate_rows_for_host(user: dict) -> list[dict]:
+    if not has_claimed_room(user):
+        return []
+    rows = []
+    for row in _room_consents(user["id"], user.get("dorm_id") or "", user.get("unit") or ""):
+        rows.append(
+            {
+                "id": row.get("id"),
+                "email": row.get("roommate_email") or "",
+                "name": _person_name(row.get("roommate_id") or "", row.get("roommate_email") or "Roommate"),
+                "status": row.get("status") or "pending",
+            }
+        )
+    return rows
+
+
+def roommate_asks_for(user: dict) -> list[dict]:
+    asks = []
+    for row in get_db().find_all("consents"):
+        if row.get("roommate_id") != user.get("id") or row.get("status") != "pending":
+            continue
+        host = get_db().find_one("users", id=row.get("host_id")) or {}
+        dorm = get_dorm(row.get("dorm_id") or "") or {}
+        asks.append(
+            {
+                "id": row.get("id"),
+                "host_id": row.get("host_id") or "",
+                "host_name": host.get("name") or "Your roommate",
+                "dorm_name": dorm.get("name") or "",
+                "unit": row.get("unit") or "",
+                "status": "pending",
+            }
+        )
+    asks.sort(key=lambda item: item.get("id") or "")
+    return asks
+
+
+def invite_roommate(user: dict, email: str) -> dict:
+    if not has_claimed_room(user):
+        raise ApiError("Claim a room before adding a roommate.")
+    cleaned = normalize_email(email)
+    if cleaned == (user.get("email") or "").lower():
+        raise ApiError("Add the person you live with.")
+    roommate = get_db().find_one("users", email=cleaned)
+    if not roommate:
+        raise ApiError("They need a Dormsurf account before they can agree to this room.")
+    rows = _room_consents(user["id"], user.get("dorm_id") or "", user.get("unit") or "")
+    if any(row.get("roommate_id") == roommate["id"] for row in rows):
+        raise ApiError("They're already listed on this room. Remove them before inviting them again.")
+    needed = roommates_needed(user)
+    cap = needed if needed else 3
+    if len(rows) >= cap:
+        raise ApiError("Remove a roommate before adding another.")
+    get_db().insert(
+        "consents",
+        {
+            "id": uuid.uuid4().hex,
+            "host_id": user["id"],
+            "dorm_id": user.get("dorm_id") or "",
+            "unit": user.get("unit") or "",
+            "floor": user.get("floor"),
+            "roommate_id": roommate["id"],
+            "roommate_email": cleaned,
+            "status": "pending",
+            "created_at": now_iso(),
+            "responded_at": None,
+        },
+    )
+    _close_if_unbookable(user["id"])
+    fresh = get_db().find_one("users", id=user["id"]) or user
+    return serialize_user(fresh, user["id"])
+
+
+def withdraw_roommate(user: dict, consent_id: str) -> dict:
+    row = get_db().find_one("consents", id=consent_id)
+    if not row or row.get("host_id") != user["id"] or row.get("status") == "withdrawn":
+        raise ApiError("That roommate isn't on your room.", 404)
+    get_db().update("consents", consent_id, {"status": "withdrawn", "responded_at": now_iso()})
+    _close_if_unbookable(user["id"])
+    fresh = get_db().find_one("users", id=user["id"]) or user
+    return serialize_user(fresh, user["id"])
+
+
+def respond_roommate(user: dict, consent_id: str, accept: bool) -> dict:
+    row = get_db().find_one("consents", id=consent_id)
+    if not row or row.get("roommate_id") != user["id"] or row.get("status") != "pending":
+        raise ApiError("That request isn't waiting on you.", 404)
+    status = "accepted" if accept else "declined"
+    updated = get_db().update("consents", consent_id, {"status": status, "responded_at": now_iso()}) or row
+    _close_if_unbookable(row.get("host_id") or "")
+    host = get_db().find_one("users", id=row.get("host_id")) or {}
+    dorm = get_dorm(row.get("dorm_id") or "") or {}
+    return {
+        "id": updated.get("id"),
+        "host_id": row.get("host_id") or "",
+        "host_name": host.get("name") or "Your roommate",
+        "dorm_name": dorm.get("name") or "",
+        "unit": row.get("unit") or "",
+        "status": status,
+    }
 
 
 def _accepted_booking(user_id: str, booking_id: str) -> dict:

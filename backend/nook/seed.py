@@ -6,6 +6,7 @@ from .constants import YEAR_LABELS
 from .db import get_db
 from .dorms import get_dorm
 from .embed import axes_from_signals
+from .housing import room_footprint
 from .security import hash_password
 
 DEMO_PASSWORD = "WeekendNook!"
@@ -117,8 +118,8 @@ def seed_if_empty() -> None:
             "Mechanical Engineering", "3", "Decatur, GA", "north-ave-east", 5, "E507", [5, 6],
             ["music", "basketball", "cooking"], ["producing", "pickup basketball"],
             "average", "late", "01:00", "09:30", "moderate",
-            "The couch is real. Text before you come up so he can move the MIDI keyboard.",
-            "Andre is a third-year mechanical engineering major from Decatur. He produces music after basketball, keeps late hours, and doesn't mind a mug in the sink if the couch is actually free.",
+            "The bed is real. Text before you come up so he can move the MIDI keyboard.",
+            "Andre is a third-year mechanical engineering major from Decatur. He produces music after basketball, keeps late hours, and doesn't mind a mug in the sink if the bed is actually free.",
             {"instagram": "andre.wav", "phone": "404-555-0177", "discord": "andrewallace"},
             password_hash,
         ),
@@ -147,7 +148,7 @@ def seed_if_empty() -> None:
             "Architecture", "3", "Savannah, GA", "eighth-east", 3, "E305", [1, 2, 3],
             ["design", "film", "coffee"], ["studio critiques", "campus films"],
             "tidy", "early", "23:00", "07:30", "quiet",
-            "Models and chipboard live on the desk. The couch is yours if you keep drinks off the drawings.",
+            "Models and chipboard live on the desk. The bed is yours if you keep drinks off the drawings.",
             "Hannah is a third-year architecture student from Savannah. Eighth Street East stays tidy, she watches films on weeknights, and she is up early for studio.",
             {"instagram": "hannah.draws", "phone": "404-555-0115", "discord": "hbrooks"},
             password_hash,
@@ -225,3 +226,126 @@ def seed_if_empty() -> None:
     ]
     for person in people:
         db.insert("users", person)
+    backfill_demo_consents()
+
+
+DEMO_IDS = {
+    "maya-chen",
+    "andre-wallace",
+    "priya-shah",
+    "luis-ortega",
+    "hannah-brooks",
+    "sam-okonkwo",
+    "elena-vasquez",
+    "chris-dalton",
+    "noah-kim",
+    "aisha-rahman",
+    "jordan-hale",
+    "brooke-lin",
+}
+
+
+# People who already agreed to the seeded shared rooms. They are not hosts.
+ROOMMATE_NAMES = {
+    "maya-chen": "Taylor Nguyen",
+    "priya-shah": "Casey Morales",
+    "sam-okonkwo": "Devon Clarke",
+    "elena-vasquez": "Riley Santos",
+    "aisha-rahman": "Morgan Blake",
+    "jordan-hale": "Quinn Adler",
+    "brooke-lin": "Avery Singh",
+}
+
+
+def _seed_roommate(db, host: dict) -> dict:
+    roommate_id = f"roommate-{host['id']}"
+    existing = db.find_one("users", id=roommate_id)
+    if existing:
+        return existing
+    email = f"roommate.{host['id']}@gatech.edu"
+    by_email = db.find_one("users", email=email)
+    if by_email:
+        return by_email
+    roommate = {
+        "id": roommate_id,
+        "email": email,
+        "password_hash": host.get("password_hash") or "",
+        "email_verified": True,
+        "name": ROOMMATE_NAMES.get(host["id"], "Roommate"),
+        "gender": "undisclosed",
+        "age": None,
+        "major": "",
+        "year": "",
+        "hometown": "",
+        "socials": {},
+        "dorm_id": "",
+        "floor": None,
+        "unit": "",
+        "open_dates": [],
+        "lifestyle": None,
+        "transcript": "",
+        "embedding": [],
+        "embedding_model": "",
+        "onboarding_complete": False,
+        "room_skipped": True,
+        "created_at": date.today().isoformat(),
+    }
+    db.insert("users", roommate)
+    return roommate
+
+
+def refresh_demo_copy() -> None:
+    """Demo profiles seeded before the bed wording still say couch. Rewrite those lines in place."""
+    db = get_db()
+    for user in db.find_all("users"):
+        if user.get("id") not in DEMO_IDS:
+            continue
+        changed = False
+        transcript = user.get("transcript") or ""
+        if "couch" in transcript.lower():
+            transcript = transcript.replace("couch", "bed").replace("Couch", "Bed")
+            changed = True
+        life = dict(user.get("lifestyle") or {})
+        for key in ("guest_notes", "bio"):
+            text = life.get(key) or ""
+            if "couch" in text.lower():
+                life[key] = text.replace("couch", "bed").replace("Couch", "Bed")
+                changed = True
+        if changed:
+            db.update("users", user["id"], {"transcript": transcript, "lifestyle": life})
+
+
+def backfill_demo_consents() -> None:
+    """Shared demo rooms already have open nights, so record the roommate agreement those nights assume."""
+    db = get_db()
+    hosts = [user for user in db.find_all("users") if user.get("id") in DEMO_IDS and user.get("dorm_id")]
+    if not hosts:
+        return
+    covered = {
+        (row.get("host_id"), row.get("dorm_id"), row.get("unit"))
+        for row in db.find_all("consents")
+        if row.get("status") != "withdrawn"
+    }
+    for host in hosts:
+        foot = room_footprint(host.get("dorm_id") or "") or {}
+        if int(foot.get("occupants") or 1) < 2:
+            continue
+        key = (host.get("id"), host.get("dorm_id"), host.get("unit"))
+        if key in covered:
+            continue
+        roommate = _seed_roommate(db, host)
+        db.insert(
+            "consents",
+            {
+                "id": f"seed-{host['id']}",
+                "host_id": host["id"],
+                "dorm_id": host.get("dorm_id") or "",
+                "unit": host.get("unit") or "",
+                "floor": host.get("floor"),
+                "roommate_id": roommate["id"],
+                "roommate_email": roommate.get("email") or "",
+                "status": "accepted",
+                "created_at": date.today().isoformat(),
+                "responded_at": date.today().isoformat(),
+            },
+        )

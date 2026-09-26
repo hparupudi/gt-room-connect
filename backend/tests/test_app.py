@@ -299,7 +299,7 @@ def test_messages_stay_in_nook_and_socials_link_out(client):
     )
     photo = client.post(
         f"/api/bookings/{booking_id}/messages",
-        data={"text": "The couch", "image": (BytesIO(png), "room.png")},
+        data={"text": "The room", "image": (BytesIO(png), "room.png")},
         headers=auth(andre),
     )
     assert photo.status_code == 201, photo.get_json()
@@ -817,3 +817,76 @@ def test_typing_indicator_is_visible_to_the_other_person(client):
     cleared = client.post(f"/api/bookings/{booking_id}/typing", json={"active": False}, headers=auth(maya))
     assert cleared.status_code == 200
     assert client.get(f"/api/bookings/{booking_id}/typing", headers=auth(andre)).get_json()["typing"] == []
+
+
+def test_shared_room_stays_hidden_until_roommate_agrees(client):
+    maya = login(client, "maya.chen@gatech.edu")
+    andre = login(client, "andre.wallace@gatech.edu")
+    me = client.get("/api/auth/me", headers=auth(maya)).get_json()["user"]
+    assert me["roommates_needed"] == 1
+    assert me["room_bookable"] is True
+    assert me["roommates"][0]["status"] == "accepted"
+    assert me["roommates"][0]["name"] == "Taylor Nguyen"
+    assert me["open_dates"]
+
+    solo = client.get("/api/auth/me", headers=auth(andre)).get_json()["user"]
+    assert solo["roommates_needed"] == 0
+    assert solo["room_bookable"] is True
+    assert solo["roommates"] == []
+
+    removed = client.delete("/api/me/roommates/seed-maya-chen", headers=auth(maya))
+    assert removed.status_code == 200, removed.get_json()
+    closed = removed.get_json()["user"]
+    assert closed["open_dates"] == []
+    assert closed["room_bookable"] is False
+
+    blocked = client.put("/api/me/availability", json={"dates": [day(0)]}, headers=auth(maya))
+    assert blocked.status_code == 400
+    assert "roommate" in blocked.get_json()["error"].lower()
+
+    self_invite = client.post("/api/me/roommates", json={"email": "maya.chen@gatech.edu"}, headers=auth(maya))
+    assert self_invite.status_code == 400
+    unknown = client.post("/api/me/roommates", json={"email": "nobody@gatech.edu"}, headers=auth(maya))
+    assert unknown.status_code == 400
+    assert "account" in unknown.get_json()["error"].lower()
+
+    invited = client.post("/api/me/roommates", json={"email": "andre.wallace@gatech.edu"}, headers=auth(maya))
+    assert invited.status_code == 201, invited.get_json()
+    pending = invited.get_json()["user"]
+    assert pending["room_bookable"] is False
+    assert pending["roommates"][0]["status"] == "pending"
+    consent_id = pending["roommates"][0]["id"]
+
+    hidden = client.post(
+        "/api/bookings",
+        json={"host_id": "maya-chen", "dates": [day(0)]},
+        headers=auth(andre),
+    )
+    assert hidden.status_code == 404
+
+    asks = client.get("/api/roommate-asks", headers=auth(andre)).get_json()["asks"]
+    assert [item["id"] for item in asks] == [consent_id]
+    declined = client.post(f"/api/roommate-asks/{consent_id}/decline", headers=auth(andre))
+    assert declined.status_code == 200
+    assert declined.get_json()["ask"]["status"] == "declined"
+    again = client.post("/api/me/roommates", json={"email": "andre.wallace@gatech.edu"}, headers=auth(maya))
+    assert again.status_code == 400
+
+    cleared = client.delete(f"/api/me/roommates/{consent_id}", headers=auth(maya))
+    assert cleared.status_code == 200
+    reinvited = client.post("/api/me/roommates", json={"email": "Andre.Wallace@gatech.edu"}, headers=auth(maya))
+    assert reinvited.status_code == 201, reinvited.get_json()
+    new_id = reinvited.get_json()["user"]["roommates"][0]["id"]
+    accepted = client.post(f"/api/roommate-asks/{new_id}/accept", headers=auth(andre))
+    assert accepted.status_code == 200
+    assert accepted.get_json()["ask"]["status"] == "accepted"
+
+    opened = client.put("/api/me/availability", json={"dates": [day(0)]}, headers=auth(maya))
+    assert opened.status_code == 200, opened.get_json()
+    assert opened.get_json()["user"]["room_bookable"] is True
+    found = client.post(
+        "/api/search",
+        json={"dates": [day(0)], "query": "Glenn 314", "sort": "match"},
+        headers=auth(andre),
+    )
+    assert [item["host"]["id"] for item in found.get_json()["results"]] == ["maya-chen"]
