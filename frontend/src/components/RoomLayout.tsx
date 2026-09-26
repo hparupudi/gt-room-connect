@@ -116,14 +116,19 @@ function SideView({ x, y, setup, measures }: { x: number; y: number; setup: Setu
         </g>
       ) : null}
       <text
-        x={setup === "low" ? bedX + 2 : bedX + bedLen - 2}
-        y={setup === "low" ? at(frame) - 2 : at(frame) + mattress + 8}
-        textAnchor={setup === "low" ? "start" : "end"}
+        x={setup === "high" ? bedX + bedLen - 2 : bedX + 2}
+        y={setup === "high" ? at(frame) + mattress + 8 : at(frame) - 2}
+        textAnchor={setup === "high" ? "end" : "start"}
         fontSize={3.6}
         fill="#5c6674"
       >
         {frameLabel}
       </text>
+      {setup === "bunked" ? (
+        <text x={bedX + 2} y={at(FRAME_CLEARANCE.high) - 2} fontSize={3.6} fill="#5c6674">
+          about 6 ft
+        </text>
+      ) : null}
       {deskBeside ? (
         <g>
           <rect x={deskX} y={floor - measures.desk.h} width={measures.desk.w} height={measures.desk.h} fill={DESK} stroke="#003057" strokeWidth={0.45} />
