@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { apiUrl } from "../api";
 import { formatDates, sleepLabel } from "../format";
 import type { FloorPlan as Floor, RoomShape } from "../types";
 
@@ -29,7 +30,7 @@ export function FloorPlan({
       {showOfficial ? (
         <figure className="space-y-2">
           <img
-            src={plan.image || ""}
+            src={plan.image ? apiUrl(plan.image) : ""}
             alt={`Georgia Tech Housing floor plan for floor ${plan.floor}, including rooms, bathrooms, and study spaces`}
             className="w-full rounded-2xl border border-line bg-white"
             onError={() => setImageFailed(true)}

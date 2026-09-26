@@ -22,6 +22,20 @@ npm run dev
 
 The app is served at [http://127.0.0.1:43123](http://127.0.0.1:43123). The Vite dev server proxies `/api` to Flask on port 5317.
 
+## When the UI and the API are on different hosts
+
+Both sides assume one origin by default, which is what the dev proxy gives you. To split them, set `VITE_API_URL` in `frontend/.env` to where Flask answers, and list the UI's origin in `CORS_ORIGINS` in the root `.env`:
+
+```bash
+# frontend/.env
+VITE_API_URL=https://nook-api.example.com
+
+# .env
+CORS_ORIGINS=https://nook.example.com
+```
+
+`VITE_API_URL` is read at build time, so a change needs another `npm run build`. `CORS_ORIGINS` takes a comma-separated list and rejects every origin outside it. Blank means any origin, which is fine locally because the session travels as an `Authorization` header and never as a cookie. See `frontend/.env.example` and `.env.example`.
+
 ## Step through it
 
 The `.vscode` folder is the IDE setup for Cursor and VS Code. After the install steps above:

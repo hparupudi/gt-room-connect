@@ -10,8 +10,7 @@ os.environ.setdefault("SMTP_HOST", "")
 os.environ.setdefault("FLASK_SECRET_KEY", "test-secret")
 
 
-@pytest.fixture()
-def client(tmp_path, monkeypatch):
+def build_client(tmp_path, monkeypatch, **env):
     monkeypatch.setenv("DATA_PATH", str(tmp_path / "db.json"))
     monkeypatch.setenv("MONGODB_URI", "")
     monkeypatch.setenv("MODEL_API_KEY", "")
@@ -20,6 +19,9 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("FLASK_SECRET_KEY", "test-secret")
     monkeypatch.setenv("DEMO_LOGIN", "1")
     monkeypatch.setenv("LIVE_ROUTING", "0")
+    monkeypatch.setenv("CORS_ORIGINS", "")
+    for key, value in env.items():
+        monkeypatch.setenv(key, value)
     from nook.db import reset_state
 
     reset_state()
@@ -28,6 +30,11 @@ def client(tmp_path, monkeypatch):
     app = create_app()
     app.config["TESTING"] = True
     return app.test_client()
+
+
+@pytest.fixture()
+def client(tmp_path, monkeypatch):
+    return build_client(tmp_path, monkeypatch)
 
 
 def day(offset: int) -> str:
@@ -78,6 +85,40 @@ def test_gatech_email_and_verification(client):
     assert user["email"] == "new.jacket@gatech.edu"
     assert user["onboarding_step"] == "room"
     assert user["socials_visible"] is True
+
+
+def test_cors_defaults_to_any_origin(client):
+    # flask-cors answers a wildcard by echoing the caller's origin, not a literal "*".
+    dev = client.get("/api/meta", headers={"Origin": "http://127.0.0.1:43123"})
+    assert dev.status_code == 200
+    assert dev.headers["Access-Control-Allow-Origin"] == "http://127.0.0.1:43123"
+    anywhere = client.get("/api/meta", headers={"Origin": "https://anything.example"})
+    assert anywhere.headers["Access-Control-Allow-Origin"] == "https://anything.example"
+
+
+def test_cors_allows_only_the_configured_origins(tmp_path, monkeypatch):
+    client = build_client(tmp_path, monkeypatch, CORS_ORIGINS="https://nook.vercel.app/, http://localhost:43123")
+    preflight = client.options(
+        "/api/auth/login",
+        headers={
+            "Origin": "https://nook.vercel.app",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "Authorization, Content-Type",
+        },
+    )
+    assert preflight.status_code == 200
+    assert preflight.headers["Access-Control-Allow-Origin"] == "https://nook.vercel.app"
+    allowed = preflight.headers["Access-Control-Allow-Headers"].lower()
+    assert "authorization" in allowed
+    assert "content-type" in allowed
+
+    token = login(client, "andre.wallace@gatech.edu")
+    signed_in = client.get("/api/auth/me", headers={**auth(token), "Origin": "http://localhost:43123"})
+    assert signed_in.status_code == 200
+    assert signed_in.headers["Access-Control-Allow-Origin"] == "http://localhost:43123"
+
+    stranger = client.get("/api/meta", headers={"Origin": "https://not-nook.example"})
+    assert "Access-Control-Allow-Origin" not in stranger.headers
 
 
 def test_search_keyword_filters_and_sort(client):
