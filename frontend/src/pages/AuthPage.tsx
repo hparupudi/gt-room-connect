@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
+=======
+import { useState } from "react";
+import type { SubmitEvent } from "react";
+>>>>>>> cc0fc8974ab62721cb8101e9f4b6a3c79f915491
 import { Link, useNavigate } from "react-router-dom";
 
 import { api, ApiError } from "../api";
@@ -54,7 +59,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
     navigate(userStep === "done" ? "/discover" : "/onboarding");
   }
 
-  async function onLogin(event: FormEvent) {
+  async function onLogin(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setError("");
@@ -68,7 +73,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
     }
   }
 
-  async function sendCode(event: FormEvent) {
+  async function sendCode(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setError("");
@@ -87,7 +92,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
     }
   }
 
-  async function verify(event: FormEvent) {
+  async function verify(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setError("");
@@ -105,7 +110,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
     }
   }
 
-  async function register(event: FormEvent) {
+  async function register(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setError("");
