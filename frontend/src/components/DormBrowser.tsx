@@ -101,6 +101,14 @@ export function DormBrowser({
     if (next?.dormId && next.dormId !== selectedId) selectHall(next.dormId);
   }
 
+  useEffect(() => {
+    if (destinationRoom && detail) {
+      const level = detail.floors.find((item) => item.rooms.some((room) => room.unit === destinationRoom.unit));
+      if (level && level.floor !== floor) setFloor(level.floor);
+    }
+    // Follow the destination when it changes, not when the user browses floors.
+  }, [destinationRoom?.unit, detail?.id]);
+
   function chooseUnit(room: RoomShape) {
     if (!detail || !plan) return;
     if (mode === "pick") {
@@ -335,34 +343,37 @@ function EndpointPicker({
   }, [dormId, token]);
 
   return (
-    <div className="grid grid-cols-[3rem_minmax(0,1fr)_5.5rem] items-center gap-2 text-sm">
-      <span className="text-muted">{label}</span>
-      <select
-        value={dormId}
-        onChange={(event) => {
-          const next = event.target.value;
-          onChange(next ? { dormId: next, unit: "" } : null);
-        }}
-      >
-        <option value="">Hall</option>
-        {dorms.map((dorm) => (
-          <option key={dorm.id} value={dorm.id}>
-            {dorm.name}
-          </option>
-        ))}
-      </select>
-      <select
-        value={value?.unit ?? ""}
-        disabled={!dormId}
-        onChange={(event) => dormId && onChange({ dormId, unit: event.target.value })}
-      >
-        <option value="">Unit</option>
-        {units.map((unit) => (
-          <option key={unit} value={unit}>
-            {unit}
-          </option>
-        ))}
-      </select>
+    <div className="text-sm">
+      <span className="mb-1 block text-xs font-medium text-muted uppercase tracking-wide">{label}</span>
+      <div className="grid grid-cols-[minmax(0,1fr)_5.5rem] gap-2">
+        <select
+          className="min-w-0"
+          value={dormId}
+          onChange={(event) => {
+            const next = event.target.value;
+            onChange(next ? { dormId: next, unit: "" } : null);
+          }}
+        >
+          <option value="">Hall</option>
+          {dorms.map((dorm) => (
+            <option key={dorm.id} value={dorm.id}>
+              {dorm.name}
+            </option>
+          ))}
+        </select>
+        <select
+          value={value?.unit ?? ""}
+          disabled={!dormId}
+          onChange={(event) => dormId && onChange({ dormId, unit: event.target.value })}
+        >
+          <option value="">Unit</option>
+          {units.map((unit) => (
+            <option key={unit} value={unit}>
+              {unit}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 }

@@ -1,15 +1,17 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { CircleMarker, MapContainer, Polygon, Polyline, TileLayer, Tooltip, useMap } from "react-leaflet";
 import type { LatLngBoundsExpression, LatLngExpression } from "leaflet";
 
 import type { DormPin, Route } from "../types";
 
-const TILES = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png";
-const LABELS = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png";
+// OpenStreetMap's standard tiles need no key. Set VITE_TILE_URL to swap in a
+// keyed provider (CARTO, Stadia, MapTiler) without touching the code.
+const TILES = import.meta.env.VITE_TILE_URL || "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+  import.meta.env.VITE_TILE_ATTRIBUTION ||
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
-export const CAMPUS_BOUNDS: LatLngBoundsExpression = [
+const CAMPUS_BOUNDS: LatLngBoundsExpression = [
   [33.7665, -84.4095],
   [33.7845, -84.3855],
 ];
@@ -20,7 +22,7 @@ const FILL = {
   idle: "#8d8476",
 };
 
-export function hallTone(dorm: { yours: boolean; open_units: number }): keyof typeof FILL {
+function hallTone(dorm: { yours: boolean; open_units: number }): keyof typeof FILL {
   if (dorm.yours) return "yours";
   if (dorm.open_units) return "open";
   return "idle";
@@ -59,8 +61,7 @@ export function CampusMap({
         doubleClickZoom={interactive}
         className="h-full w-full bg-[#eef0e7]"
       >
-        <TileLayer url={TILES} attribution={ATTRIBUTION} subdomains="abcd" maxZoom={20} />
-        <TileLayer url={LABELS} subdomains="abcd" maxZoom={20} pane="shadowPane" />
+        <TileLayer url={TILES} attribution={ATTRIBUTION} maxZoom={19} className="nook-tiles" />
         {dorms.map((dorm) => {
           const tone = hallTone(dorm);
           const active = dorm.id === selectedId;
@@ -68,8 +69,13 @@ export function CampusMap({
             color: active ? "#8d6e2f" : "#fffaf3",
             weight: active ? 3 : 1.2,
             fillColor: FILL[tone],
-            fillOpacity: active ? 0.95 : tone === "idle" ? 0.55 : 0.85,
+            fillOpacity: active ? 0.95 : tone === "idle" ? 0.6 : 0.88,
           };
+          const label = dorm.yours
+            ? "Your hall"
+            : dorm.open_units
+              ? `${dorm.open_units} unit${dorm.open_units === 1 ? "" : "s"} open`
+              : "Nobody hosting";
           return (
             <Polygon
               key={dorm.id}
@@ -80,11 +86,31 @@ export function CampusMap({
               <Tooltip sticky direction="top" opacity={1} className="nook-tip">
                 <strong>{dorm.name}</strong>
                 <br />
-                {dorm.yours ? "Your hall" : dorm.open_units ? `${dorm.open_units} unit${dorm.open_units === 1 ? "" : "s"} open` : "Nobody hosting"}
+                {label}
               </Tooltip>
             </Polygon>
           );
         })}
+        {dorms
+          .filter((dorm) => dorm.yours || dorm.open_units || dorm.id === selectedId)
+          .map((dorm) => {
+            const tone = hallTone(dorm);
+            return (
+              <CircleMarker
+                key={`pin-${dorm.id}`}
+                center={[dorm.lat, dorm.lng]}
+                radius={dorm.id === selectedId ? 9 : 7}
+                pathOptions={{ color: "#fffaf3", weight: 2, fillColor: FILL[tone], fillOpacity: 1 }}
+                eventHandlers={{ click: () => onSelect?.(dorm.id) }}
+              >
+                <Tooltip direction="top" offset={[0, -8]} opacity={1} className="nook-tip">
+                  <strong>{dorm.name}</strong>
+                  <br />
+                  {dorm.yours ? "Your hall" : `${dorm.open_units} unit${dorm.open_units === 1 ? "" : "s"} open`}
+                </Tooltip>
+              </CircleMarker>
+            );
+          })}
         {route && route.points.length > 1 ? (
           <>
             <Polyline positions={route.points} pathOptions={{ color: "#fffaf3", weight: 8, opacity: 0.9 }} />
@@ -116,14 +142,20 @@ export function CampusMap({
 
 function Focus({ points, selectedId, dorms }: { points: [number, number][] | null; selectedId?: string; dorms: DormPin[] }) {
   const map = useMap();
+  const firstSelection = useRef(true);
   useEffect(() => {
     if (points && points.length > 1) {
       map.fitBounds(points, { padding: [48, 48], maxZoom: 17 });
       return;
     }
+    // The whole campus stays in view on load; only a later click zooms in.
+    if (firstSelection.current) {
+      firstSelection.current = false;
+      return;
+    }
     const dorm = dorms.find((item) => item.id === selectedId);
     if (dorm) {
-      map.flyTo([dorm.lat, dorm.lng], Math.max(map.getZoom(), 17), { duration: 0.6 });
+      map.flyTo([dorm.lat, dorm.lng], Math.max(map.getZoom(), 16), { duration: 0.6 });
     }
   }, [points, selectedId, dorms, map]);
   useEffect(() => {
