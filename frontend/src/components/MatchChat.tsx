@@ -44,9 +44,17 @@ export function MatchChat({
       });
     const id = window.setInterval(() => {
       if (document.hidden) return;
+<<<<<<< HEAD
       loadMessages()
         .then(() => onSeenRef.current?.())
         .catch(() => undefined);
+=======
+      loadMessages().catch(() => undefined);
+      loadStatus().catch(() => undefined);
+      // Why would you ever do this?
+      // please don't ever do this
+      // use websockets, PLEASE
+>>>>>>> 7fa697a5dd1d4029b06d6b16f7c9e1d5a45c17ca
     }, 4000);
     return () => {
       stop = true;

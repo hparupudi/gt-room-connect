@@ -29,7 +29,7 @@ function reachedIndex(step: string | undefined): number {
 }
 
 export function Onboarding() {
-  const { token, user, refresh } = useAuth();
+  const { token, user, refresh, logout } = useAuth();
   const { dates } = useDates();
   const navigate = useNavigate();
   const [step, setStep] = useState<StepId>(user?.onboarding_step === "done" ? "voice" : user?.onboarding_step === "about" || user?.onboarding_step === "voice" ? user.onboarding_step : "room");
@@ -108,9 +108,14 @@ export function Onboarding() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
-      <div className="mb-6 flex items-center gap-2">
-        <Mark />
-        <span className="font-serif text-2xl">Nook</span>
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <Mark />
+          <span className="font-serif text-2xl">Nook</span>
+        </div>
+        <button type="button" onClick={logout} className="text-sm text-muted hover:text-ink">
+          Log out
+        </button>
       </div>
       <p className="text-xs tracking-[0.16em] text-gold uppercase">First time in</p>
       <h1 className="font-serif text-4xl text-navy">Claim a room, then tell us how you live.</h1>
