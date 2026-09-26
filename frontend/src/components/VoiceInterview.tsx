@@ -5,9 +5,6 @@ import { useAuth } from "../auth";
 import type { User } from "../types";
 import { Banner, btnPrimary } from "./ui";
 
-const MIN_SECONDS = 30;
-const MAX_SECONDS = 60;
-
 export function VoiceInterview({ onDone }: { onDone: (user: User) => void }) {
   const { token, meta, refresh } = useAuth();
   const questions = meta?.questions ?? [];
@@ -22,24 +19,23 @@ export function VoiceInterview({ onDone }: { onDone: (user: User) => void }) {
   const chunks = useRef<Blob[]>([]);
   const stream = useRef<MediaStream | null>(null);
   const recognition = useRef<{ stop: () => void } | null>(null);
+  const transcriptRef = useRef("");
+  const interimRef = useRef("");
+  const saving = useRef(false);
 
   useEffect(() => {
     if (!running) return;
     const id = window.setInterval(() => {
-      setSeconds((current) => {
-        if (current + 1 >= MAX_SECONDS) {
-          setRunning(false);
-          return MAX_SECONDS;
-        }
-        return current + 1;
-      });
+      setSeconds((current) => current + 1);
     }, 1000);
     return () => window.clearInterval(id);
   }, [running]);
 
-  useEffect(() => {
-    if (!running) stopCapture();
-  }, [running]);
+  function writeTranscript(value: string) {
+    const next = value.replace(/\s+/g, " ").trim();
+    transcriptRef.current = next;
+    setTranscript(next);
+  }
 
   function stopCapture() {
     recognition.current?.stop();
@@ -49,10 +45,15 @@ export function VoiceInterview({ onDone }: { onDone: (user: User) => void }) {
     stream.current = null;
   }
 
+  useEffect(() => {
+    return () => stopCapture();
+  }, []);
+
   async function start() {
     setError("");
     setSeconds(0);
     chunks.current = [];
+    interimRef.current = "";
     setRunning(true);
     try {
       const media = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -78,7 +79,7 @@ export function VoiceInterview({ onDone }: { onDone: (user: User) => void }) {
       rec.start();
       setMicNote("");
     } catch {
-      setMicNote("The mic isn't available, so type your answers while the timer runs. That's enough for the profile.");
+      setMicNote("The mic isn't available, so type your answers. That's enough for the profile if you cover your habits.");
     }
 
     const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -94,11 +95,8 @@ export function VoiceInterview({ onDone }: { onDone: (user: User) => void }) {
           if (event.results[index].isFinal) finalText += `${piece} `;
           else interim += piece;
         }
-        if (finalText) {
-          setTranscript((current) => `${current} ${finalText}`.replace(/\s+/g, " ").trim());
-        } else if (interim) {
-          setTranscript((current) => current || interim);
-        }
+        interimRef.current = interim.trim();
+        if (finalText) writeTranscript(`${transcriptRef.current} ${finalText}`);
       };
       try {
         heard.start();
@@ -107,6 +105,14 @@ export function VoiceInterview({ onDone }: { onDone: (user: User) => void }) {
         /* recognition can fail independently of the mic */
       }
     }
+  }
+
+  function flushInterim() {
+    const extra = interimRef.current.trim();
+    interimRef.current = "";
+    if (!extra) return;
+    if (transcriptRef.current.toLowerCase().includes(extra.toLowerCase())) return;
+    writeTranscript(`${transcriptRef.current} ${extra}`);
   }
 
   async function submit() {
@@ -119,9 +125,12 @@ export function VoiceInterview({ onDone }: { onDone: (user: User) => void }) {
           recorder.current!.stop();
         });
       }
+      stream.current?.getTracks().forEach((track) => track.stop());
+      stream.current = null;
+      flushInterim();
       const body = new FormData();
       body.set("duration_sec", String(seconds));
-      body.set("transcript", transcript.trim());
+      body.set("transcript", transcriptRef.current.trim());
       if (chunks.current.length) {
         body.set("audio", new Blob(chunks.current, { type: "audio/webm" }), "interview.webm");
       }
@@ -135,10 +144,28 @@ export function VoiceInterview({ onDone }: { onDone: (user: User) => void }) {
     }
   }
 
-  const activeQuestion = Math.min(questions.length - 1, Math.floor(seconds / 15));
+  async function finishAndSave() {
+    if (saving.current) return;
+    saving.current = true;
+    setRunning(false);
+    recognition.current?.stop();
+    recognition.current = null;
+    await new Promise((resolve) => window.setTimeout(resolve, 250));
+    flushInterim();
+    try {
+      await submit();
+    } finally {
+      saving.current = false;
+    }
+  }
+
+  const activeQuestion = questions.length ? Math.min(questions.length - 1, Math.floor(seconds / 12)) : 0;
 
   return (
     <div className="space-y-5">
+      <p className="text-sm text-muted">
+        Cover each prompt, then stop. A short take is fine. Nook only rejects the recording when a habit is still missing.
+      </p>
       <ol className="space-y-2">
         {questions.map((question, index) => (
           <li
@@ -158,7 +185,7 @@ export function VoiceInterview({ onDone }: { onDone: (user: User) => void }) {
             <p className="text-xs tracking-[0.16em] text-gold-soft uppercase">One take</p>
             <p className="font-serif text-5xl tabular-nums">
               {seconds}
-              <span className="text-2xl text-gold-soft"> / {MAX_SECONDS}s</span>
+              <span className="text-2xl text-gold-soft">s</span>
             </p>
           </div>
           {!running && seconds === 0 ? (
@@ -166,8 +193,8 @@ export function VoiceInterview({ onDone }: { onDone: (user: User) => void }) {
               Start recording
             </button>
           ) : running ? (
-            <button type="button" className="rounded-full bg-white/10 px-4 py-2 text-sm" onClick={() => setRunning(false)}>
-              Stop
+            <button type="button" className="rounded-full bg-gold-soft px-4 py-2 text-sm font-medium text-navy" disabled={busy} onClick={finishAndSave}>
+              {busy ? "Saving…" : "I'm done"}
             </button>
           ) : null}
         </div>
@@ -177,9 +204,11 @@ export function VoiceInterview({ onDone }: { onDone: (user: User) => void }) {
           ))}
         </div>
         <p className="mt-3 text-sm text-gold-soft">
-          {seconds < MIN_SECONDS
-            ? `Keep going until ${MIN_SECONDS} seconds so the profile has a real voice to it.`
-            : "That's enough. Stop anytime before a minute, or let it finish."}
+          {running
+            ? "Stop whenever you've covered your habits. You don't have to fill a minute."
+            : seconds === 0
+              ? "Hit start, talk through the prompts, then stop when you're finished."
+              : "Recording stopped. Save it, or edit the transcript if something got missed."}
         </p>
       </div>
       {micNote ? <Banner tone="note">{micNote}</Banner> : null}
@@ -188,18 +217,13 @@ export function VoiceInterview({ onDone }: { onDone: (user: User) => void }) {
         <textarea
           rows={5}
           value={transcript}
-          onChange={(event) => setTranscript(event.target.value)}
-          placeholder="The mic fills this in. Edit anything it missed."
+          onChange={(event) => writeTranscript(event.target.value)}
+          placeholder="The mic fills this in. Edit anything it missed, including habits you didn't say out loud."
         />
       </label>
       {error ? <Banner>{error}</Banner> : null}
-      <button
-        type="button"
-        className={btnPrimary}
-        disabled={busy || seconds < MIN_SECONDS || transcript.trim().length < 40}
-        onClick={submit}
-      >
-        {busy ? "Writing your profile…" : "Save interview"}
+      <button type="button" className={btnPrimary} disabled={busy} onClick={running ? finishAndSave : submit}>
+        {busy ? "Writing your profile…" : running ? "Stop and save" : "Save interview"}
       </button>
     </div>
   );

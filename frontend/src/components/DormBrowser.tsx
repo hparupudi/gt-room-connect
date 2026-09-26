@@ -241,11 +241,17 @@ export function DormBrowser({
               ))}
             </div>
           </div>
-          {plan ? <FloorPlan plan={plan} selectedUnit={highlightUnit} onSelect={chooseUnit} /> : null}
+          {plan ? (
+            <FloorPlan key={`${detail.id}-${plan.floor}`} plan={plan} selectedUnit={highlightUnit} onSelect={chooseUnit} />
+          ) : null}
           <p className="mt-3 text-xs text-muted">
-            {mode === "pick"
-              ? "Click a unit to claim it as yours. Roommates can both live in a double."
-              : "Hover a unit for who's hosting. Click any unit to get walking directions to it from your room."}
+            {plan?.image
+              ? mode === "pick"
+                ? "The plan above is the Housing drawing for this floor. Choose your unit underneath it. Roommates can both live in a double."
+                : "The plan above is the Housing drawing for this floor, including bathrooms and study spaces. Choose a unit underneath it for who's hosting and for walking directions."
+              : mode === "pick"
+                ? "Click a unit to claim it as yours. Roommates can both live in a double."
+                : "Hover a unit for who's hosting. Click any unit to get walking directions to it from your room."}
           </p>
         </section>
       ) : null}

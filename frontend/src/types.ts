@@ -92,6 +92,10 @@ export type FloorPlan = {
   hall: { x: number; y: number; w: number; h: number; label: string } | null;
   fixtures: { x: number; y: number; w: number; h: number; label: string }[];
   rooms: RoomShape[];
+  image?: string | null;
+  pdf?: string | null;
+  source_page?: string | null;
+  official?: boolean;
 };
 
 export type HallSpecs = {

@@ -1,0 +1,1478 @@
+{
+  "glenn": {
+    "slug": "glenn",
+    "page": "https://housing.gatech.edu/locations/glenn",
+    "floors": {
+      "0": {
+        "label": "Floor Plan 0",
+        "file": "glenn/0.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/GLN-00.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/GLN-00.pdf",
+        "mime": "image/jpeg"
+      },
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "glenn/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/GLN-01.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/GLN-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "glenn/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/GLN-02.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/GLN-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "glenn/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/GLN-03.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/GLN-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "glenn/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/GLN-04.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/GLN-04.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "field": {
+    "slug": "field",
+    "page": "https://housing.gatech.edu/locations/field",
+    "floors": {
+      "0": {
+        "label": "Floor Plan 0",
+        "file": "field/0.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/FLD-00.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/FLD-00.pdf",
+        "mime": "image/jpeg"
+      },
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "field/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/FLD-01_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/FLD-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "field/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/FLD-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/FLD-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "field/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/FLD-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/FLD-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "field/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/FLD-04_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/FLD-04.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "hopkins": {
+    "slug": "hopkins",
+    "page": "https://housing.gatech.edu/locations/hopkins",
+    "floors": {
+      "0": {
+        "label": "Floor Plan 0",
+        "file": "hopkins/0.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/HOP-00_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/HOP-00.pdf",
+        "mime": "image/jpeg"
+      },
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "hopkins/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/HOP-01_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/HOP-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "hopkins/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/HOP-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/HOP-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "hopkins/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/HOP-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/HOP-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "hopkins/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/HOP-04_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/HOP-04.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "matheson": {
+    "slug": "matheson",
+    "page": "https://housing.gatech.edu/locations/matheson",
+    "floors": {
+      "0": {
+        "label": "Floor Plan 0",
+        "file": "matheson/0.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/MTH-00.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/MTH-00.pdf",
+        "mime": "image/jpeg"
+      },
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "matheson/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/MTH-01.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/MTH-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "matheson/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/MTH-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/MTH-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "matheson/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/MTH-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/MTH-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "matheson/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/MTH-04_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/MTH-04.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "perry": {
+    "slug": "perry",
+    "page": "https://housing.gatech.edu/locations/perry",
+    "floors": {
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "perry/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/PER-01.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/PER-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "perry/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/PER-02-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/PER-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "perry/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/PER-03-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/PER-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "perry/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/PER-04-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/PER-04.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "hanson": {
+    "slug": "hanson",
+    "page": "https://housing.gatech.edu/locations/hanson",
+    "floors": {
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "hanson/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/HAN-01_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/HAN-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "hanson/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/HAN-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/HAN-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "hanson/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/HAN-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/HAN-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "hanson/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/HAN-04_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/HAN-04.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "harrison": {
+    "slug": "harrison",
+    "page": "https://housing.gatech.edu/locations/harrison",
+    "floors": {
+      "0": {
+        "label": "Floor Plan 0",
+        "file": "harrison/0.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/HRN-00_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/HRN-00.pdf",
+        "mime": "image/jpeg"
+      },
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "harrison/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/HRN-01_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/HRN-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "harrison/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/HRN-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/HRN-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "harrison/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/HRN-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/HRN-03.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "howell": {
+    "slug": "howell",
+    "page": "https://housing.gatech.edu/locations/howell",
+    "floors": {
+      "0": {
+        "label": "Floor Plan 0",
+        "file": "howell/0.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/HOW-00_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/HOW-00.pdf",
+        "mime": "image/jpeg"
+      },
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "howell/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/HOW-01.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/HOW-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "howell/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/HOW-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/HOW-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "howell/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/HOW-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/HOW-03.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "towers": {
+    "slug": "towers",
+    "page": "https://housing.gatech.edu/locations/towers",
+    "floors": {
+      "0": {
+        "label": "Floor Plan 0",
+        "file": "towers/0.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/TOW-00_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/TOW-00.pdf",
+        "mime": "image/jpeg"
+      },
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "towers/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/TOW-01_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/TOW-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "towers/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/TOW-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/TOW-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "towers/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/TOW-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/TOW-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "towers/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/TOW-04_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/TOW-04.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "cloudman": {
+    "slug": "cloudman",
+    "page": "https://housing.gatech.edu/locations/cloudman",
+    "floors": {
+      "0": {
+        "label": "Floor Plan 0",
+        "file": "cloudman/0.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/CLD-00.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/CLD-00.pdf",
+        "mime": "image/jpeg"
+      },
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "cloudman/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CLD-01_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CLD-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "cloudman/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CLD-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CLD-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "cloudman/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CLD-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CLD-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "cloudman/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/CLD-04.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/CLD-04.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "brown": {
+    "slug": "brown",
+    "page": "https://housing.gatech.edu/locations/brown",
+    "floors": {
+      "0": {
+        "label": "Floor Plan 0",
+        "file": "brown/0.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2024/11/Brown-0.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2024/11/Brown-FP-1.pdf",
+        "mime": "image/jpeg"
+      },
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "brown/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/BRN-01_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/BRN-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "brown/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/BRN-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/BRN-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "brown/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/BRN-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/BRN-03.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "armstrong": {
+    "slug": "armstrong",
+    "page": "https://housing.gatech.edu/locations/armstrong",
+    "floors": {
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "armstrong/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ARM-01_1-1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ARM-01-1.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "armstrong/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ARM-02_1-1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ARM-02-1.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "armstrong/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ARM-03_1-1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ARM-03-1.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "caldwell": {
+    "slug": "caldwell",
+    "page": "https://housing.gatech.edu/locations/caldwell",
+    "floors": {
+      "0": {
+        "label": "Floor Plan 0",
+        "file": "caldwell/0.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CAL-00_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CAL-00.pdf",
+        "mime": "image/jpeg"
+      },
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "caldwell/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CAL-01_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CAL-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "caldwell/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CAL-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CAL-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "caldwell/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CAL-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CAL-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "caldwell/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CAL-04_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CAL-04.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "folk": {
+    "slug": "folk",
+    "page": "https://housing.gatech.edu/locations/folk",
+    "floors": {
+      "0": {
+        "label": "Floor Plan 0",
+        "file": "folk/0.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/FLK-00_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/FLK-00.pdf",
+        "mime": "image/jpeg"
+      },
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "folk/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/FLK-01_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/FLK-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "folk/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/FLK-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/FLK-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "folk/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/FLK-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/FLK-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "folk/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/FLK-04_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/FLK-04.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "fitten": {
+    "slug": "fitten",
+    "page": "https://housing.gatech.edu/locations/fitten",
+    "floors": {
+      "0": {
+        "label": "Floor Plan 0",
+        "file": "fitten/0.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/FIT-00_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/FIT-00.pdf",
+        "mime": "image/jpeg"
+      },
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "fitten/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/FIT-01.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/FIT-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "fitten/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/FIT-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/FIT-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "fitten/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/FIT-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/FIT-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "fitten/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/FIT-04_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/FIT-04.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "freeman": {
+    "slug": "freeman",
+    "page": "https://housing.gatech.edu/locations/freeman",
+    "floors": {
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "freeman/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/FRE-01_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/FRE-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "freeman/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/FRE-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/FRE-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "freeman/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/FRE-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/FRE-03.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "fulmer": {
+    "slug": "fulmer",
+    "page": "https://housing.gatech.edu/locations/fulmer",
+    "floors": {
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "fulmer/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/FUL-01_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/FUL-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "fulmer/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/FUL-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/FUL-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "fulmer/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/FUL-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/FUL-03.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "hefner": {
+    "slug": "hefner",
+    "page": "https://housing.gatech.edu/locations/hefner",
+    "floors": {
+      "0": {
+        "label": "Floor Plan 0",
+        "file": "hefner/0.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/HEF-00.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/HEF-00.pdf",
+        "mime": "image/jpeg"
+      },
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "hefner/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/HEF-01_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/HEF-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "hefner/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/HEF-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/HEF-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "hefner/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/HEF-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/HEF-03.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "montag": {
+    "slug": "montag",
+    "page": "https://housing.gatech.edu/locations/montag",
+    "floors": {
+      "0": {
+        "label": "Floor Plan 0",
+        "file": "montag/0.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/MON-00.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/MON-00.pdf",
+        "mime": "image/jpeg"
+      },
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "montag/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/MON-01_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/MON-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "montag/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/MON-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/MON-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "montag/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/MON-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/MON-03.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "woodruff-north": {
+    "slug": "woodruff-north",
+    "page": "https://housing.gatech.edu/locations/woodruff-north",
+    "floors": {
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "woodruff-north/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/WDF-01.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/WDF-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "woodruff-north/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/WDF-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/WDF-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "woodruff-north/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/WDF-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/WDF-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "woodruff-north/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/WDF-04.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/WDF-04.pdf",
+        "mime": "image/jpeg"
+      },
+      "5": {
+        "label": "Floor Plan 5",
+        "file": "woodruff-north/5.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/WDF-05.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/WDF-05.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "woodruff-south": {
+    "slug": "woodruff-south",
+    "page": "https://housing.gatech.edu/locations/woodruff-south",
+    "floors": {
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "woodruff-south/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/WDF-01.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/WDF-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "woodruff-south/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/WDF-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/WDF-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "woodruff-south/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/WDF-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/WDF-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "woodruff-south/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/WDF-04.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/WDF-04.pdf",
+        "mime": "image/jpeg"
+      },
+      "5": {
+        "label": "Floor Plan 5",
+        "file": "woodruff-south/5.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/WDF-05.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/WDF-05.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "crecine": {
+    "slug": "crecine",
+    "page": "https://housing.gatech.edu/locations/crecine",
+    "floors": {
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "crecine/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CRE-01_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CRE-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "crecine/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CRE-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CRE-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "crecine/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CRE-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CRE-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "crecine/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CRE-04_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CRE-04.pdf",
+        "mime": "image/jpeg"
+      },
+      "5": {
+        "label": "Floor Plan 5",
+        "file": "crecine/5.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CRE-05_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CRE-05.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "eighth-east": {
+    "slug": "eighth-street-east",
+    "page": "https://housing.gatech.edu/locations/eighth-street-east",
+    "floors": {
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "eighth-east/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESE-01_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESE-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "eighth-east/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESE-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESE-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "eighth-east/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESE-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESE-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "eighth-east/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESE-04_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESE-04.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "eighth-west": {
+    "slug": "eighth-street-west",
+    "page": "https://housing.gatech.edu/locations/eighth-street-west",
+    "floors": {
+      "0": {
+        "label": "Floor Plan 0",
+        "file": "eighth-west/0.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESW-00_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESW-00.pdf",
+        "mime": "image/jpeg"
+      },
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "eighth-west/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESW-01_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESW-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "eighth-west/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESW-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESW-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "eighth-west/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESW-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESW-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "eighth-west/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESW-04_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESW-04.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "eighth-south": {
+    "slug": "eighth-street-south",
+    "page": "https://housing.gatech.edu/locations/eighth-street-south",
+    "floors": {
+      "0": {
+        "label": "Floor Plan 0",
+        "file": "eighth-south/0.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESS-00_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESS-00.pdf",
+        "mime": "image/jpeg"
+      },
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "eighth-south/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESS-01_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESS-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "eighth-south/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESS-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESS-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "eighth-south/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESS-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESS-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "eighth-south/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESS-04_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ESS-04.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "center-north": {
+    "slug": "center-street-north",
+    "page": "https://housing.gatech.edu/locations/center-street-north",
+    "floors": {
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "center-north/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CSN-01_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CSN-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "center-north/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CSN-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CSN-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "center-north/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CSN-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CSN-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "center-north/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CSN-04_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CSN-04.pdf",
+        "mime": "image/jpeg"
+      },
+      "5": {
+        "label": "Floor Plan 5",
+        "file": "center-north/5.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CSN-05_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CSN-05.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "center-south": {
+    "slug": "center-street-south",
+    "page": "https://housing.gatech.edu/locations/center-street-south",
+    "floors": {
+      "0": {
+        "label": "Floor Plan 0",
+        "file": "center-south/0.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CSS-00_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CSS-00.pdf",
+        "mime": "image/jpeg"
+      },
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "center-south/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CSS-01_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CSS-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "center-south/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CSS-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CSS-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "center-south/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/CSS-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/CSS-03.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "maulding": {
+    "slug": "maulding",
+    "page": "https://housing.gatech.edu/locations/maulding",
+    "floors": {
+      "0": {
+        "label": "Floor Plan 0",
+        "file": "maulding/0.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/MLD-00_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/MLD-00.pdf",
+        "mime": "image/jpeg"
+      },
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "maulding/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/MLD-01_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/MLD-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "maulding/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/MLD-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/MLD-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "maulding/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/MLD-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/MLD-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "maulding/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/MLD-04_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/MLD-04.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "nelson-shell": {
+    "slug": "nelson-shell",
+    "page": "https://housing.gatech.edu/locations/nelson-shell",
+    "floors": {
+      "0": {
+        "label": "Floor Plan 0",
+        "file": "nelson-shell/0.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NSL-00-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NSL-00.pdf",
+        "mime": "image/jpeg"
+      },
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "nelson-shell/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NSL-01-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NSL-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "nelson-shell/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NSL-02-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NSL-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "nelson-shell/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NSL-03-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NSL-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "nelson-shell/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NSL-04-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NSL-04.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "zbar": {
+    "slug": "zbar-apartments",
+    "page": "https://housing.gatech.edu/locations/zbar-apartments",
+    "floors": {
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "zbar/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ZBR-01-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ZBR-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "zbar/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ZBR-02-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ZBR-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "zbar/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ZBR-03-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ZBR-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "zbar/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/ZBR-04-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/ZBR-04.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "graduate-living": {
+    "slug": "glc",
+    "page": "https://housing.gatech.edu/locations/glc",
+    "floors": {
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "graduate-living/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2026/08/GLC-01.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2026/08/GLC-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "graduate-living/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/GLC-02_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/GLC-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "graduate-living/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/GLC-03_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/GLC-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "graduate-living/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/GLC-04_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/GLC-04.pdf",
+        "mime": "image/jpeg"
+      },
+      "5": {
+        "label": "Floor Plan 5",
+        "file": "graduate-living/5.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/GLC-05_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/GLC-05.pdf",
+        "mime": "image/jpeg"
+      },
+      "6": {
+        "label": "Floor Plan 6",
+        "file": "graduate-living/6.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/GLC-06_1.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/GLC-06.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "north-ave-east": {
+    "slug": "north-avenue-east",
+    "page": "https://housing.gatech.edu/locations/north-avenue-east",
+    "floors": {
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "north-ave-east/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-01-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "north-ave-east/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-02-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "north-ave-east/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-03-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "north-ave-east/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-04-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-04.pdf",
+        "mime": "image/jpeg"
+      },
+      "5": {
+        "label": "Floor Plan 5",
+        "file": "north-ave-east/5.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-05-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-05.pdf",
+        "mime": "image/jpeg"
+      },
+      "6": {
+        "label": "Floor Plan 6",
+        "file": "north-ave-east/6.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-06-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-06.pdf",
+        "mime": "image/jpeg"
+      },
+      "7": {
+        "label": "Floor Plan 7",
+        "file": "north-ave-east/7.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-07-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-07.pdf",
+        "mime": "image/jpeg"
+      },
+      "8": {
+        "label": "Floor Plan 8",
+        "file": "north-ave-east/8.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-08-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-08.pdf",
+        "mime": "image/jpeg"
+      },
+      "9": {
+        "label": "Floor Plan 9",
+        "file": "north-ave-east/9.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-09-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-09.pdf",
+        "mime": "image/jpeg"
+      },
+      "10": {
+        "label": "Floor Plan 10",
+        "file": "north-ave-east/10.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-10-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-10.pdf",
+        "mime": "image/jpeg"
+      },
+      "11": {
+        "label": "Floor Plan 11",
+        "file": "north-ave-east/11.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-11-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-11.pdf",
+        "mime": "image/jpeg"
+      },
+      "12": {
+        "label": "Floor Plan 12",
+        "file": "north-ave-east/12.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-12-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-12.pdf",
+        "mime": "image/jpeg"
+      },
+      "13": {
+        "label": "Floor Plan 13",
+        "file": "north-ave-east/13.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-13-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAE-13.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "north-ave-north": {
+    "slug": "north-avenue-north",
+    "page": "https://housing.gatech.edu/locations/north-avenue-north",
+    "floors": {
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "north-ave-north/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAN-01-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAN-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "north-ave-north/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAN-02-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAN-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "north-ave-north/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAN-03-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAN-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "north-ave-north/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAN-04-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAN-04.pdf",
+        "mime": "image/jpeg"
+      },
+      "5": {
+        "label": "Floor Plan 5",
+        "file": "north-ave-north/5.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAN-05-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAN-05.pdf",
+        "mime": "image/jpeg"
+      },
+      "6": {
+        "label": "Floor Plan 6",
+        "file": "north-ave-north/6.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAN-06-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAN-06.pdf",
+        "mime": "image/jpeg"
+      },
+      "7": {
+        "label": "Floor Plan 7",
+        "file": "north-ave-north/7.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAN-07-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAN-07.pdf",
+        "mime": "image/jpeg"
+      },
+      "8": {
+        "label": "Floor Plan 8",
+        "file": "north-ave-north/8.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAN-08-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAN-08.pdf",
+        "mime": "image/jpeg"
+      },
+      "9": {
+        "label": "Floor Plan 9",
+        "file": "north-ave-north/9.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAN-09-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAN-09.pdf",
+        "mime": "image/jpeg"
+      },
+      "10": {
+        "label": "Floor Plan 10",
+        "file": "north-ave-north/10.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAN-10-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAN-10.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "north-ave-south": {
+    "slug": "north-avenue-south",
+    "page": "https://housing.gatech.edu/locations/north-avenue-south",
+    "floors": {
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "north-ave-south/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAS-01-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAS-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "north-ave-south/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAS-02-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAS-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "north-ave-south/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAS-03-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAS-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "north-ave-south/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAS-04-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAS-04.pdf",
+        "mime": "image/jpeg"
+      },
+      "5": {
+        "label": "Floor Plan 5",
+        "file": "north-ave-south/5.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAS-05-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAS-05.pdf",
+        "mime": "image/jpeg"
+      },
+      "6": {
+        "label": "Floor Plan 6",
+        "file": "north-ave-south/6.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAS-06-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAS-06.pdf",
+        "mime": "image/jpeg"
+      },
+      "7": {
+        "label": "Floor Plan 7",
+        "file": "north-ave-south/7.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAS-07-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAS-07.pdf",
+        "mime": "image/jpeg"
+      },
+      "8": {
+        "label": "Floor Plan 8",
+        "file": "north-ave-south/8.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAS-08-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAS-08.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "north-ave-west": {
+    "slug": "north-avenue-west",
+    "page": "https://housing.gatech.edu/locations/north-avenue-west",
+    "floors": {
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "north-ave-west/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAW-01-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAW-01.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "north-ave-west/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAW-02-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAW-02.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "north-ave-west/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAW-03-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAW-03.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "north-ave-west/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAW-04-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAW-04.pdf",
+        "mime": "image/jpeg"
+      },
+      "5": {
+        "label": "Floor Plan 5",
+        "file": "north-ave-west/5.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAW-05-scaled.jpg",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2025/09/NAW-05.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  },
+  "harris": {
+    "slug": "harris",
+    "page": "https://housing.gatech.edu/locations/harris",
+    "floors": {
+      "1": {
+        "label": "Floor Plan 1",
+        "file": "harris/1.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2024/11/HRS-01-1-1.pdf",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2024/11/HRS-01-1.pdf",
+        "mime": "image/jpeg"
+      },
+      "2": {
+        "label": "Floor Plan 2",
+        "file": "harris/2.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2024/11/HRS-02-1-3.pdf",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2024/11/HRS-02-1-1.pdf",
+        "mime": "image/jpeg"
+      },
+      "3": {
+        "label": "Floor Plan 3",
+        "file": "harris/3.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2024/11/HRS-03-1-2.pdf",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2024/11/HRS-03-1-1.pdf",
+        "mime": "image/jpeg"
+      },
+      "4": {
+        "label": "Floor Plan 4",
+        "file": "harris/4.jpg",
+        "image_url": "https://housing.gatech.edu/wp-content/uploads/2024/11/HRS-04-1-1.pdf",
+        "pdf": "https://housing.gatech.edu/wp-content/uploads/2024/11/HRS-04-1.pdf",
+        "mime": "image/jpeg"
+      }
+    }
+  }
+}

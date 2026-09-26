@@ -20,10 +20,31 @@ export function FloorPlan({
   onSelect?: (room: RoomShape) => void;
 }) {
   const [hover, setHover] = useState<{ room: RoomShape; x: number; y: number } | null>(null);
+  const [imageFailed, setImageFailed] = useState(false);
   const [vbX, vbY, vbW, vbH] = plan.viewBox;
+  const showOfficial = Boolean(plan.image) && !imageFailed;
 
   return (
-    <div className="relative">
+    <div className="relative space-y-4">
+      {showOfficial ? (
+        <figure className="space-y-2">
+          <img
+            src={plan.image || ""}
+            alt={`Georgia Tech Housing floor plan for floor ${plan.floor}, including rooms, bathrooms, and study spaces`}
+            className="w-full rounded-2xl border border-line bg-white"
+            onError={() => setImageFailed(true)}
+          />
+          <figcaption className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
+            <span>Published by Georgia Tech Housing. Bathrooms, study rooms, and kitchens are drawn as on this plan.</span>
+            {plan.pdf ? (
+              <a href={plan.pdf} target="_blank" rel="noreferrer" className="text-navy underline">
+                Download the PDF
+              </a>
+            ) : null}
+          </figcaption>
+        </figure>
+      ) : null}
+      {showOfficial ? null : (
       <svg
         viewBox={`${vbX} ${vbY} ${vbW} ${vbH}`}
         className="w-full rounded-2xl border border-line bg-[#f7f3ea]"
@@ -113,6 +134,36 @@ export function FloorPlan({
           );
         })}
       </svg>
+      )}
+      {showOfficial && plan.rooms.length ? (
+        <div>
+          <p className="mb-2 text-sm font-medium">Units on this floor</p>
+          <div className="flex flex-wrap gap-2">
+            {plan.rooms.map((room) => {
+              const selected = selectedUnit === room.unit;
+              return (
+                <button
+                  key={room.unit}
+                  type="button"
+                  onMouseEnter={(event) => setHover({ room, x: event.clientX, y: event.clientY })}
+                  onMouseMove={(event) => setHover({ room, x: event.clientX, y: event.clientY })}
+                  onMouseLeave={() => setHover(null)}
+                  onClick={() => onSelect?.(room)}
+                  className={`rounded-full border px-3 py-1.5 text-sm ${
+                    selected ? "border-gold bg-navy text-paper" : "border-line bg-paper text-ink"
+                  }`}
+                >
+                  <span
+                    className="mr-1.5 inline-block h-2 w-2 rounded-sm align-middle"
+                    style={{ background: FILL[room.status] }}
+                  />
+                  {room.unit}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
       {hover ? (
         <div
           className="pointer-events-none fixed z-30 w-56 rounded-2xl border border-line bg-card p-3 text-sm shadow-lg"

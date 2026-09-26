@@ -69,7 +69,7 @@ Demo profiles were embedded with the local encoder. Interviews taken after you a
 2. Create a password.
 3. Claim your room on the campus map, including the floor and unit. You can open nights now or later.
 4. Fill in name, gender, age, major, year, hometown, and socials.
-5. Record a 30–60 second answer to the interview prompts. If the mic is blocked, type while the timer runs.
+5. Record answers to the interview prompts and stop whenever you're done. A short take is saved if it covers your habits (what you're into, cleanliness, sleep, and noise or weekend guests). If one of those is missing, the interview returns an error and keeps the transcript so you can add it. If the mic is blocked, type the same answers.
 6. Search by name, hall, unit number, or bio. Dates are required. Filter sleep, cleanliness, year, major (all selected by default), gender, floor, and dorm type (traditional, suite, apartment).
 7. Sort by match or by walking distance. Match runs cosine first, then the bio rerank. Distance walks from the room you claimed.
 8. Request a couch and wait. The host accepts or declines. Accepting closes those nights and declines other requests that overlap.
@@ -86,7 +86,7 @@ The map is a real base map (Leaflet with CARTO Voyager tiles on OpenStreetMap da
 
 Directions come from free public routers with no API key. Valhalla's pedestrian profile (FOSSGIS server) is tried first and follows walkways, stairs, and crosswalks. OSRM's demo server is the backup; its public instance only has a car profile, so Nook uses its distance and recomputes time at walking pace. If neither answers, a straight-line estimate is drawn as a dashed line. `VALHALLA_URL` and `OSRM_URL` in `.env` point at self-hosted servers if you outgrow the public ones, and `LIVE_ROUTING=0` keeps everything offline. Search's distance sort uses the offline estimate so results never wait on the network.
 
-Floor diagrams are original schematics, not official housing plans.
+Floor plans are the official drawings published by Georgia Tech Housing (rooms, bathrooms, study spaces, and kitchens), downloaded with `scripts/fetch_gt_floorplans.py` from each hall page on housing.gatech.edu. They are served from `backend/nook/data/floorplans`. A hall level Housing has not published falls back to an original schematic. Pick a unit under the plan to claim it or to get walking directions.
 
 ## Messages after a match
 

@@ -8,6 +8,7 @@ from datetime import date, datetime, timedelta, timezone
 from .constants import GENDERS, MAJORS, SLEEP, STYLES, YEAR_LABELS, YEARS
 from .db import get_db
 from .dorms import DORMS, floor_plan, get_dorm, map_payload, public_dorm, walking_route
+from .floorplans import official_floors
 from .embed import normalize
 from .errors import ApiError
 from .models import LifestyleProfile
@@ -389,10 +390,32 @@ def dorm_detail(dorm_id: str, viewer: dict | None, dates: list[str]) -> dict:
     if not dorm:
         raise ApiError("That hall isn't on the Nook map.", 404)
     grouped = _residents()
+    published = official_floors(dorm_id)
+    floor_numbers = sorted(set(dorm["floors"]) | set(published))
     floors = []
     open_units = 0
-    for floor in dorm["floors"]:
-        plan = floor_plan(dorm_id, floor)
+    for floor in floor_numbers:
+        if floor in dorm["floors"]:
+            plan = floor_plan(dorm_id, floor)
+        else:
+            plan = {
+                "style": dorm["style"],
+                "viewBox": [0, 0, 960, 120],
+                "hall": None,
+                "fixtures": [],
+                "rooms": [],
+            }
+        drawing = published.get(floor)
+        if drawing:
+            plan["image"] = f"/api/floorplans/{dorm_id}/{floor}"
+            plan["pdf"] = drawing["pdf"]
+            plan["source_page"] = drawing["page"]
+            plan["official"] = True
+        else:
+            plan["image"] = None
+            plan["pdf"] = None
+            plan["source_page"] = None
+            plan["official"] = False
         floor_open = 0
         for room in plan["rooms"]:
             residents = grouped.get((dorm_id, room["unit"]), [])

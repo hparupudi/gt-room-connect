@@ -1,9 +1,12 @@
 """Georgia Tech residence halls, schematic floor layouts, and walking estimates.
 
 Building positions, outlines, and floor counts come from OpenStreetMap
-(data/gt_halls.json, ODbL). Floor diagrams are original schematics for this
-app, not copies of official housing plans. Live walking routes are in
-routing.py; the estimate here is the offline fallback and the ranking metric.
+(data/gt_halls.json, ODbL). Official floor plans (rooms, bathrooms, study
+spaces) are the Housing JPEGs in data/floorplans, fetched by
+scripts/fetch_gt_floorplans.py. The geometry here is only the fallback when
+Housing has not published a plan for that level, plus the clickable unit list.
+Live walking routes are in routing.py; the estimate here is the offline
+fallback and the ranking metric.
 """
 
 from __future__ import annotations

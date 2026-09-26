@@ -67,7 +67,7 @@ export function Profile() {
       </div>
       <div className="mt-10 max-w-2xl">
         <button type="button" className="text-sm text-navy underline" onClick={() => setRedo((value) => !value)}>
-          {redo ? "Close the interview" : "Re-record the one-minute interview"}
+          {redo ? "Close the interview" : "Re-record the interview"}
         </button>
         {redo ? (
           <div className="mt-4">

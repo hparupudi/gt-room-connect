@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 from pathlib import Path
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 
 from .constants import (
     CLEANLINESS,
@@ -20,7 +20,8 @@ from .db import get_db
 from .errors import ApiError
 from .graph import instagram_configured, signature_ok, verify_subscription, whatsapp_configured
 from .mailer import send_verification, smtp_configured
-from .muse import convert_to_wav, extract_profile, match_sentence, muse_configured, transcribe_wav
+from .floorplans import image_file
+from .muse import convert_to_wav, extract_profile, habit_gaps, match_sentence, muse_configured, transcribe_wav
 from .security import (
     check_password,
     hash_password,
@@ -374,8 +375,8 @@ def register_routes(app: Flask) -> None:
             duration = float(request.form.get("duration_sec") or 0)
         except ValueError as exc:
             raise ApiError("The recording length didn't come through.") from exc
-        if duration < 30 or duration > 70:
-            raise ApiError("The interview needs to run between 30 and 60 seconds.")
+        if duration < 0 or duration > 30 * 60:
+            raise ApiError("That recording length doesn't look right.")
         transcript = (request.form.get("transcript") or "").strip()
         source = "browser"
         audio = request.files.get("audio")
@@ -397,8 +398,10 @@ def register_routes(app: Flask) -> None:
                         source = "muse-voice-transcribe-1.0"
                 except Exception as exc:
                     print(f"Muse Voice Transcribe failed, using the browser transcript: {exc}")
-        if len(transcript) < 40:
-            raise ApiError("Say a little more about how you live so matching has something to hold onto.")
+        gaps = habit_gaps(transcript)
+        if gaps:
+            missing = "; ".join(gaps)
+            raise ApiError(f"Tell Nook the rest of your habits before this can be saved. Still missing: {missing}.")
         questionnaire = {
             "name": user.get("name"),
             "major": user.get("major"),
@@ -449,6 +452,20 @@ def register_routes(app: Flask) -> None:
         if dates:
             dates = parse_dates(dates)
         return jsonify(dorm=dorm_detail(dorm_id, user, dates))
+
+    @app.get("/api/floorplans/<dorm_id>/<int:floor>")
+    def floorplan_image(dorm_id: str, floor: int):
+        path = image_file(dorm_id, floor)
+        if path is None:
+            raise ApiError("Housing hasn't published a floor plan for that level.", 404)
+        kind = {
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".png": "image/png",
+            ".webp": "image/webp",
+            ".gif": "image/gif",
+        }.get(path.suffix.lower(), "image/jpeg")
+        return send_file(path, mimetype=kind, max_age=86_400)
 
     @app.get("/api/directions")
     def directions():

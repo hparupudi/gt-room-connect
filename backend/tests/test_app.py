@@ -380,6 +380,68 @@ def test_voice_interview_structures_a_profile(client):
     me = client.get("/api/auth/me", headers=auth(token))
     assert "password_hash" not in me.get_json()["user"]
 
+    short = client.post(
+        "/api/me/interview",
+        data={
+            "duration_sec": "8",
+            "transcript": (
+                "I'm into climbing and jazz. I keep a tidy room, fall asleep around midnight, and wake at 9. "
+                "I like it quiet, and a weekend guest should text me first."
+            ),
+        },
+        headers=auth(token),
+    )
+    assert short.status_code == 200, short.get_json()
+
+
+def test_voice_interview_rejects_incomplete_habits(client):
+    started = client.post("/api/auth/email/start", json={"email": "partial.jacket@gatech.edu"})
+    code = started.get_json()["preview_code"]
+    verified = client.post(
+        "/api/auth/email/verify",
+        json={"email": "partial.jacket@gatech.edu", "code": code},
+    )
+    created = client.post(
+        "/api/auth/register",
+        json={
+            "email": "partial.jacket@gatech.edu",
+            "password": "Jacket123",
+            "verification_token": verified.get_json()["verification_token"],
+        },
+    )
+    token = created.get_json()["token"]
+    client.post(
+        "/api/me/room",
+        json={"dorm_id": "glenn", "floor": 2, "unit": "208"},
+        headers=auth(token),
+    )
+    client.post(
+        "/api/me/questionnaire",
+        json={
+            "name": "Partial Jacket",
+            "gender": "man",
+            "age": 19,
+            "major": "Computer Science",
+            "year": "1",
+            "hometown": "Savannah, GA",
+            "socials": {},
+        },
+        headers=auth(token),
+    )
+    early = client.post(
+        "/api/me/interview",
+        data={"duration_sec": "6", "transcript": "I love climbing and that's about it."},
+        headers=auth(token),
+    )
+    assert early.status_code == 400
+    message = early.get_json()["error"]
+    assert "habits" in message
+    assert "how clean you keep a shared room" in message
+    assert "when you fall asleep and wake up" in message
+    assert "noise and weekend guests" in message
+    me = client.get("/api/auth/me", headers=auth(token))
+    assert me.get_json()["user"]["onboarding_complete"] is False
+
 
 def test_map_and_directions(client):
     token = login(client, "maya.chen@gatech.edu")
@@ -393,6 +455,11 @@ def test_map_and_directions(client):
     floors = detail.get_json()["dorm"]["floors"]
     room = next(room for floor in floors for room in floor["rooms"] if room["unit"] == "405")
     assert room["status"] == "open"
+    published = next(level for level in floors if level.get("official"))
+    assert published["image"].startswith("/api/floorplans/field/")
+    drawing = client.get(published["image"])
+    assert drawing.status_code == 200
+    assert drawing.mimetype.startswith("image/")
     assert room["hosts"][0]["name"] == "Elena Vasquez"
     assert dorms["glenn"]["footprint"][0][0][0] > 33.77
     assert dorms["glenn"]["specs"]["bath"]

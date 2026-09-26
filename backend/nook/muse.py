@@ -226,6 +226,48 @@ def muse_extract(transcript: str, questionnaire: dict) -> LifestyleProfile:
     return parsed
 
 
+def habit_gaps(transcript: str) -> list[str]:
+    """Topics the interview still needs before a profile can be saved.
+
+    Length does not matter. A short take is complete when it covers interests,
+    cleanliness, sleep, and how the person feels about noise or weekend guests.
+    """
+    text = transcript.lower()
+    gaps: list[str] = []
+    interests = [label for label, words in INTEREST_LEXICON if _has_any(text, words)]
+    if not interests and not _has_any(text, ("into", "hobby", "hobbies", "club", "clubs")):
+        gaps.append("what you're into")
+    if not _has_any(
+        text,
+        ("clean", "tidy", "messy", "clutter", "spotless", "neat", "organized", "dirty", "immaculate"),
+    ):
+        gaps.append("how clean you keep a shared room")
+    has_clock = re.search(r"\b\d{1,2}(?::\d{2})?\s*(a\.?m\.?|p\.?m\.?)\b", text) is not None
+    if not has_clock and not _has_any(
+        text,
+        ("sleep", "asleep", "wake", "waking", "awake", "midnight", "bedtime", "night owl", "nocturnal", "sunrise"),
+    ):
+        gaps.append("when you fall asleep and wake up")
+    if not _has_any(
+        text,
+        (
+            "quiet",
+            "loud",
+            "noise",
+            "noisy",
+            "headphone",
+            "party",
+            "guest",
+            "people over",
+            "crash",
+            "visitor",
+            "weekend",
+        ),
+    ):
+        gaps.append("how you feel about noise and weekend guests")
+    return gaps
+
+
 def extract_profile(transcript: str, questionnaire: dict) -> tuple[LifestyleProfile, str]:
     if muse_configured():
         try:

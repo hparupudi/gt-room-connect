@@ -8,8 +8,8 @@ const STEPS = [
     copy: "We'll send a code to your @gatech.edu email so we know it's you.",
   },
   {
-    title: "Talk for a minute",
-    copy: "A short voice note becomes a bio, tags, and a lifestyle other students can match against.",
+    title: "Say how you live",
+    copy: "Record your habits and stop whenever you're done. A short take is saved if it actually covers them.",
   },
   {
     title: "Ask, then decide",
