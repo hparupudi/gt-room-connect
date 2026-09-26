@@ -34,7 +34,7 @@ export function Landing() {
           </Link>
         </div>
       </header>
-      <section className="grid items-end gap-10 py-10 md:grid-cols-[1.3fr_0.7fr] md:py-16">
+      <section className="grid items-start gap-10 py-10 md:grid-cols-[1.3fr_0.7fr] md:py-16">
         <div>
           <p className="text-xs font-medium tracking-[0.18em] text-gold uppercase">Georgia Tech · weekend housing</p>
           <h1 className="mt-3 max-w-xl font-serif text-5xl leading-[1.02] text-navy md:text-7xl">
