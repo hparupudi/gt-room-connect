@@ -21,6 +21,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("SMTP_HOST", "")
     monkeypatch.setenv("FLASK_SECRET_KEY", "test-secret")
     monkeypatch.setenv("DEMO_LOGIN", "1")
+    monkeypatch.setenv("LIVE_ROUTING", "0")
     from nook.db import reset_state
 
     reset_state()
@@ -243,9 +244,21 @@ def test_map_and_directions(client):
     room = next(room for floor in floors for room in floor["rooms"] if room["unit"] == "405")
     assert room["status"] == "open"
     assert room["hosts"][0]["name"] == "Elena Vasquez"
-    route = client.get("/api/directions?to=crecine", headers=auth(token))
+    assert dorms["glenn"]["footprint"][0][0][0] > 33.77
+    assert dorms["glenn"]["specs"]["bath"]
+    route = client.get("/api/directions?to=crecine&to_unit=204", headers=auth(token))
     body = route.get_json()
+    assert body["source"] == "estimate"
     assert body["minutes"] >= 1
     assert len(body["points"]) >= 2
+    assert body["from"] == {"dorm_id": "glenn", "dorm_name": "Glenn", "unit": "314", "floor": 3, "lat": body["from"]["lat"], "lng": body["from"]["lng"]}
+    assert body["to"]["unit"] == "204" and body["to"]["floor"] == 2
+    assert body["steps"][0].startswith("Leave Glenn 314 on floor 3")
+    assert body["steps"][-1] == "Go up to floor 2 and find unit 204"
     near = client.get("/api/directions?to=field", headers=auth(token))
     assert near.get_json()["meters"] < body["meters"]
+    other = client.get("/api/directions?from=north-ave-east&from_unit=508&to=woodruff-south&to_unit=402A", headers=auth(token))
+    assert other.status_code == 200
+    assert other.get_json()["from"]["dorm_name"] == "North Avenue East"
+    bad = client.get("/api/directions?to=glenn&to_unit=999", headers=auth(token))
+    assert bad.status_code == 400

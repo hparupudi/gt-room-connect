@@ -93,48 +93,66 @@ export type FloorPlan = {
   rooms: RoomShape[];
 };
 
-export type DormDetail = {
+export type HallSpecs = {
+  room: string;
+  bath: string;
+  kitchen: string;
+  guest_space: string;
+};
+
+export type HallBase = {
   id: string;
   name: string;
   code: string;
   campus: string;
   style: string;
+  lat: number;
+  lng: number;
+  units_per_floor: number;
   address: string;
   note: string;
+  osm_name: string | null;
+  osm: string | null;
+  footprint: [number, number][][];
+  specs: HallSpecs;
+};
+
+export type DormDetail = HallBase & {
   open_units: number;
   floors: FloorPlan[];
   directions?: Route;
 };
 
-export type DormPin = {
-  id: string;
-  name: string;
-  code: string;
-  campus: string;
-  style: string;
-  x: number;
-  y: number;
+export type DormPin = HallBase & {
   floors: number[];
-  address: string;
-  note: string;
   open_units: number;
   yours: boolean;
 };
 
-export type MapPoint = { x: number; y: number; lat: number; lng: number; label: string };
+export type RouteEnd = {
+  dorm_id: string;
+  dorm_name: string;
+  unit: string | null;
+  floor: number | null;
+  lat: number;
+  lng: number;
+};
 
 export type Route = {
+  source: "valhalla" | "osrm" | "estimate";
   meters: number;
   minutes: number;
+  walk_minutes?: number;
   steps: string[];
-  points: MapPoint[];
+  points: [number, number][];
   maps_url?: string;
   note?: string;
+  from?: RouteEnd;
+  to?: RouteEnd;
 };
 
 export type MapData = {
-  landmarks: { id: string; name: string; x: number; y: number }[];
-  hubs: { id: string; name: string; x: number; y: number }[];
+  center: { lat: number; lng: number };
   dorms: DormPin[];
   home?: string;
 };

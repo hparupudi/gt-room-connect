@@ -522,14 +522,24 @@ def register_routes(app: Flask) -> None:
     @app.get("/api/directions")
     def directions():
         user = _require()
-        if not user.get("dorm_id"):
+        from .dorms import find_unit, get_dorm
+        from .routing import room_route
+
+        from_id = request.args.get("from") or user.get("dorm_id") or ""
+        from_unit = request.args.get("from_unit")
+        if from_unit is None and from_id == user.get("dorm_id"):
+            from_unit = user.get("unit") or None
+        if not get_dorm(from_id):
             raise ApiError("Claim your room first so Nook knows where to start.")
         target = request.args.get("to") or ""
-        from .dorms import get_dorm, walking_route
-
         if not get_dorm(target):
             raise ApiError("Pick a hall on the map.")
-        return jsonify(walking_route(user["dorm_id"], target))
+        to_unit = request.args.get("to_unit") or None
+        if to_unit and not find_unit(target, to_unit):
+            raise ApiError("That unit isn't in this hall.")
+        if from_unit and not find_unit(from_id, from_unit):
+            from_unit = None
+        return jsonify(room_route(from_id, target, from_unit or None, to_unit))
 
     @app.get("/api/hosts/<host_id>")
     def host_profile(host_id: str):

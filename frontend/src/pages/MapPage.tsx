@@ -12,7 +12,7 @@ export function MapPage() {
           <p className="text-xs tracking-[0.16em] text-gold uppercase">Campus</p>
           <h1 className="font-serif text-4xl text-navy">Every hall, floor by floor.</h1>
           <p className="mt-1 max-w-xl text-sm text-muted">
-            Open units are green. A gold line is the walk from your room. Hover a unit to see who's hosting.
+            Click a building for its floor plan. Click a unit to get the walk there from your own room, along real campus paths.
           </p>
         </div>
       </div>

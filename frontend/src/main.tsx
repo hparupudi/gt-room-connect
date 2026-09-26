@@ -5,6 +5,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { AuthProvider } from "./auth";
 import { DatesProvider } from "./dates";
+import "leaflet/dist/leaflet.css";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(

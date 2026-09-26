@@ -75,7 +75,18 @@ Demo profiles were embedded with the local encoder. Interviews taken after you a
 8. Request a couch and wait. The host accepts or declines. Accepting closes those nights and declines other requests that overlap.
 9. Once accepted, both people can see Instagram, phone, and Discord.
 
-The map is a campus diagram of Georgia Tech undergrad halls. Click a hall for a floor-by-floor layout. Hover a unit for availability: green is open, amber has a request waiting, navy is your room. The gold line is a walking estimate through campus hubs, and a Google Maps walking link opens the same pair of buildings. Floor diagrams are original schematics, not official housing plans.
+## Campus map
+
+The map is a real base map (Leaflet with CARTO Voyager tiles on OpenStreetMap data) with the outlines of 37 Georgia Tech residence halls drawn on top. Outlines, positions, and floor counts come from OpenStreetMap and are stored in `backend/nook/data/gt_halls.json`, so the app never calls OSM at runtime.
+
+- Click a hall for its specs (style, floors, units per floor, bath, kitchen, where a guest sleeps) and a floor-by-floor layout.
+- Hover a unit for who's hosting. Green is open, amber has a request waiting, navy is your room.
+- Click any unit, or pick a hall and unit in the From / To selectors, to get walking directions from one room to another. The gold line is the path, and the steps include the indoor part: leave your unit, walk, enter the other hall, go to that floor and unit.
+- Every couch page shows the walk from your room to that host's unit.
+
+Directions come from free public routers with no API key. Valhalla's pedestrian profile (FOSSGIS server) is tried first and follows walkways, stairs, and crosswalks. OSRM's demo server is the backup; its public instance only has a car profile, so Nook uses its distance and recomputes time at walking pace. If neither answers, a straight-line estimate is drawn as a dashed line. `VALHALLA_URL` and `OSRM_URL` in `.env` point at self-hosted servers if you outgrow the public ones, and `LIVE_ROUTING=0` keeps everything offline. Search's distance sort uses the offline estimate so results never wait on the network.
+
+Floor diagrams are original schematics, not official housing plans.
 
 ## Tests
 

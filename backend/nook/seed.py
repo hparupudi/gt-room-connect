@@ -175,7 +175,7 @@ def seed_if_empty() -> None:
         ),
         _person(
             "chris-dalton", "chris.dalton@gatech.edu", "Chris Dalton", "man", 22,
-            "Business", "4", "Charlotte, NC", "maulding", 6, "604", [3, 4, 10],
+            "Business", "4", "Charlotte, NC", "maulding", 5, "504", [3, 4, 10],
             ["startups", "golf", "coffee"], ["pitch practice", "early range"],
             "relaxed", "typical", "00:00", "08:30", "social",
             "The apartment is lived-in. Grab a pillow from the closet and don't reschedule his morning calls.",

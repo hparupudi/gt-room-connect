@@ -1,54 +1,59 @@
-"""Georgia Tech undergrad residence halls, original floor diagrams, and walking routes.
+"""Georgia Tech residence halls, schematic floor layouts, and walking estimates.
 
-Floor diagrams are schematic layouts for this app, not copies of official
-housing floor plans. Coordinates are approximate campus positions so the
-map and walking estimates agree.
+Building positions, outlines, and floor counts come from OpenStreetMap
+(data/gt_halls.json, ODbL). Floor diagrams are original schematics for this
+app, not copies of official housing plans. Live walking routes are in
+routing.py; the estimate here is the offline fallback and the ranking metric.
 """
 
 from __future__ import annotations
 
+import json
 import math
+from pathlib import Path
 from typing import Any
 
-BOUNDS = {"north": 33.7838, "south": 33.7694, "west": -84.4098, "east": -84.3886}
+OSM = json.loads((Path(__file__).resolve().parent / "data" / "gt_halls.json").read_text())
 
-# id, name, code, campus, style, lat, lng, floors, per_floor, address
+# id, name, code, campus, style, units per floor, floors override (None = use OSM levels)
 HALLS: list[tuple] = [
-    ("glenn", "Glenn", "GLN", "east", "traditional", 33.7768, -84.3925, (1, 2, 3, 4), 16, "118 Bobby Dodd Way"),
-    ("field", "Field", "FLD", "east", "traditional", 33.7775, -84.3915, (1, 2, 3, 4), 16, "711 Techwood Dr NW"),
-    ("hopkins", "Hopkins", "HOP", "east", "traditional", 33.7779, -84.3930, (1, 2, 3, 4), 16, "Techwood Dr NW"),
-    ("matheson", "Matheson", "MAT", "east", "traditional", 33.7771, -84.3935, (1, 2, 3, 4), 12, "Fowler St"),
-    ("perry", "Perry", "PRY", "east", "traditional", 33.7785, -84.3917, (1, 2, 3, 4), 12, "Techwood Dr NW"),
-    ("hanson", "Hanson", "HAN", "east", "traditional", 33.7783, -84.3907, (1, 2, 3, 4), 12, "Techwood Dr NW"),
-    ("harrison", "Harrison", "HAR", "east", "traditional", 33.7789, -84.3903, (1, 2, 3, 4), 12, "Techwood Dr NW"),
-    ("howell", "Howell", "HOW", "east", "traditional", 33.7793, -84.3911, (1, 2, 3, 4), 12, "Techwood Dr NW"),
-    ("towers", "Towers", "TWR", "east", "traditional", 33.7778, -84.3921, (1, 2, 3, 4), 12, "112 Bobby Dodd Way"),
-    ("cloudman", "Cloudman", "CLD", "east", "traditional", 33.7763, -84.3939, (1, 2, 3, 4), 12, "Bobby Dodd Way"),
-    ("harris", "Harris", "HRS", "east", "suite", 33.7757, -84.3945, (1, 2, 3, 4), 4, "Fowler St"),
-    ("armstrong", "Armstrong", "ARM", "west", "traditional", 33.7803, -84.4074, (1, 2, 3), 12, "Hemphill Ave"),
-    ("caldwell", "Caldwell", "CAL", "west", "traditional", 33.7811, -84.4066, (1, 2, 3), 12, "Hemphill Ave"),
-    ("folk", "Folk", "FLK", "west", "traditional", 33.7813, -84.4054, (1, 2, 3), 12, "6th St"),
-    ("fitten", "Fitten", "FIT", "west", "traditional", 33.7805, -84.4036, (1, 2, 3, 4), 12, "Hemphill Ave"),
-    ("freeman", "Freeman", "FRE", "west", "traditional", 33.7809, -84.4046, (1, 2, 3, 4), 12, "Hemphill Ave"),
-    ("fulmer", "Fulmer", "FUL", "west", "traditional", 33.7816, -84.4032, (1, 2, 3), 12, "Hemphill Ave"),
-    ("hefner", "Hefner", "HEF", "west", "traditional", 33.7797, -84.4078, (1, 2, 3), 12, "6th St"),
-    ("montag", "Montag", "MON", "west", "traditional", 33.7815, -84.4048, (1, 2, 3), 12, "Hemphill Ave"),
-    ("woodruff-north", "Woodruff North", "WDN", "west", "suite", 33.7804, -84.4062, (1, 2, 3, 4, 5), 4, "890 Curran St NW"),
-    ("woodruff-south", "Woodruff South", "WDS", "west", "suite", 33.7797, -84.4056, (1, 2, 3, 4, 5), 4, "Curran St NW"),
-    ("crecine", "Crecine", "CRE", "west", "apartment", 33.7786, -84.4024, (1, 2, 3, 4), 8, "Hemphill Ave"),
-    ("eighth-east", "Eighth Street East", "8E", "west", "apartment", 33.7788, -84.4036, (1, 2, 3, 4), 8, "8th St"),
-    ("eighth-west", "Eighth Street West", "8W", "west", "apartment", 33.7791, -84.4052, (1, 2, 3, 4), 8, "8th St"),
-    ("eighth-south", "Eighth Street South", "8S", "west", "apartment", 33.7782, -84.4044, (1, 2, 3, 4), 8, "8th St"),
-    ("center-north", "Center Street North", "CSN", "west", "apartment", 33.7772, -84.4046, (2, 3, 4, 5), 8, "Center St"),
-    ("center-south", "Center Street South", "CSS", "west", "apartment", 33.7764, -84.4042, (2, 3, 4, 5), 8, "Center St"),
-    ("maulding", "Maulding", "MAU", "west", "apartment", 33.7758, -84.4062, (2, 3, 4, 5, 6), 8, "10th St"),
-    ("nelson-shell", "Nelson Shell", "NSH", "west", "apartment", 33.7752, -84.4050, (2, 3, 4, 5), 8, "Ferst Dr"),
-    ("zbar", "Zbar", "ZBR", "west", "apartment", 33.7776, -84.4076, (1, 2, 3, 4), 6, "Hemphill Ave"),
-    ("graduate-living", "Graduate Living Center", "GLC", "west", "apartment", 33.7822, -84.3990, (1, 2, 3, 4, 5), 8, "10th St"),
-    ("north-ave-east", "North Avenue East", "NAE", "east", "apartment", 33.7709, -84.3906, (3, 4, 5, 6, 7, 8), 8, "North Ave NE"),
-    ("north-ave-north", "North Avenue North", "NAN", "east", "apartment", 33.7714, -84.3916, (3, 4, 5, 6, 7, 8), 8, "North Ave NW"),
-    ("north-ave-south", "North Avenue South", "NAS", "east", "apartment", 33.7706, -84.3924, (3, 4, 5, 6, 7), 8, "North Ave NW"),
-    ("north-ave-west", "North Avenue West", "NAW", "east", "apartment", 33.7712, -84.3934, (3, 4, 5, 6, 7, 8), 8, "North Ave NW"),
+    ("glenn", "Glenn", "GLN", "east", "traditional", 16, None),
+    ("field", "Field", "FLD", "east", "traditional", 16, None),
+    ("hopkins", "Hopkins", "HOP", "east", "traditional", 16, None),
+    ("matheson", "Matheson", "MAT", "east", "traditional", 12, None),
+    ("perry", "Perry", "PRY", "east", "traditional", 12, None),
+    ("hanson", "Hanson", "HAN", "east", "traditional", 12, None),
+    ("harrison", "Harrison", "HAR", "east", "traditional", 12, None),
+    ("howell", "Howell", "HOW", "east", "traditional", 12, None),
+    ("towers", "Towers", "TWR", "east", "traditional", 12, None),
+    ("cloudman", "Cloudman", "CLD", "east", "traditional", 12, None),
+    ("smith", "Smith", "SMT", "east", "traditional", 12, None),
+    ("brown", "Brown", "BRN", "east", "traditional", 12, None),
+    ("harris", "Harris", "HRS", "east", "suite", 4, None),
+    ("armstrong", "Armstrong", "ARM", "west", "traditional", 12, None),
+    ("caldwell", "Caldwell", "CAL", "west", "traditional", 12, None),
+    ("folk", "Folk", "FLK", "west", "traditional", 12, None),
+    ("fitten", "Fitten", "FIT", "west", "traditional", 12, None),
+    ("freeman", "Freeman", "FRE", "west", "traditional", 12, None),
+    ("fulmer", "Fulmer", "FUL", "west", "traditional", 12, None),
+    ("hefner", "Hefner", "HEF", "west", "traditional", 12, None),
+    ("montag", "Montag", "MON", "west", "traditional", 12, None),
+    ("woodruff-north", "Woodruff North", "WDN", "west", "suite", 4, None),
+    ("woodruff-south", "Woodruff South", "WDS", "west", "suite", 4, None),
+    ("crecine", "Crecine", "CRE", "west", "apartment", 8, (1, 2, 3, 4)),
+    ("eighth-east", "Eighth Street East", "8E", "west", "apartment", 8, (1, 2, 3, 4)),
+    ("eighth-west", "Eighth Street West", "8W", "west", "apartment", 8, (1, 2, 3, 4)),
+    ("eighth-south", "Eighth Street South", "8S", "west", "apartment", 8, (1, 2, 3, 4)),
+    ("center-north", "Center Street North", "CSN", "west", "apartment", 8, (1, 2, 3, 4, 5)),
+    ("center-south", "Center Street South", "CSS", "west", "apartment", 8, (1, 2, 3, 4, 5)),
+    ("maulding", "Maulding", "MAU", "west", "apartment", 8, None),
+    ("nelson-shell", "Nelson Shell", "NSH", "west", "apartment", 8, None),
+    ("zbar", "Zbar", "ZBR", "west", "apartment", 6, None),
+    ("graduate-living", "Graduate Living Center", "GLC", "west", "apartment", 8, None),
+    ("north-ave-east", "North Avenue East", "NAE", "east", "apartment", 8, None),
+    ("north-ave-north", "North Avenue North", "NAN", "east", "apartment", 8, None),
+    ("north-ave-south", "North Avenue South", "NAS", "east", "apartment", 8, None),
+    ("north-ave-west", "North Avenue West", "NAW", "east", "apartment", 8, None),
 ]
 
 NOTES = {
@@ -58,36 +63,31 @@ NOTES = {
     "woodruff-north": "Four-person suites on the west side, near Curran.",
     "woodruff-south": "Suites, including a handful of single-room suites.",
     "north-ave-east": "Apartment-style, across North Avenue from the east campus hill.",
+    "graduate-living": "Apartments for graduate students on 10th Street.",
 }
 
-LANDMARKS = [
-    {"id": "tech-tower", "name": "Tech Tower", "lat": 33.7726, "lng": -84.3949},
-    {"id": "bobby-dodd", "name": "Bobby Dodd", "lat": 33.7725, "lng": -84.3928},
-    {"id": "clough", "name": "Clough", "lat": 33.7749, "lng": -84.3964},
-    {"id": "crc", "name": "CRC", "lat": 33.7756, "lng": -84.4038},
-    {"id": "student-center", "name": "Student Center", "lat": 33.7738, "lng": -84.3986},
-    {"id": "north-ave-dining", "name": "North Ave Dining", "lat": 33.7715, "lng": -84.3918},
-]
-
-HUBS = {
-    "east": {"id": "east", "name": "East Campus", "lat": 33.7776, "lng": -84.3924},
-    "west": {"id": "west", "name": "West Campus", "lat": 33.7794, "lng": -84.4050},
-    "central": {"id": "central", "name": "Clough Commons", "lat": 33.7752, "lng": -84.3972},
-    "north": {"id": "north", "name": "North Avenue", "lat": 33.7711, "lng": -84.3920},
+STYLE_SPECS = {
+    "traditional": {
+        "room": "Two-person room",
+        "bath": "Community bath on the hall",
+        "kitchen": "Shared floor kitchen",
+        "guest_space": "Floor space or a spare bed when a roommate is away",
+    },
+    "suite": {
+        "room": "Two bedrooms sharing a bath",
+        "bath": "Private bath inside the suite",
+        "kitchen": "Shared floor kitchen and lounge",
+        "guest_space": "Suite common area or an open bedroom",
+    },
+    "apartment": {
+        "room": "Two to four bedrooms with a living room",
+        "bath": "One or two baths inside the apartment",
+        "kitchen": "Full kitchen in the unit",
+        "guest_space": "Living-room couch",
+    },
 }
 
-HUB_EDGES = [
-    ("east", "central"),
-    ("central", "west"),
-    ("east", "north"),
-    ("central", "north"),
-]
-
-
-def project(lat: float, lng: float) -> tuple[float, float]:
-    x = (lng - BOUNDS["west"]) / (BOUNDS["east"] - BOUNDS["west"]) * 100
-    y = (BOUNDS["north"] - lat) / (BOUNDS["north"] - BOUNDS["south"]) * 100
-    return round(x, 2), round(y, 2)
+CAMPUS_CENTER = {"lat": 33.7756, "lng": -84.3975}
 
 
 def haversine(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
@@ -114,22 +114,26 @@ def _units(style: str, floors: tuple[int, ...], per_floor: int) -> list[dict]:
 
 def _build() -> dict[str, dict]:
     dorms = {}
-    for item in HALLS:
-        hall_id, name, code, campus, style, lat, lng, floors, per_floor, address = item
-        x, y = project(lat, lng)
+    for hall_id, name, code, campus, style, per_floor, floors in HALLS:
+        osm = OSM[hall_id]
+        if floors is None:
+            floors = tuple(range(1, (osm.get("levels") or 4) + 1))
         dorms[hall_id] = {
             "id": hall_id,
             "name": name,
             "code": code,
             "campus": campus,
             "style": style,
-            "lat": lat,
-            "lng": lng,
-            "x": x,
-            "y": y,
+            "lat": osm["lat"],
+            "lng": osm["lng"],
             "floors": list(floors),
-            "address": address,
+            "units_per_floor": per_floor if style != "suite" else per_floor * 2,
+            "address": osm.get("address") or ("Georgia Tech West Campus" if campus == "west" else "Georgia Tech East Campus"),
             "note": NOTES.get(hall_id, ""),
+            "osm_name": osm.get("name"),
+            "osm": osm.get("osm"),
+            "footprint": osm["footprint"],
+            "specs": STYLE_SPECS[style],
             "units": _units(style, floors, per_floor),
         }
     return dorms
@@ -142,8 +146,16 @@ def get_dorm(dorm_id: str) -> dict | None:
     return DORMS.get(dorm_id)
 
 
+def find_unit(dorm_id: str, unit: str) -> dict | None:
+    dorm = DORMS.get(dorm_id)
+    if not dorm:
+        return None
+    return next((item for item in dorm["units"] if item["id"] == unit), None)
+
+
 def public_dorm(dorm: dict) -> dict:
-    return {key: dorm[key] for key in ("id", "name", "code", "campus", "style", "lat", "lng", "x", "y", "floors", "address", "note")}
+    keys = ("id", "name", "code", "campus", "style", "lat", "lng", "floors", "units_per_floor", "address", "note", "osm_name", "osm", "footprint", "specs")
+    return {key: dorm[key] for key in keys}
 
 
 def floor_plan(dorm_id: str, floor: int) -> dict[str, Any]:
@@ -247,79 +259,7 @@ def _apartment_plan(units: list[dict]) -> dict:
     }
 
 
-def _nearest_hub(lat: float, lng: float) -> str:
-    return min(HUBS, key=lambda hub: haversine(lat, lng, HUBS[hub]["lat"], HUBS[hub]["lng"]))
-
-
-def _hub_path(start: str, end: str) -> list[str]:
-    if start == end:
-        return [start]
-    graph: dict[str, list[tuple[str, float]]] = {hub: [] for hub in HUBS}
-    for a, b in HUB_EDGES:
-        dist = haversine(HUBS[a]["lat"], HUBS[a]["lng"], HUBS[b]["lat"], HUBS[b]["lng"])
-        graph[a].append((b, dist))
-        graph[b].append((a, dist))
-    dist_map = {hub: math.inf for hub in HUBS}
-    prev: dict[str, str | None] = {hub: None for hub in HUBS}
-    dist_map[start] = 0
-    left = set(HUBS)
-    while left:
-        current = min(left, key=lambda hub: dist_map[hub])
-        left.remove(current)
-        if current == end:
-            break
-        for nxt, weight in graph[current]:
-            alt = dist_map[current] + weight
-            if alt < dist_map[nxt]:
-                dist_map[nxt] = alt
-                prev[nxt] = current
-    path = [end]
-    while path[-1] != start:
-        parent = prev[path[-1]]
-        if parent is None:
-            return [start, end]
-        path.append(parent)
-    path.reverse()
-    return path
-
-
-def walking_route(from_id: str, to_id: str) -> dict:
-    origin = DORMS[from_id]
-    dest = DORMS[to_id]
-    if from_id == to_id:
-        point = {"lat": origin["lat"], "lng": origin["lng"], "x": origin["x"], "y": origin["y"], "label": origin["name"]}
-        return {"meters": 0, "minutes": 0, "steps": [f"You're already at {origin['name']}."], "points": [point], "maps_url": _maps_url(origin, dest)}
-
-    start_hub = _nearest_hub(origin["lat"], origin["lng"])
-    end_hub = _nearest_hub(dest["lat"], dest["lng"])
-    hubs = _hub_path(start_hub, end_hub)
-    points = [{"lat": origin["lat"], "lng": origin["lng"], "x": origin["x"], "y": origin["y"], "label": origin["name"]}]
-    for hub_id in hubs:
-        hub = HUBS[hub_id]
-        x, y = project(hub["lat"], hub["lng"])
-        points.append({"lat": hub["lat"], "lng": hub["lng"], "x": x, "y": y, "label": hub["name"]})
-    points.append({"lat": dest["lat"], "lng": dest["lng"], "x": dest["x"], "y": dest["y"], "label": dest["name"]})
-
-    meters = 0.0
-    for a, b in zip(points, points[1:]):
-        meters += haversine(a["lat"], a["lng"], b["lat"], b["lng"])
-    minutes = max(1, round(meters / 80))
-    via = [HUBS[hub]["name"] for hub in hubs]
-    steps = [f"Leave {origin['name']}"]
-    if via:
-        steps.append("Walk via " + " → ".join(via))
-    steps.append(f"Arrive at {dest['name']}")
-    return {
-        "meters": round(meters),
-        "minutes": minutes,
-        "steps": steps,
-        "points": points,
-        "maps_url": _maps_url(origin, dest),
-        "note": "Walking estimate along campus hubs, not a turn-by-turn GPS trace.",
-    }
-
-
-def _maps_url(origin: dict, dest: dict) -> str:
+def maps_url(origin: dict, dest: dict) -> str:
     return (
         "https://www.google.com/maps/dir/?api=1"
         f"&origin={origin['lat']},{origin['lng']}"
@@ -328,18 +268,37 @@ def _maps_url(origin: dict, dest: dict) -> str:
     )
 
 
-def map_payload() -> dict:
-    landmarks = []
-    for item in LANDMARKS:
-        x, y = project(item["lat"], item["lng"])
-        landmarks.append({**item, "x": x, "y": y})
-    hubs = []
-    for hub in HUBS.values():
-        x, y = project(hub["lat"], hub["lng"])
-        hubs.append({**hub, "x": x, "y": y})
+def walking_estimate(from_id: str, to_id: str) -> dict:
+    """Straight-line distance with a campus detour factor. No network."""
+    origin = DORMS[from_id]
+    dest = DORMS[to_id]
+    if from_id == to_id:
+        return {
+            "source": "estimate",
+            "meters": 0,
+            "minutes": 0,
+            "steps": [f"You're already in {origin['name']}."],
+            "points": [[origin["lat"], origin["lng"]]],
+            "maps_url": maps_url(origin, dest),
+        }
+    meters = haversine(origin["lat"], origin["lng"], dest["lat"], dest["lng"]) * 1.3
     return {
-        "bounds": BOUNDS,
-        "landmarks": landmarks,
-        "hubs": hubs,
+        "source": "estimate",
+        "meters": round(meters),
+        "minutes": max(1, round(meters / 80)),
+        "steps": [f"Leave {origin['name']}", f"Walk toward {dest['name']}", f"Arrive at {dest['name']}"],
+        "points": [[origin["lat"], origin["lng"]], [dest["lat"], dest["lng"]]],
+        "maps_url": maps_url(origin, dest),
+        "note": "Straight-line estimate. Live walking directions weren't reachable.",
+    }
+
+
+# Ranking uses the offline estimate so search never waits on the network.
+walking_route = walking_estimate
+
+
+def map_payload() -> dict:
+    return {
+        "center": CAMPUS_CENTER,
         "dorms": [public_dorm(dorm) for dorm in DORMS.values()],
     }

@@ -395,10 +395,8 @@ def dorm_detail(dorm_id: str, viewer: dict | None, dates: list[str]) -> dict:
     payload = public_dorm(dorm)
     payload["open_units"] = open_units
     payload["floors"] = floors
-    if viewer and viewer.get("dorm_id") and viewer["dorm_id"] != dorm_id:
+    if viewer and viewer.get("dorm_id"):
         payload["directions"] = walking_route(viewer["dorm_id"], dorm_id)
-    elif viewer and viewer.get("dorm_id") == dorm_id:
-        payload["directions"] = walking_route(dorm_id, dorm_id)
     return payload
 
 

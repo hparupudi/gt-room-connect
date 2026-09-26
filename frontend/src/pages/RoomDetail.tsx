@@ -3,11 +3,12 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { api, ApiError } from "../api";
 import { useAuth } from "../auth";
+import { CampusMap } from "../components/CampusMap";
 import { Shell } from "../components/Shell";
-import { Avatar, Banner, Tags, btnPrimary } from "../components/ui";
+import { Avatar, Banner, Tags, btnGhost, btnPrimary } from "../components/ui";
 import { useDates } from "../dates";
 import { formatDates, matchPercent, sleepLabel, styleLabel } from "../format";
-import type { Score, User } from "../types";
+import type { MapData, Route, Score, User } from "../types";
 
 export function RoomDetail() {
   const { id } = useParams();
@@ -20,6 +21,8 @@ export function RoomDetail() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [route, setRoute] = useState<Route | null>(null);
+  const [map, setMap] = useState<MapData | null>(null);
 
   useEffect(() => {
     api<{ host: User; scores?: Score }>(`/api/hosts/${id}`, {}, token)
@@ -31,6 +34,18 @@ export function RoomDetail() {
       })
       .catch((err: unknown) => setError(err instanceof ApiError ? err.message : "That profile isn't available."));
   }, [id, token, dates]);
+
+  useEffect(() => {
+    if (!host?.dorm_id || !user?.dorm_id || host.id === user.id) return;
+    const params = new URLSearchParams({ to: host.dorm_id });
+    if (host.unit) params.set("to_unit", host.unit);
+    api<Route>(`/api/directions?${params}`, {}, token)
+      .then(setRoute)
+      .catch(() => setRoute(null));
+    api<MapData>("/api/map", {}, token)
+      .then(setMap)
+      .catch(() => setMap(null));
+  }, [host, user, token]);
 
   async function requestStay() {
     if (!host) return;
@@ -81,9 +96,34 @@ export function RoomDetail() {
               <Stat label="Sleep" value={`${sleepLabel(host.sleep_timing)} · ${host.sleep_start ?? ""}`} />
               <Stat label="Cleanliness" value={host.cleanliness || ""} />
               <Stat label="Noise" value={host.noise || ""} />
-              <Stat label="Walk" value={scores ? `${scores.minutes} min` : "—"} />
+              <Stat label="Walk" value={route ? `${route.minutes} min` : scores ? `${scores.minutes} min` : "—"} />
             </dl>
             <p className="mt-4 text-sm">{host.guest_notes}</p>
+            {route && map && user?.id !== host.id ? (
+              <section className="mt-6">
+                <h2 className="font-serif text-2xl">
+                  The walk from {user?.dorm_name} {user?.unit}
+                </h2>
+                <p className="mb-3 text-sm text-muted">
+                  {route.minutes} minutes, {(route.meters / 1000).toFixed(1)} km, ending at {host.dorm_name} {host.unit} on floor{" "}
+                  {host.floor}.
+                </p>
+                <CampusMap dorms={map.dorms} route={route} height="320px" interactive={false} />
+                <details className="mt-3 text-sm">
+                  <summary className="cursor-pointer text-navy">Turn by turn</summary>
+                  <ol className="mt-2 list-decimal space-y-0.5 pl-4 text-muted">
+                    {route.steps.map((step, index) => (
+                      <li key={`${index}-${step}`}>{step}</li>
+                    ))}
+                  </ol>
+                </details>
+                {route.maps_url ? (
+                  <a className={`${btnGhost} mt-3`} href={route.maps_url} target="_blank" rel="noreferrer">
+                    Open in Google Maps
+                  </a>
+                ) : null}
+              </section>
+            ) : null}
             {host.socials_visible && host.socials ? (
               <div className="mt-4 rounded-2xl bg-moss-soft p-4 text-sm">
                 <p className="font-medium">You're matched. Here's how to coordinate.</p>

@@ -1,23 +1,16 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 import { api, ApiError } from "../api";
 import { useAuth } from "../auth";
 import { styleLabel } from "../format";
-import type { DormDetail, DormPin, MapData, RoomShape } from "../types";
+import type { DormDetail, DormPin, MapData, Route, RoomShape } from "../types";
+import { CampusMap } from "./CampusMap";
 import { FloorPlan } from "./FloorPlan";
-import { Banner } from "./ui";
+import { Banner, btnGhost, btnPrimary } from "./ui";
 
-const HUB_EDGES = [
-  ["west", "central"],
-  ["central", "east"],
-  ["east", "north"],
-  ["central", "north"],
-];
-
-function yOf(value: number): number {
-  return value * 0.82;
-}
+type Pick = { dormId: string; dormName: string; floor: number; unit: string };
+type Endpoint = { dormId: string; unit: string };
 
 export function DormBrowser({
   dates,
@@ -28,161 +21,195 @@ export function DormBrowser({
   dates: string[];
   mode: "browse" | "pick";
   pickedUnit?: string;
-  onPick?: (pick: { dormId: string; dormName: string; floor: number; unit: string }) => void;
+  onPick?: (pick: Pick) => void;
 }) {
-  const { token } = useAuth();
-  const navigate = useNavigate();
+  const { token, user } = useAuth();
   const [map, setMap] = useState<MapData | null>(null);
-  const [selectedId, setSelectedId] = useState<string>("");
+  const [selectedId, setSelectedId] = useState("");
   const [detail, setDetail] = useState<DormDetail | null>(null);
   const [floor, setFloor] = useState<number | null>(null);
   const [error, setError] = useState("");
-  const [hover, setHover] = useState<string>("");
+  const [origin, setOrigin] = useState<Endpoint | null>(null);
+  const [destination, setDestination] = useState<Endpoint | null>(null);
+  const [route, setRoute] = useState<Route | null>(null);
+  const [routing, setRouting] = useState(false);
+
+  useEffect(() => {
+    if (user?.dorm_id && user.unit && !origin) setOrigin({ dormId: user.dorm_id, unit: user.unit });
+  }, [user, origin]);
 
   useEffect(() => {
     const query = dates.length ? `?dates=${dates.join(",")}` : "";
     api<MapData>(`/api/map${query}`, {}, token)
       .then((data) => {
         setMap(data);
-        setSelectedId((current) => current || data.home || data.dorms[0]?.id || "");
+        setSelectedId((current) => current || data.home || "");
       })
       .catch((err: unknown) => setError(err instanceof ApiError ? err.message : "The map didn't load."));
   }, [dates, token]);
 
   useEffect(() => {
-    if (!selectedId) return;
+    if (!selectedId) {
+      setDetail(null);
+      return;
+    }
     const query = dates.length ? `?dates=${dates.join(",")}` : "";
     api<{ dorm: DormDetail }>(`/api/dorms/${selectedId}${query}`, {}, token)
       .then((body) => {
         setDetail(body.dorm);
-        setFloor((current) => (current && body.dorm.floors.some((item) => item.floor === current) ? current : body.dorm.floors[0]?.floor ?? null));
+        setFloor((current) =>
+          current && body.dorm.floors.some((item) => item.floor === current) ? current : body.dorm.floors[0]?.floor ?? null,
+        );
       })
       .catch((err: unknown) => setError(err instanceof ApiError ? err.message : "That hall didn't load."));
   }, [selectedId, dates, token]);
 
-  const selected = map?.dorms.find((dorm) => dorm.id === selectedId);
-  const plan = detail?.floors.find((item) => item.floor === floor) ?? null;
-  const hubs = Object.fromEntries((map?.hubs ?? []).map((hub) => [hub.id, hub]));
-
-  function chooseRoom(room: RoomShape) {
-    if (!detail) return;
-    if (mode === "pick") {
-      onPick?.({ dormId: detail.id, dormName: detail.name, floor: floor ?? room.hosts[0]?.open_dates.length ?? detail.floors[0].floor, unit: room.unit });
+  useEffect(() => {
+    if (mode !== "browse" || !origin?.dormId || !destination?.dormId) {
+      setRoute(null);
       return;
     }
-    const host = room.hosts[0];
-    if (host) navigate(`/room/${host.id}`);
+    setRouting(true);
+    const params = new URLSearchParams({ from: origin.dormId, to: destination.dormId });
+    if (origin.unit) params.set("from_unit", origin.unit);
+    if (destination.unit) params.set("to_unit", destination.unit);
+    api<Route>(`/api/directions?${params}`, {}, token)
+      .then(setRoute)
+      .catch((err: unknown) => setError(err instanceof ApiError ? err.message : "Directions didn't load."))
+      .finally(() => setRouting(false));
+  }, [origin, destination, mode, token]);
+
+  const dorms = map?.dorms ?? [];
+  const byId = useMemo(() => Object.fromEntries(dorms.map((dorm) => [dorm.id, dorm])), [dorms]);
+  const plan = detail?.floors.find((item) => item.floor === floor) ?? null;
+  const destinationRoom = useMemo(() => {
+    if (!destination || !detail || detail.id !== destination.dormId) return null;
+    for (const level of detail.floors) {
+      const room = level.rooms.find((item) => item.unit === destination.unit);
+      if (room) return room;
+    }
+    return null;
+  }, [destination, detail]);
+
+  function selectHall(id: string) {
+    setSelectedId(id);
+    setFloor(null);
   }
 
-  if (error) return <Banner>{error}</Banner>;
-  if (!map) return <p className="text-sm text-muted">Unfolding the campus map…</p>;
+  function chooseDestination(next: Endpoint | null) {
+    setDestination(next);
+    if (next?.dormId && next.dormId !== selectedId) selectHall(next.dormId);
+  }
+
+  function chooseUnit(room: RoomShape) {
+    if (!detail || !plan) return;
+    if (mode === "pick") {
+      onPick?.({ dormId: detail.id, dormName: detail.name, floor: plan.floor, unit: room.unit });
+      return;
+    }
+    setDestination({ dormId: detail.id, unit: room.unit });
+  }
+
+  if (error && !map) return <Banner>{error}</Banner>;
+  if (!map) return <p className="text-sm text-muted">Loading the campus…</p>;
+
+  const sorted = [...dorms].sort((a, b) => a.name.localeCompare(b.name));
+  const highlightUnit = mode === "pick" ? pickedUnit : destination && detail?.id === destination.dormId ? destination.unit : undefined;
 
   return (
     <div className="space-y-5">
-      <div>
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <label className="text-sm">
-            <span className="sr-only">Jump to a hall</span>
-            <select value={selectedId} onChange={(event) => setSelectedId(event.target.value)} className="min-w-56">
-              {map.dorms
-                .slice()
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map((dorm) => (
+      {error ? <Banner>{error}</Banner> : null}
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.65fr)]">
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <label className="text-sm">
+              <span className="sr-only">Jump to a hall</span>
+              <select value={selectedId} onChange={(event) => selectHall(event.target.value)} className="min-w-64">
+                <option value="">Choose a residence hall</option>
+                {sorted.map((dorm) => (
                   <option key={dorm.id} value={dorm.id}>
                     {dorm.name}
                     {dorm.yours ? " · your hall" : dorm.open_units ? ` · ${dorm.open_units} open` : ""}
                   </option>
                 ))}
-            </select>
-          </label>
-          <ul className="flex flex-wrap gap-3 text-xs text-muted">
-            <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-moss" /> Open</li>
-            <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-amber" /> Request waiting</li>
-            <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-navy" /> Your room</li>
-            <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-[#d9d0c0]" /> Not hosting</li>
-          </ul>
+              </select>
+            </label>
+            <ul className="flex flex-wrap gap-3 text-xs text-muted">
+              <li className="flex items-center gap-1.5">
+                <span className="h-2.5 w-2.5 rounded-sm bg-moss" /> Hosting
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span className="h-2.5 w-2.5 rounded-sm bg-navy" /> Your hall
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span className="h-2.5 w-2.5 rounded-sm bg-[#8d8476]" /> Quiet
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span className="h-0.5 w-4 bg-gold" /> Your walk
+              </li>
+            </ul>
+          </div>
+          <CampusMap dorms={dorms} selectedId={selectedId} onSelect={selectHall} route={mode === "browse" ? route : null} />
+          <p className="text-xs text-muted">
+            Base map © OpenStreetMap contributors, CARTO. Building outlines from OpenStreetMap. Walking routes from OpenStreetMap
+            paths via Valhalla.
+          </p>
         </div>
-        <svg viewBox="0 0 100 82" className="w-full rounded-[28px] border border-line bg-[#e7f0e4]" role="img" aria-label="Map of Georgia Tech residence halls">
-          <rect x="0" y="70" width="100" height="12" fill="#e4dcc4" />
-          <text x="4" y="77.5" fontSize="2.1" fill="#5c6674">North Avenue</text>
-          <text x="92" y="6" fontSize="2.4" fill="#003057">N</text>
-          {HUB_EDGES.map(([from, to]) => {
-            const a = hubs[from];
-            const b = hubs[to];
-            if (!a || !b) return null;
-            return (
-              <line
-                key={`${from}-${to}`}
-                x1={a.x}
-                y1={yOf(a.y)}
-                x2={b.x}
-                y2={yOf(b.y)}
-                stroke="#ffffff"
-                strokeWidth="0.7"
-                strokeDasharray="1.2 0.8"
-              />
-            );
-          })}
-          {detail?.directions && detail.directions.points.length > 1 ? (
-            <polyline
-              fill="none"
-              stroke="#8d6e2f"
-              strokeWidth="0.7"
-              points={detail.directions.points.map((point) => `${point.x},${yOf(point.y)}`).join(" ")}
-            />
-          ) : null}
-          {map.landmarks.map((mark) => (
-            <g key={mark.id} transform={`translate(${mark.x} ${yOf(mark.y)})`}>
-              <rect x="-0.7" y="-0.7" width="1.4" height="1.4" fill="#9aa3ad" />
-              <text x="1.1" y="0.45" fontSize="1.35" fill="#5c6674">
-                {mark.name}
-              </text>
-            </g>
-          ))}
-          {map.dorms.map((dorm) => (
-            <Pin
-              key={dorm.id}
-              dorm={dorm}
-              active={dorm.id === selectedId}
-              hovered={hover === dorm.id}
-              onHover={setHover}
-              onSelect={() => {
-                setSelectedId(dorm.id);
-                setFloor(null);
-              }}
-            />
-          ))}
-        </svg>
-      </div>
-      <aside className="rounded-[28px] border border-line bg-card p-4 lg:p-5">
-        {detail && selected ? (
-          <div className="space-y-4">
-            <div>
-              <p className="text-xs tracking-[0.16em] text-gold uppercase">{styleLabel(detail.style)} · {detail.campus} campus</p>
-              <h2 className="font-serif text-3xl">{detail.name}</h2>
-              <p className="text-sm text-muted">{detail.address}</p>
-              {detail.note ? <p className="mt-2 text-sm">{detail.note}</p> : null}
-              <p className="mt-2 text-sm">
+        <aside className="space-y-4 rounded-[28px] border border-line bg-card p-5">
+          {detail ? (
+            <>
+              <div>
+                <p className="text-xs tracking-[0.16em] text-gold uppercase">
+                  {styleLabel(detail.style)} · {detail.campus} campus
+                </p>
+                <h2 className="font-serif text-3xl">{detail.name}</h2>
+                <p className="text-sm text-muted">{detail.address}</p>
+                {detail.note ? <p className="mt-2 text-sm">{detail.note}</p> : null}
+              </div>
+              <dl className="grid grid-cols-2 gap-2 text-sm">
+                <Spec label="Floors" value={String(detail.floors.length)} />
+                <Spec label="Units per floor" value={String(detail.units_per_floor)} />
+                <Spec label="Rooms" value={detail.specs.room} wide />
+                <Spec label="Bath" value={detail.specs.bath} wide />
+                <Spec label="Kitchen" value={detail.specs.kitchen} wide />
+                <Spec label="Where a guest sleeps" value={detail.specs.guest_space} wide />
+              </dl>
+              <p className="text-sm">
                 {detail.open_units
                   ? `${detail.open_units} unit${detail.open_units === 1 ? "" : "s"} hosting on these dates.`
                   : "Nobody in this hall is hosting those nights."}
               </p>
+              {mode === "browse" ? (
+                <Navigator
+                  dorms={sorted}
+                  byId={byId}
+                  origin={origin}
+                  destination={destination}
+                  onOrigin={setOrigin}
+                  onDestination={chooseDestination}
+                  route={route}
+                  routing={routing}
+                  destinationRoom={destinationRoom}
+                />
+              ) : null}
+            </>
+          ) : (
+            <div>
+              <h2 className="font-serif text-2xl">Pick a hall</h2>
+              <p className="mt-1 text-sm text-muted">
+                Click a building on the map. Green halls have someone hosting on your dates. You'll get the floor plan and the walk from
+                your room.
+              </p>
             </div>
-            {detail.directions && detail.directions.minutes > 0 ? (
-              <div className="rounded-2xl bg-paper p-3 text-sm">
-                <p className="font-medium">{detail.directions.minutes} min walk from your hall</p>
-                <ol className="mt-1 list-decimal space-y-0.5 pl-4 text-muted">
-                  {detail.directions.steps.map((step) => (
-                    <li key={step}>{step}</li>
-                  ))}
-                </ol>
-                {detail.directions.maps_url ? (
-                  <a className="mt-2 inline-block text-navy underline" href={detail.directions.maps_url} target="_blank" rel="noreferrer">
-                    Open walking directions
-                  </a>
-                ) : null}
-              </div>
-            ) : null}
+          )}
+        </aside>
+      </div>
+      {detail ? (
+        <section className="rounded-[28px] border border-line bg-card p-5">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <h3 className="font-serif text-2xl">
+              {detail.name} floor plan
+            </h3>
             <div className="flex flex-wrap gap-1.5">
               {detail.floors.map((item) => (
                 <button
@@ -196,71 +223,146 @@ export function DormBrowser({
                 </button>
               ))}
             </div>
-            {plan ? (
-              <FloorPlan
-                plan={plan}
-                selectedUnit={pickedUnit}
-                onSelect={(room) => {
-                  if (mode === "pick") {
-                    onPick?.({ dormId: detail.id, dormName: detail.name, floor: plan.floor, unit: room.unit });
-                  } else {
-                    chooseRoom(room);
-                  }
-                }}
-              />
-            ) : null}
-            <p className="text-xs text-muted">
-              {mode === "pick"
-                ? "Click a unit to claim it as yours. Roommates can both live in a double."
-                : "Hover a unit for who's hosting. Click an open unit to see their profile."}
-            </p>
           </div>
-        ) : (
-          <p className="text-sm text-muted">Choose a hall to see its floors.</p>
-        )}
-      </aside>
+          {plan ? <FloorPlan plan={plan} selectedUnit={highlightUnit} onSelect={chooseUnit} /> : null}
+          <p className="mt-3 text-xs text-muted">
+            {mode === "pick"
+              ? "Click a unit to claim it as yours. Roommates can both live in a double."
+              : "Hover a unit for who's hosting. Click any unit to get walking directions to it from your room."}
+          </p>
+        </section>
+      ) : null}
     </div>
   );
 }
 
-function Pin({
-  dorm,
-  active,
-  hovered,
-  onHover,
-  onSelect,
-}: {
-  dorm: DormPin;
-  active: boolean;
-  hovered: boolean;
-  onHover: (id: string) => void;
-  onSelect: () => void;
-}) {
-  const fill = dorm.yours ? "#003057" : dorm.open_units ? "#1f6b45" : "#8d8476";
-  const showLabel = active || hovered || dorm.yours;
+function Spec({ label, value, wide = false }: { label: string; value: string; wide?: boolean }) {
   return (
-    <g
-      transform={`translate(${dorm.x} ${yOf(dorm.y)})`}
-      onMouseEnter={() => onHover(dorm.id)}
-      onMouseLeave={() => onHover("")}
-      onClick={onSelect}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onSelect();
-        }
-      }}
-      role="button"
-      tabIndex={0}
-      aria-label={`${dorm.name}${dorm.open_units ? `, ${dorm.open_units} open` : ""}`}
-      className="cursor-pointer"
-    >
-      <circle r={active ? 2.15 : 1.55} fill={fill} stroke={active ? "#e7d7a8" : "white"} strokeWidth={active ? 0.45 : 0.25} />
-      {showLabel ? (
-        <text y="-2.5" textAnchor="middle" fontSize="1.7" fill="#1c2430">
-          {dorm.code}
-        </text>
+    <div className={`rounded-2xl bg-paper px-3 py-2 ${wide ? "col-span-2" : ""}`}>
+      <dt className="text-xs text-muted">{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  );
+}
+
+function Navigator({
+  dorms,
+  byId,
+  origin,
+  destination,
+  onOrigin,
+  onDestination,
+  route,
+  routing,
+  destinationRoom,
+}: {
+  dorms: DormPin[];
+  byId: Record<string, DormPin>;
+  origin: Endpoint | null;
+  destination: Endpoint | null;
+  onOrigin: (value: Endpoint | null) => void;
+  onDestination: (value: Endpoint | null) => void;
+  route: Route | null;
+  routing: boolean;
+  destinationRoom: RoomShape | null;
+}) {
+  const { user } = useAuth();
+  const host = destinationRoom?.hosts[0];
+  return (
+    <div className="space-y-3 rounded-2xl bg-paper p-3">
+      <p className="text-xs tracking-[0.16em] text-gold uppercase">Room to room</p>
+      <EndpointPicker label="From" value={origin} dorms={dorms} onChange={onOrigin} />
+      {user?.dorm_id && user.unit && (origin?.dormId !== user.dorm_id || origin.unit !== user.unit) ? (
+        <button type="button" className="text-xs text-navy underline" onClick={() => onOrigin({ dormId: user.dorm_id, unit: user.unit })}>
+          Use my room ({byId[user.dorm_id]?.name} {user.unit})
+        </button>
       ) : null}
-    </g>
+      <EndpointPicker label="To" value={destination} dorms={dorms} onChange={onDestination} />
+      {!destination ? <p className="text-xs text-muted">Or click a unit on the floor plan below.</p> : null}
+      {routing ? <p className="text-sm text-muted">Finding the walk…</p> : null}
+      {route && destination ? (
+        <div className="space-y-2 text-sm">
+          <p className="font-serif text-3xl text-navy">
+            {route.minutes} min <span className="text-base text-muted">· {(route.meters / 1000).toFixed(1)} km</span>
+          </p>
+          <ol className="list-decimal space-y-0.5 pl-4 text-muted">
+            {route.steps.map((step, index) => (
+              <li key={`${index}-${step}`}>{step}</li>
+            ))}
+          </ol>
+          {route.note ? <p className="text-xs text-clay">{route.note}</p> : null}
+          <div className="flex flex-wrap gap-2 pt-1">
+            {route.maps_url ? (
+              <a className={btnGhost} href={route.maps_url} target="_blank" rel="noreferrer">
+                Open in Google Maps
+              </a>
+            ) : null}
+            {host ? (
+              <Link to={`/room/${host.id}`} className={btnPrimary}>
+                View {host.name.split(" ")[0]}'s couch
+              </Link>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function EndpointPicker({
+  label,
+  value,
+  dorms,
+  onChange,
+}: {
+  label: string;
+  value: Endpoint | null;
+  dorms: DormPin[];
+  onChange: (value: Endpoint | null) => void;
+}) {
+  const { token } = useAuth();
+  const [units, setUnits] = useState<string[]>([]);
+  const dormId = value?.dormId ?? "";
+
+  useEffect(() => {
+    if (!dormId) {
+      setUnits([]);
+      return;
+    }
+    api<{ dorm: DormDetail }>(`/api/dorms/${dormId}`, {}, token)
+      .then((body) => setUnits(body.dorm.floors.flatMap((level) => level.rooms.map((room) => room.unit))))
+      .catch(() => setUnits([]));
+  }, [dormId, token]);
+
+  return (
+    <div className="grid grid-cols-[3rem_minmax(0,1fr)_5.5rem] items-center gap-2 text-sm">
+      <span className="text-muted">{label}</span>
+      <select
+        value={dormId}
+        onChange={(event) => {
+          const next = event.target.value;
+          onChange(next ? { dormId: next, unit: "" } : null);
+        }}
+      >
+        <option value="">Hall</option>
+        {dorms.map((dorm) => (
+          <option key={dorm.id} value={dorm.id}>
+            {dorm.name}
+          </option>
+        ))}
+      </select>
+      <select
+        value={value?.unit ?? ""}
+        disabled={!dormId}
+        onChange={(event) => dormId && onChange({ dormId, unit: event.target.value })}
+      >
+        <option value="">Unit</option>
+        {units.map((unit) => (
+          <option key={unit} value={unit}>
+            {unit}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }
