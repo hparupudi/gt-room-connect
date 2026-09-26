@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-sans: "Outfit", "Avenir Next", "Segoe UI", sans-serif;
+  --color-paper: #f3efe6;
+  --color-ink: #1c2430;
+  --color-navy: #003057;
+  --color-gold: #8d6e2f;
+  --color-gold-soft: #e7d7a8;
+  --color-moss: #1f6b45;
+  --color-moss-soft: #d7efe3;
+  --color-clay: #a84b28;
+  --color-amber: #8a5a12;
+  --color-amber-soft: #f6e6c4;
+  --color-line: #e3dac8;
+  --color-card: #fffaf3;
+  --color-muted: #5c6674;
+}
+
+html {
+  background: var(--color-paper);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% -10%, rgba(231, 215, 168, 0.55), transparent 50%),
+    var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+body::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+#root {
+  position: relative;
+  min-height: 100vh;
+}
+
+::selection {
+  background: #e7d7a8;
+  color: #1c2430;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--color-line);
+  background: white;
+  color: var(--color-ink);
+  border-radius: 0.9rem;
+  padding: 0.7rem 0.85rem;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--color-navy);
+  outline-offset: 1px;
+  border-color: var(--color-navy);
+}

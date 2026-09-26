@@ -1,0 +1,74 @@
+# Nook
+
+Nook is a weekend couch for Georgia Tech students. When a roommate is out of town, another Yellow Jacket can request the room. You match on how you live, or on the walk from your own hall. Socials stay hidden until the host accepts.
+
+## Run it
+
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python wsgi.py
+```
+
+In another terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The app is served at [http://127.0.0.1:43123](http://127.0.0.1:43123). The Vite dev server proxies `/api` to Flask on port 5317.
+
+Copy `.env.example` to `.env` in the repo root. Every API key is blank on purpose. The app still runs: profiles, search, the dorm map, and bookings use the local file store and a local lifestyle vector.
+
+## Demo accounts
+
+Both use the password `WeekendNook!`.
+
+| Who | Email | What they're for |
+| --- | --- | --- |
+| Maya Chen | maya.chen@gatech.edu | Hosting in Glenn |
+| Andre Wallace | andre.wallace@gatech.edu | Looking for a couch |
+
+The login screen can enter as either of them. Set `DEMO_LOGIN=0` to hide those buttons. The password still works until you change the seed.
+
+## What happens without keys
+
+| Piece | With a key | Without a key |
+| --- | --- | --- |
+| Accounts | MongoDB | `backend/data/db.json` |
+| Email code | SMTP | Shown on the signup screen |
+| Google sign-in | OAuth, must be a `@gatech.edu` account | Button explains which env vars to add |
+| Interview audio | Muse Voice Transcribe (`muse-voice-transcribe-1.0`) | Browser transcript, or what you type |
+| Profile | Muse Spark 1.3 structured output into a Pydantic `LifestyleProfile` | Same schema, filled by a local parser |
+| Embedding | 32 lifestyle axes from Muse Spark, L2-normalized, upserted to Pinecone | Same 32 axes from the local encoder, stored on the user |
+| Match sort | Cosine similarity, then Muse Spark 1.3 reranks the top bios | Cosine similarity, then a lifestyle score (sleep and cleanliness) |
+| Distance sort | Walking estimate via campus hubs, match breaks ties | Same |
+
+Meta's Model API does not ship a separate embeddings endpoint. Nook asks Muse Spark 1.3 for a fixed 32-axis vector inside the structured profile, stores that vector in Pinecone (dimension 32, metric cosine), and compares with cosine similarity. Create the index before setting `PINECONE_API_KEY`.
+
+Demo profiles were embedded with the local encoder. Interviews taken after you add `MODEL_API_KEY` use Muse. The reranker reads bios either way, so mixed profiles still get a Muse pass on match sort when the key is set.
+
+## Flow
+
+1. Enter a `@gatech.edu` address and the code from email (or the on-screen preview).
+2. Create a password. Google is optional once the OAuth keys are set.
+3. Claim your room on the campus map, including the floor and unit. You can open nights now or later.
+4. Fill in name, gender, age, major, year, hometown, and socials.
+5. Record a 30–60 second answer to the interview prompts. If the mic is blocked, type while the timer runs.
+6. Search by name, hall, unit number, or bio. Dates are required. Filter sleep, cleanliness, year, major (all selected by default), gender, floor, and dorm type (traditional, suite, apartment).
+7. Sort by match or by walking distance. Match runs cosine first, then the bio rerank. Distance walks from the room you claimed.
+8. Request a couch and wait. The host accepts or declines. Accepting closes those nights and declines other requests that overlap.
+9. Once accepted, both people can see Instagram, phone, and Discord.
+
+The map is a campus diagram of Georgia Tech undergrad halls. Click a hall for a floor-by-floor layout. Hover a unit for availability: green is open, amber has a request waiting, navy is your room. The gold line is a walking estimate through campus hubs, and a Google Maps walking link opens the same pair of buildings. Floor diagrams are original schematics, not official housing plans.
+
+## Tests
+
+```bash
+cd backend
+.venv/bin/pytest
+```

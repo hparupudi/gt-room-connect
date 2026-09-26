@@ -1,0 +1,588 @@
+import os
+import uuid
+from datetime import datetime, timedelta, timezone
+from hashlib import sha256
+from pathlib import Path
+
+from flask import Flask, jsonify, redirect, request
+
+from .constants import (
+    CLEANLINESS,
+    GENDERS,
+    INTERVIEW_QUESTIONS,
+    MAJORS,
+    SLEEP,
+    STYLES,
+    YEAR_LABELS,
+    YEARS,
+)
+from .db import get_db
+from .errors import ApiError
+from .mailer import send_verification, smtp_configured
+from .muse import convert_to_wav, extract_profile, muse_configured, transcribe_wav
+from .security import (
+    check_password,
+    hash_password,
+    make_token,
+    normalize_email,
+    read_token,
+    secret,
+    validate_password,
+)
+from .seed import DEMO_PASSWORD
+from .services import (
+    accept_booking,
+    apply_lifestyle,
+    cancel_booking,
+    create_booking,
+    decline_booking,
+    dorm_detail,
+    get_booking,
+    list_bookings,
+    map_overview,
+    onboarding_step,
+    parse_dates,
+    save_room,
+    search,
+    serialize_user,
+    set_availability,
+    tag_list,
+)
+from .vectors import pinecone_configured
+
+_oauth = None
+
+
+def _frontend() -> str:
+    return os.getenv("FRONTEND_URL", "http://127.0.0.1:43123").rstrip("/")
+
+
+def _viewer():
+    header = request.headers.get("Authorization", "")
+    if not header.startswith("Bearer "):
+        return None
+    try:
+        payload = read_token(header[7:].strip())
+    except Exception:
+        return None
+    if payload.get("purpose"):
+        return None
+    return get_db().find_one("users", id=payload.get("sub"))
+
+
+def _require():
+    user = _viewer()
+    if not user:
+        raise ApiError("Log in to continue.", 401)
+    return user
+
+
+def _hash_code(code: str) -> str:
+    return sha256(f"{secret()}:{code}".encode()).hexdigest()
+
+
+def _me_payload(user: dict) -> dict:
+    payload = serialize_user(user, user["id"])
+    payload["incoming_pending"] = sum(
+        1
+        for booking in get_db().find_all("bookings")
+        if booking.get("host_id") == user["id"] and booking.get("status") == "pending"
+    )
+    return payload
+
+
+def register_routes(app: Flask) -> None:
+    global _oauth
+    from authlib.integrations.flask_client import OAuth
+
+    _oauth = OAuth(app)
+    client_id = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+    client_secret = os.getenv("GOOGLE_CLIENT_SECRET", "").strip()
+    if client_id and client_secret:
+        _oauth.register(
+            name="google",
+            client_id=client_id,
+            client_secret=client_secret,
+            server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+            client_kwargs={"scope": "openid email profile"},
+        )
+        app.config["GOOGLE_OAUTH"] = True
+    else:
+        app.config["GOOGLE_OAUTH"] = False
+
+    @app.errorhandler(ApiError)
+    def _api_error(exc: ApiError):
+        return jsonify(error=exc.message), exc.status
+
+    @app.errorhandler(404)
+    def _missing(_exc):
+        return jsonify(error="Not found."), 404
+
+    @app.get("/api/health")
+    def health():
+        db = get_db()
+        return jsonify(
+            ok=True,
+            store=db.mode,
+            muse=muse_configured(),
+            pinecone=pinecone_configured(),
+            smtp=smtp_configured(),
+            google=bool(app.config.get("GOOGLE_OAUTH")),
+            demo=os.getenv("DEMO_LOGIN", "1") != "0",
+        )
+
+    @app.get("/api/meta")
+    def meta():
+        payload = {
+            "majors": MAJORS,
+            "years": YEARS,
+            "genders": GENDERS,
+            "sleep": SLEEP,
+            "cleanliness": CLEANLINESS,
+            "styles": STYLES,
+            "questions": INTERVIEW_QUESTIONS,
+            "google": bool(app.config.get("GOOGLE_OAUTH")),
+            "demo": os.getenv("DEMO_LOGIN", "1") != "0",
+        }
+        if payload["demo"]:
+            payload["demo_password"] = DEMO_PASSWORD
+            payload["demo_accounts"] = [
+                {
+                    "name": "Maya Chen",
+                    "email": "maya.chen@gatech.edu",
+                    "blurb": "Hosting in Glenn this weekend",
+                },
+                {
+                    "name": "Andre Wallace",
+                    "email": "andre.wallace@gatech.edu",
+                    "blurb": "Looking for a couch",
+                },
+            ]
+        return jsonify(payload)
+
+    @app.post("/api/auth/email/start")
+    def email_start():
+        email = normalize_email((request.get_json(silent=True) or {}).get("email", ""))
+        if get_db().find_one("users", email=email):
+            raise ApiError("That email already has a Nook account. Log in instead.", 409)
+        recent = datetime.now(timezone.utc) - timedelta(hours=1)
+        sent = 0
+        for code in get_db().find_all("codes"):
+            if code.get("email") != email:
+                continue
+            try:
+                created = datetime.fromisoformat(code.get("created_at"))
+            except Exception:
+                continue
+            if created >= recent:
+                sent += 1
+        if sent >= 5:
+            raise ApiError("Too many codes for that email. Wait a bit and try again.", 429)
+        code_value = f"{uuid.uuid4().int % 1_000_000:06d}"
+        get_db().insert(
+            "codes",
+            {
+                "id": uuid.uuid4().hex,
+                "email": email,
+                "code_hash": _hash_code(code_value),
+                "expires": (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat(),
+                "attempts": 0,
+                "used": False,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
+        try:
+            delivery = send_verification(email, code_value)
+        except Exception as exc:
+            print(f"SMTP failed, showing the code in the app instead: {exc}")
+            delivery = "preview"
+        body = {"ok": True, "email": email, "delivery": delivery}
+        if delivery == "preview" or os.getenv("DEV_EXPOSE_EMAIL_CODES") == "1":
+            body["preview_code"] = code_value
+        return jsonify(body)
+
+    @app.post("/api/auth/email/verify")
+    def email_verify():
+        data = request.get_json(silent=True) or {}
+        email = normalize_email(data.get("email", ""))
+        code_value = str(data.get("code", "")).strip()
+        matches = [
+            item
+            for item in get_db().find_all("codes")
+            if item.get("email") == email and not item.get("used")
+        ]
+        matches.sort(key=lambda item: item.get("created_at") or "", reverse=True)
+        record = matches[0] if matches else None
+        if not record:
+            raise ApiError("Request a new code first.")
+        try:
+            expires = datetime.fromisoformat(record["expires"])
+        except Exception:
+            expires = datetime.now(timezone.utc) - timedelta(seconds=1)
+        if expires < datetime.now(timezone.utc):
+            raise ApiError("That code expired. Request a new one.")
+        if record.get("attempts", 0) >= 5:
+            raise ApiError("Too many tries. Request a new code.")
+        if _hash_code(code_value) != record.get("code_hash"):
+            get_db().update("codes", record["id"], {"attempts": record.get("attempts", 0) + 1})
+            raise ApiError("That code doesn't match.")
+        get_db().update("codes", record["id"], {"used": True})
+        token = make_token(email, minutes=30, purpose="verify")
+        return jsonify(ok=True, verification_token=token, email=email)
+
+    @app.post("/api/auth/register")
+    def register():
+        data = request.get_json(silent=True) or {}
+        email = normalize_email(data.get("email", ""))
+        password = data.get("password") or ""
+        token = data.get("verification_token") or ""
+        try:
+            payload = read_token(token)
+        except Exception as exc:
+            raise ApiError("Verify your email again before creating a password.") from exc
+        if payload.get("purpose") != "verify" or payload.get("sub") != email:
+            raise ApiError("Verify your email again before creating a password.")
+        if get_db().find_one("users", email=email):
+            raise ApiError("That email already has a Nook account. Log in instead.", 409)
+        validate_password(password)
+        user = {
+            "id": uuid.uuid4().hex,
+            "email": email,
+            "password_hash": hash_password(password),
+            "google_sub": None,
+            "email_verified": True,
+            "name": "",
+            "gender": "",
+            "age": None,
+            "major": "",
+            "year": "",
+            "hometown": "",
+            "socials": {"instagram": "", "phone": "", "discord": ""},
+            "dorm_id": "",
+            "floor": None,
+            "unit": "",
+            "open_dates": [],
+            "lifestyle": None,
+            "transcript": "",
+            "embedding": [],
+            "embedding_model": "",
+            "onboarding_complete": False,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        get_db().insert("users", user)
+        return jsonify(token=make_token(user["id"]), user=_me_payload(user))
+
+    @app.post("/api/auth/login")
+    def login():
+        data = request.get_json(silent=True) or {}
+        email = normalize_email(data.get("email", ""))
+        password = data.get("password") or ""
+        user = get_db().find_one("users", email=email)
+        if not user:
+            raise ApiError("Email or password is wrong.", 401)
+        if not user.get("password_hash"):
+            raise ApiError("This account signs in with Google.", 401)
+        if not check_password(password, user["password_hash"]):
+            raise ApiError("Email or password is wrong.", 401)
+        return jsonify(token=make_token(user["id"]), user=_me_payload(user))
+
+    @app.get("/api/auth/me")
+    def me():
+        return jsonify(user=_me_payload(_require()))
+
+    @app.get("/api/auth/google")
+    def google_start():
+        if not app.config.get("GOOGLE_OAUTH"):
+            return jsonify(error="Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable Google sign-in."), 503
+        redirect_uri = os.getenv("GOOGLE_REDIRECT_URI", f"{_frontend()}/api/auth/google/callback")
+        return _oauth.google.authorize_redirect(redirect_uri)
+
+    @app.get("/api/auth/google/callback")
+    def google_callback():
+        if not app.config.get("GOOGLE_OAUTH"):
+            return redirect(f"{_frontend()}/login?error=google")
+        try:
+            token = _oauth.google.authorize_access_token()
+            info = token.get("userinfo") or {}
+            email = normalize_email(info.get("email", ""))
+        except ApiError:
+            return redirect(f"{_frontend()}/login?error=gt")
+        except Exception:
+            return redirect(f"{_frontend()}/login?error=google")
+        db = get_db()
+        user = db.find_one("users", email=email)
+        if not user:
+            user = {
+                "id": uuid.uuid4().hex,
+                "email": email,
+                "password_hash": "",
+                "google_sub": info.get("sub"),
+                "email_verified": True,
+                "name": info.get("name") or "",
+                "gender": "",
+                "age": None,
+                "major": "",
+                "year": "",
+                "hometown": "",
+                "socials": {"instagram": "", "phone": "", "discord": ""},
+                "dorm_id": "",
+                "floor": None,
+                "unit": "",
+                "open_dates": [],
+                "lifestyle": None,
+                "transcript": "",
+                "embedding": [],
+                "embedding_model": "",
+                "onboarding_complete": False,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }
+            db.insert("users", user)
+        elif info.get("sub") and user.get("google_sub") != info.get("sub"):
+            db.update("users", user["id"], {"google_sub": info.get("sub")})
+        session = make_token(user["id"])
+        return redirect(f"{_frontend()}/auth/callback?token={session}")
+
+    @app.post("/api/me/room")
+    def update_room():
+        user = _require()
+        data = request.get_json(silent=True) or {}
+        try:
+            floor = int(data.get("floor"))
+        except (TypeError, ValueError) as exc:
+            raise ApiError("Pick a floor.") from exc
+        open_dates = data.get("open_dates") if "open_dates" in data else None
+        profile = save_room(user, data.get("dorm_id") or "", floor, str(data.get("unit") or ""), open_dates)
+        return jsonify(user=profile)
+
+    @app.post("/api/me/questionnaire")
+    def questionnaire():
+        user = _require()
+        if onboarding_step(user) == "room":
+            raise ApiError("Claim your room before the questionnaire.")
+        data = request.get_json(silent=True) or {}
+        name = (data.get("name") or "").strip()
+        if len(name) < 2 or len(name) > 80:
+            raise ApiError("Add the name you go by.")
+        gender = data.get("gender") or ""
+        if gender not in {item["id"] for item in GENDERS}:
+            raise ApiError("Pick a gender option.")
+        try:
+            age = int(data.get("age"))
+        except (TypeError, ValueError) as exc:
+            raise ApiError("Add your age.") from exc
+        if age < 16 or age > 40:
+            raise ApiError("Age should be between 16 and 40.")
+        major = data.get("major") or ""
+        if major not in MAJORS:
+            raise ApiError("Pick a major from the list.")
+        year = data.get("year") or ""
+        if year not in YEAR_LABELS:
+            raise ApiError("Pick your year.")
+        hometown = (data.get("hometown") or "").strip()
+        if len(hometown) < 2 or len(hometown) > 80:
+            raise ApiError("Add your hometown.")
+        socials_in = data.get("socials") or {}
+        socials = {
+            "instagram": str(socials_in.get("instagram") or "").strip()[:80],
+            "phone": str(socials_in.get("phone") or "").strip()[:40],
+            "discord": str(socials_in.get("discord") or "").strip()[:80],
+        }
+        patch = {
+            "name": name,
+            "gender": gender,
+            "age": age,
+            "major": major,
+            "year": year,
+            "hometown": hometown,
+            "socials": socials,
+        }
+        updated = get_db().update("users", user["id"], patch)
+        if updated.get("lifestyle"):
+            from .embed import axes_from_signals
+
+            life = updated["lifestyle"]
+            signal = " ".join(
+                [
+                    updated.get("name") or "",
+                    major,
+                    hometown,
+                    life.get("bio") or "",
+                    " ".join(life.get("interests") or []),
+                    updated.get("transcript") or "",
+                ]
+            )
+            vector = axes_from_signals(
+                signal,
+                life.get("sleep_timing") or "typical",
+                life.get("cleanliness") or "average",
+                major,
+                hometown,
+                life.get("noise") or "moderate",
+            )
+            if updated.get("embedding_model") != "muse-spark-1.3":
+                life["tags"] = tag_list(updated)
+                embed_patch = {
+                    "lifestyle": life,
+                    **__import__("nook.services", fromlist=["store_embedding"]).store_embedding(updated, vector, "local-lifestyle-v1"),
+                }
+                updated = get_db().update("users", user["id"], embed_patch)
+            else:
+                life["tags"] = tag_list(updated)
+                updated = get_db().update("users", user["id"], {"lifestyle": life})
+        return jsonify(user=serialize_user(updated, user["id"]))
+
+    @app.post("/api/me/interview")
+    def interview():
+        user = _require()
+        step = onboarding_step(user)
+        if step == "room":
+            raise ApiError("Claim your room before the interview.")
+        if step == "about":
+            raise ApiError("Finish the questionnaire before the interview.")
+        try:
+            duration = float(request.form.get("duration_sec") or 0)
+        except ValueError as exc:
+            raise ApiError("The recording length didn't come through.") from exc
+        if duration < 30 or duration > 70:
+            raise ApiError("The interview needs to run between 30 and 60 seconds.")
+        transcript = (request.form.get("transcript") or "").strip()
+        source = "browser"
+        audio = request.files.get("audio")
+        if audio and audio.filename:
+            folder = Path(__file__).resolve().parents[1] / "data" / "audio"
+            folder.mkdir(parents=True, exist_ok=True)
+            raw_path = folder / f"{user['id']}-{uuid.uuid4().hex[:8]}"
+            suffix = Path(audio.filename).suffix.lower() or ".webm"
+            if suffix not in {".webm", ".wav", ".mp3", ".m4a", ".ogg"}:
+                suffix = ".webm"
+            raw_path = raw_path.with_suffix(suffix)
+            audio.save(raw_path)
+            wav = raw_path.read_bytes() if suffix == ".wav" else convert_to_wav(raw_path)
+            if wav and muse_configured():
+                try:
+                    heard = transcribe_wav(wav)
+                    if heard:
+                        transcript = heard
+                        source = "muse-voice-transcribe-1.0"
+                except Exception as exc:
+                    print(f"Muse Voice Transcribe failed, using the browser transcript: {exc}")
+        if len(transcript) < 40:
+            raise ApiError("Say a little more about how you live so matching has something to hold onto.")
+        questionnaire = {
+            "name": user.get("name"),
+            "major": user.get("major"),
+            "year": user.get("year"),
+            "year_label": YEAR_LABELS.get(user.get("year"), ""),
+            "hometown": user.get("hometown"),
+            "gender": user.get("gender"),
+            "age": user.get("age"),
+        }
+        profile, model = extract_profile(transcript, questionnaire)
+        patch = apply_lifestyle(user, profile, model, transcript)
+        updated = get_db().update("users", user["id"], patch)
+        body = serialize_user(updated, user["id"])
+        body["transcript_source"] = source
+        return jsonify(user=body, transcript_source=source, embedding_model=model)
+
+    @app.patch("/api/me")
+    def patch_me():
+        return questionnaire()
+
+    @app.put("/api/me/availability")
+    def availability():
+        user = _require()
+        if not user.get("onboarding_complete"):
+            raise ApiError("Finish your profile before opening your couch.")
+        data = request.get_json(silent=True) or {}
+        return jsonify(user=set_availability(user, data.get("dates") or []))
+
+    @app.post("/api/search")
+    def search_rooms():
+        user = _require()
+        if not user.get("onboarding_complete"):
+            raise ApiError("Finish your profile before searching.")
+        return jsonify(search(user, request.get_json(silent=True) or {}))
+
+    @app.get("/api/map")
+    def campus_map():
+        user = _require()
+        dates = [item for item in (request.args.get("dates") or "").split(",") if item]
+        if dates:
+            dates = parse_dates(dates)
+        return jsonify(map_overview(user, dates))
+
+    @app.get("/api/dorms/<dorm_id>")
+    def one_dorm(dorm_id: str):
+        user = _require()
+        dates = [item for item in (request.args.get("dates") or "").split(",") if item]
+        if dates:
+            dates = parse_dates(dates)
+        return jsonify(dorm=dorm_detail(dorm_id, user, dates))
+
+    @app.get("/api/directions")
+    def directions():
+        user = _require()
+        if not user.get("dorm_id"):
+            raise ApiError("Claim your room first so Nook knows where to start.")
+        target = request.args.get("to") or ""
+        from .dorms import get_dorm, walking_route
+
+        if not get_dorm(target):
+            raise ApiError("Pick a hall on the map.")
+        return jsonify(walking_route(user["dorm_id"], target))
+
+    @app.get("/api/hosts/<host_id>")
+    def host_profile(host_id: str):
+        user = _require()
+        host = get_db().find_one("users", id=host_id)
+        if not host or not host.get("onboarding_complete"):
+            raise ApiError("That profile isn't available.", 404)
+        payload = {"host": serialize_user(host, user["id"])}
+        if user.get("embedding") and host.get("embedding") and user.get("dorm_id") and host.get("dorm_id"):
+            from .rank import score_pair
+
+            scores = score_pair(user, host, {user["id"]: user["embedding"], host["id"]: host["embedding"]})
+            payload["scores"] = {
+                "cosine": round(scores["cosine"], 3),
+                "match": round(scores["local"], 3),
+                "meters": scores["meters"],
+                "minutes": scores["minutes"],
+                "reason": scores["reason"],
+            }
+        return jsonify(payload)
+
+    @app.post("/api/bookings")
+    def book():
+        user = _require()
+        data = request.get_json(silent=True) or {}
+        return jsonify(booking=create_booking(user, data.get("host_id") or "", data.get("dates") or [], data.get("message") or "")), 201
+
+    @app.get("/api/bookings/incoming")
+    def incoming():
+        user = _require()
+        return jsonify(bookings=list_bookings(user["id"], "incoming"))
+
+    @app.get("/api/bookings/outgoing")
+    def outgoing():
+        user = _require()
+        return jsonify(bookings=list_bookings(user["id"], "outgoing"))
+
+    @app.get("/api/bookings/<booking_id>")
+    def booking_detail(booking_id: str):
+        user = _require()
+        return jsonify(booking=get_booking(booking_id, user["id"]))
+
+    @app.post("/api/bookings/<booking_id>/accept")
+    def accept(booking_id: str):
+        user = _require()
+        return jsonify(booking=accept_booking(user, booking_id))
+
+    @app.post("/api/bookings/<booking_id>/decline")
+    def decline(booking_id: str):
+        user = _require()
+        return jsonify(booking=decline_booking(user, booking_id))
+
+    @app.post("/api/bookings/<booking_id>/cancel")
+    def cancel(booking_id: str):
+        user = _require()
+        return jsonify(booking=cancel_booking(user, booking_id))
