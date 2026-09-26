@@ -113,7 +113,7 @@ export function RoomDetail() {
               <section className="mt-6">
                 <h2 className="font-serif text-2xl">Floor {plan.floor}</h2>
                 <p className="mb-3 text-sm text-muted">
-                  The Housing drawing for this floor only. Click any room to see how the bed and furniture are set up.
+                  The Housing drawing for this floor only. Click any room to see its size and how the bed and furniture are set up.
                 </p>
                 <FloorPlan plan={plan} selectedUnit={openUnit || host.unit} onSelect={(room) => setOpenUnit(room.unit)} />
               </section>

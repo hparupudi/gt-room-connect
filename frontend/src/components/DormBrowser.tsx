@@ -254,8 +254,8 @@ export function DormBrowser({
           <p className="mt-3 text-xs text-muted">
             {plan?.image
               ? mode === "pick"
-                ? "Click a room on the plan to see the furniture layout and to claim that unit. Roommates can both live in a double."
-                : "Click a room on the plan to see the furniture layout. That room also becomes the destination of the walk."
+                ? "Click a room on the plan to see its size and furniture, drawn to scale, and to claim that unit. Roommates can both live in a double."
+                : "Click a room on the plan to see its size and furniture, drawn to scale. That room also becomes the destination of the walk."
               : mode === "pick"
                 ? "Click a unit to see its layout and claim it as yours. Roommates can both live in a double."
                 : "Hover a unit for who's hosting. Click a room for its layout and for walking directions."}

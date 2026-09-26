@@ -112,6 +112,20 @@ export type FloorPlan = {
 
 export type HousingItem = { name: string; detail?: string; lines?: string[] };
 
+export type RoomFootprint = {
+  width_in: number;
+  depth_in: number;
+  width_label: string;
+  depth_label: string;
+  summary: string;
+  drawing: string;
+  range: boolean;
+  approximate: boolean;
+  occupants: number;
+  source: string;
+  note: string;
+};
+
 export type HousingFacts = {
   page: string;
   room_style: string;
@@ -120,6 +134,7 @@ export type HousingFacts = {
   furniture_note: string;
   dimensions: HousingItem[];
   dimensions_source: string;
+  room?: RoomFootprint | null;
 };
 
 export type HallSpecs = {

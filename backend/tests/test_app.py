@@ -604,6 +604,37 @@ def test_map_and_directions(client):
     assert 0 < spot["w"] < 0.25 and 0 < spot["h"] < 0.25
     assert any(item["name"] == "Laundry" and "floors" in item["detail"] for item in housing["amenities"])
     assert any(item["name"] == "Bed" and any("38 in" in line for line in item["lines"]) for item in housing["dimensions"])
+    assert housing["room"]["width_in"] == 180
+    assert housing["room"]["depth_in"] == 132
+    assert housing["room"]["range"] is True
+    assert housing["room"]["drawing"] == "15' × 11'"
+    assert "12'" in housing["room"]["summary"] and "15'" in housing["room"]["summary"]
+
+
+def test_published_room_sizes(client):
+    token = login(client, "maya.chen@gatech.edu")
+
+    def room(dorm_id: str) -> dict:
+        response = client.get(f"/api/dorms/{dorm_id}", headers=auth(token))
+        assert response.status_code == 200
+        return response.get_json()["dorm"]["housing"]["room"]
+
+    west = room("armstrong")
+    assert west["width_in"] == 15 * 12 and west["depth_in"] == 11 * 12
+    assert west["range"] is False
+    assert west["summary"] == "approximately 15' × 11'"
+    harris = room("harris")
+    assert harris["width_in"] == 12 * 12 and harris["depth_in"] == 10 * 12
+    assert harris["occupants"] == 2 and harris["range"] is False
+    woodruff = room("woodruff-south")
+    assert woodruff["width_in"] == 15 * 12 and woodruff["depth_in"] == 12 * 12
+    assert woodruff["drawing"] == "15' × 12'"
+    apartment = room("crecine")
+    assert apartment["width_in"] == 11 * 12 and apartment["depth_in"] == 8 * 12 + 10
+    assert apartment["occupants"] == 1
+    assert apartment["depth_label"] == "8' 10\""
+    smith = room("smith")
+    assert smith["width_in"] == 15 * 12 and smith["range"] is True
 
 
 def test_inbox_after_a_request_is_accepted(client):
