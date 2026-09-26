@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { tagLabel } from "../format";
+
 export const btn =
   "inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy disabled:cursor-not-allowed disabled:opacity-45";
 export const btnPrimary = `${btn} bg-navy text-paper hover:bg-ink`;
@@ -44,7 +46,7 @@ export function Tags({ tags }: { tags: string[] }) {
     <ul className="flex flex-wrap gap-1.5">
       {tags.map((tag) => (
         <li key={tag} className="rounded-full bg-gold px-2.5 py-1 text-xs font-medium text-paper">
-          {tag}
+          {tagLabel(tag)}
         </li>
       ))}
     </ul>

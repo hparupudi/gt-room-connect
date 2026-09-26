@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 
 import { useDates } from "../dates";
-import { addDays, formatDay, isoDate, parseIso } from "../format";
+import { addDays, formatDates, isoDate, parseIso } from "../format";
 
 export function DatePicker() {
   const { dates, toggleDate, setDates } = useDates();
@@ -19,9 +19,10 @@ export function DatePicker() {
       const sunday = addDays(saturday, 1);
       const days = [isoDate(saturday)];
       if (sunday >= today) days.push(isoDate(sunday));
+      const open = days.filter((day) => parseIso(day) >= today);
       chips.push({
-        label: index === 0 && weekday === 6 ? "This weekend" : formatDay(isoDate(saturday)),
-        days: days.filter((day) => parseIso(day) >= today),
+        label: index === 0 && weekday === 6 ? "This weekend" : formatDates(open),
+        days: open,
       });
     }
     return chips.filter((chip) => chip.days.length);
@@ -45,7 +46,7 @@ export function DatePicker() {
           <p className="text-xs font-medium tracking-[0.16em] text-gold uppercase">Dates</p>
           <p className="mt-1 text-sm text-muted">Required. A couch has to be free every night you pick.</p>
         </div>
-        <p className="text-sm font-medium">{dates.length ? dates.map(formatDay).join(", ") : "None yet"}</p>
+        <p className="text-sm font-medium">{dates.length ? formatDates(dates) : "None yet"}</p>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
         {weeks.map((week) => {
