@@ -13,6 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent / "data" / "floorplans"
 MANIFEST = ROOT / "manifest.json"
+HOTSPOTS = Path(__file__).resolve().parent / "data" / "room_hotspots.json"
 
 
 @lru_cache(maxsize=1)
@@ -44,3 +45,16 @@ def image_file(dorm_id: str, floor: int) -> Path | None:
         return None
     path = ROOT / item["file"]
     return path if path.is_file() else None
+
+
+@lru_cache(maxsize=1)
+def _hotspots() -> dict:
+    if not HOTSPOTS.exists():
+        return {}
+    return json.loads(HOTSPOTS.read_text())
+
+
+def room_hotspots(dorm_id: str, floor: int) -> list[dict]:
+    """Normalized click boxes for room numbers on the published floor image."""
+    hall = _hotspots().get(dorm_id) or {}
+    return list(hall.get(str(floor)) or [])

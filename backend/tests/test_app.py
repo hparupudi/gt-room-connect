@@ -445,8 +445,13 @@ def test_map_and_directions(client):
     glenn_numbers = [room["unit"] for room in glenn_one["rooms"]]
     assert "179A" in glenn_numbers or "178A" in glenn_numbers
     assert len(glenn_numbers) > 16
-    housing = client.get("/api/dorms/glenn", headers=auth(token)).get_json()["dorm"]["housing"]
+    glenn_body = client.get("/api/dorms/glenn", headers=auth(token)).get_json()["dorm"]
+    housing = glenn_body["housing"]
     assert housing["room_style"] == "Double Traditional"
+    glenn_three = next(level for level in glenn_body["floors"] if level["floor"] == 3)
+    spot = next(item for item in glenn_three["hotspots"] if item["unit"] == "314")
+    assert 0 <= spot["x"] < 1 and 0 <= spot["y"] < 1
+    assert 0 < spot["w"] < 0.25 and 0 < spot["h"] < 0.25
     assert any(item["name"] == "Laundry" and "floors" in item["detail"] for item in housing["amenities"])
     assert any(item["name"] == "Bed" and any("38 in" in line for line in item["lines"]) for item in housing["dimensions"])
 

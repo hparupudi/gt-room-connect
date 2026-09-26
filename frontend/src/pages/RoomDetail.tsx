@@ -5,7 +5,7 @@ import { api, ApiError } from "../api";
 import { useAuth } from "../auth";
 import { CampusMap } from "../components/CampusMap";
 import { FloorPlan } from "../components/FloorPlan";
-import { RoomFacts } from "../components/RoomFacts";
+import { RoomLayoutDialog } from "../components/RoomLayout";
 import { SocialLogos } from "../components/SocialLogos";
 import { Shell } from "../components/Shell";
 import { WhyMatch } from "../components/WhyMatch";
@@ -113,14 +113,9 @@ export function RoomDetail() {
               <section className="mt-6">
                 <h2 className="font-serif text-2xl">Floor {plan.floor}</h2>
                 <p className="mb-3 text-sm text-muted">
-                  The Housing drawing for this floor only. Click a room number for its furniture dimensions and the building amenities.
+                  The Housing drawing for this floor only. Click any room to see how the bed and furniture are set up.
                 </p>
                 <FloorPlan plan={plan} selectedUnit={openUnit || host.unit} onSelect={(room) => setOpenUnit(room.unit)} />
-                {openUnit ? (
-                  <div className="mt-4">
-                    <RoomFacts unit={openUnit} housing={dorm?.housing} />
-                  </div>
-                ) : null}
               </section>
             ) : null}
             {scores ? <WhyMatch reason={scores.reason} model={scores.reason_model} /> : null}
@@ -209,6 +204,16 @@ export function RoomDetail() {
               </>
             )}
           </aside>
+          {openUnit ? (
+            <RoomLayoutDialog
+              hallName={host.dorm_name ?? ""}
+              unit={openUnit}
+              floor={plan?.floor ?? host.floor}
+              roomStyle={dorm?.housing?.room_style || styleLabel(host.style)}
+              housing={dorm?.housing}
+              onClose={() => setOpenUnit("")}
+            />
+          ) : null}
         </article>
       ) : null}
     </Shell>

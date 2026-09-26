@@ -107,6 +107,7 @@ export type FloorPlan = {
   pdf?: string | null;
   source_page?: string | null;
   official?: boolean;
+  hotspots?: { unit: string; x: number; y: number; w: number; h: number }[];
 };
 
 export type HousingItem = { name: string; detail?: string; lines?: string[] };

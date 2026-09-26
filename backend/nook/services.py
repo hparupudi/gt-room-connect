@@ -8,7 +8,7 @@ from datetime import date, datetime, timedelta, timezone
 from .constants import GENDERS, MAJORS, SLEEP, STYLES, YEAR_LABELS, YEARS
 from .db import get_db
 from .dorms import DORMS, floor_plan, get_dorm, map_payload, public_dorm, walking_route
-from .floorplans import official_floors
+from .floorplans import official_floors, room_hotspots
 from .embed import normalize
 from .errors import ApiError
 from .models import LifestyleProfile
@@ -408,6 +408,7 @@ def dorm_detail(dorm_id: str, viewer: dict | None, dates: list[str]) -> dict:
                 "fixtures": [],
                 "rooms": [],
             }
+        plan["hotspots"] = room_hotspots(dorm_id, floor)
         drawing = published.get(floor)
         if drawing:
             plan["image"] = f"/api/floorplans/{dorm_id}/{floor}"

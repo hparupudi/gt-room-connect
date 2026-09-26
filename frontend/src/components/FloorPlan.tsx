@@ -28,14 +28,55 @@ export function FloorPlan({
     <div className="relative space-y-4">
       {showOfficial ? (
         <figure className="space-y-2">
-          <img
-            src={plan.image || ""}
-            alt={`Georgia Tech Housing floor plan for floor ${plan.floor}, including rooms, bathrooms, and study spaces`}
-            className="w-full rounded-2xl border border-line bg-white"
-            onError={() => setImageFailed(true)}
-          />
+          <div className="relative overflow-hidden rounded-2xl border border-line bg-white" role="group" aria-label={`Rooms on floor ${plan.floor}. Click a room for its layout.`}>
+            <img
+              src={plan.image || ""}
+              alt={`Georgia Tech Housing floor plan for floor ${plan.floor}. Click a room to open its furniture layout.`}
+              className="block w-full"
+              onError={() => setImageFailed(true)}
+            />
+            {(plan.hotspots || []).map((spot) => {
+              const room = plan.rooms.find((item) => item.unit === spot.unit);
+              const selected = selectedUnit === spot.unit;
+              return (
+                <button
+                  key={spot.unit}
+                  type="button"
+                  aria-label={`Open the layout for room ${spot.unit}`}
+                  aria-pressed={selected}
+                  onMouseEnter={(event) => room && setHover({ room, x: event.clientX, y: event.clientY })}
+                  onMouseMove={(event) => room && setHover({ room, x: event.clientX, y: event.clientY })}
+                  onMouseLeave={() => setHover(null)}
+                  onClick={() =>
+                    onSelect?.(
+                      room || {
+                        unit: spot.unit,
+                        x: 0,
+                        y: 0,
+                        w: 0,
+                        h: 0,
+                        kind: plan.style === "apartment" ? "apartment" : plan.style === "suite" ? "bedroom" : "double",
+                        status: "idle",
+                        hosts: [],
+                        yours: false,
+                      },
+                    )
+                  }
+                  className={`absolute cursor-pointer rounded-sm p-0 ${
+                    selected ? "border-2 border-gold bg-gold/25" : "border border-transparent bg-transparent hover:border-navy/50 hover:bg-navy/10"
+                  }`}
+                  style={{
+                    left: `${spot.x * 100}%`,
+                    top: `${spot.y * 100}%`,
+                    width: `${spot.w * 100}%`,
+                    height: `${spot.h * 100}%`,
+                  }}
+                />
+              );
+            })}
+          </div>
           <figcaption className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
-            <span>Published by Georgia Tech Housing. Bathrooms, study rooms, and kitchens are drawn as on this plan.</span>
+            <span>Click a room on the drawing to open its layout. Published by Georgia Tech Housing.</span>
             {plan.pdf ? (
               <a href={plan.pdf} target="_blank" rel="noreferrer" className="text-navy underline">
                 Download the PDF
@@ -148,6 +189,7 @@ export function FloorPlan({
                   onMouseEnter={(event) => setHover({ room, x: event.clientX, y: event.clientY })}
                   onMouseMove={(event) => setHover({ room, x: event.clientX, y: event.clientY })}
                   onMouseLeave={() => setHover(null)}
+                  aria-label={`Open the layout for room ${room.unit}`}
                   onClick={() => onSelect?.(room)}
                   className={`rounded-full border px-3 py-1.5 text-sm ${
                     selected ? "border-gold bg-navy text-paper" : "border-line bg-paper text-ink"
