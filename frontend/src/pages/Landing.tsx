@@ -30,7 +30,7 @@ export function Landing() {
             Log in
           </Link>
           <Link to="/signup" className={btnPrimary}>
-            Get a code
+            Sign up
           </Link>
         </div>
       </header>
