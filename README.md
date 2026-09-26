@@ -1,6 +1,6 @@
 # Nook
 
-Nook is a weekend couch for Georgia Tech students. When a roommate is out of town, another Yellow Jacket can request the room. You match on how you live, or on the walk from your own hall. Socials stay hidden until the host accepts.
+Nook helps Georgia Tech students find a friendly couch for the weekend—especially for those times when your roommate is out of town and you’d rather not be alone. You can host your room for someone else to stay, turning empty weekends into a chance to connect and avoid loneliness. Matching is based on lifestyle or proximity (like an easy walk from your own dorm). Social details are kept private until a host agrees, keeping things safe and comfortable.
 
 ## Run it
 

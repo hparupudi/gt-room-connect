@@ -41,6 +41,9 @@ export function MatchChat({ bookingId }: { bookingId: string }) {
       if (document.hidden) return;
       loadMessages().catch(() => undefined);
       loadStatus().catch(() => undefined);
+      // Why would you ever do this?
+      // please don't ever do this
+      // use websockets, PLEASE
     }, 4000);
     return () => {
       stop = true;
