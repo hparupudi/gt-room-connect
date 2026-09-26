@@ -120,25 +120,29 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
         ) : null}
         {mode === "login" ? (
           <form className="space-y-4" onSubmit={onLogin}>
-            <Field label="GT email">
-              <input type="email" autoComplete="username" value={email} onChange={(event) => setEmail(event.target.value)} required />
+            <Field label="Georgia Tech email">
+              <input type="email" autoComplete="username" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@gatech.edu" required />
             </Field>
             <Field label="Password">
               <input type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required />
             </Field>
             <button className={btnPrimary} disabled={busy} type="submit">
-              {busy ? "Checking…" : "Enter Nook"}
+              {busy ? "Checking…" : "Log in"}
             </button>
+
+            <p className="text-sm text-muted">Don't have an account? <Link to="/signup" className="text-navy">Sign up</Link></p>
           </form>
         ) : !preview && !verificationToken ? (
           <form className="space-y-4" onSubmit={sendCode}>
-            <Field label="GT email">
+            <Field label="Georgia Tech email">
               <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@gatech.edu" required />
             </Field>
             <p className="text-sm text-muted">We'll send a 6-digit code before you can create a password.</p>
             <button className={btnPrimary} disabled={busy} type="submit">
               {busy ? "Sending…" : "Email me a code"}
             </button>
+
+            <p className="text-sm text-muted">Already have an account? <Link to="/login" className="text-navy">Log in</Link></p>
           </form>
         ) : !verificationToken ? (
           <form className="space-y-4" onSubmit={verify}>
