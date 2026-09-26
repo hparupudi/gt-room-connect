@@ -114,7 +114,7 @@ def seed_if_empty() -> None:
         ),
         _person(
             "andre-wallace", "andre.wallace@gatech.edu", "Andre Wallace", "man", 21,
-            "Mechanical Engineering", "3", "Decatur, GA", "north-ave-east", 5, "508", [5, 6],
+            "Mechanical Engineering", "3", "Decatur, GA", "north-ave-east", 5, "E507", [5, 6],
             ["music", "basketball", "cooking"], ["producing", "pickup basketball"],
             "average", "late", "01:00", "09:30", "moderate",
             "The couch is real. Text before you come up so he can move the MIDI keyboard.",
@@ -124,7 +124,7 @@ def seed_if_empty() -> None:
         ),
         _person(
             "priya-shah", "priya.shah@gatech.edu", "Priya Shah", "woman", 18,
-            "Biomedical Engineering", "1", "Edison, NJ", "woodruff-south", 4, "402A", [2, 3, 4],
+            "Biomedical Engineering", "1", "Edison, NJ", "woodruff-south", 4, "N402A", [2, 3, 4],
             ["dance", "reading", "running"], ["bharatanatyam", "lab reading"],
             "spotless", "early", "22:15", "06:45", "quiet",
             "The suite stays spotless. Lights out means lights out, and the shared bath gets a two-minute warning.",
@@ -144,7 +144,7 @@ def seed_if_empty() -> None:
         ),
         _person(
             "hannah-brooks", "hannah.brooks@gatech.edu", "Hannah Brooks", "woman", 21,
-            "Architecture", "3", "Savannah, GA", "eighth-east", 3, "306", [1, 2, 3],
+            "Architecture", "3", "Savannah, GA", "eighth-east", 3, "E305", [1, 2, 3],
             ["design", "film", "coffee"], ["studio critiques", "campus films"],
             "tidy", "early", "23:00", "07:30", "quiet",
             "Models and chipboard live on the desk. The couch is yours if you keep drinks off the drawings.",
@@ -174,7 +174,7 @@ def seed_if_empty() -> None:
         ),
         _person(
             "chris-dalton", "chris.dalton@gatech.edu", "Chris Dalton", "man", 22,
-            "Business", "4", "Charlotte, NC", "maulding", 5, "504", [3, 4, 10],
+            "Business", "4", "Charlotte, NC", "maulding", 4, "W407", [3, 4, 10],
             ["startups", "golf", "coffee"], ["pitch practice", "early range"],
             "relaxed", "typical", "00:00", "08:30", "social",
             "The apartment is lived-in. Grab a pillow from the closet and don't reschedule his morning calls.",
@@ -184,7 +184,7 @@ def seed_if_empty() -> None:
         ),
         _person(
             "noah-kim", "noah.kim@gatech.edu", "Noah Kim", "man", 24,
-            "Physics", "grad", "Seoul, South Korea", "center-north", 3, "304", [0, 6, 7],
+            "Physics", "grad", "Seoul, South Korea", "center-north", 3, "N304", [0, 6, 7],
             ["running", "chess", "reading"], ["morning miles", "blitz chess"],
             "spotless", "early", "22:00", "06:15", "quiet",
             "Shoes off. He's asleep early and the kitchen is shared, so label your food.",
@@ -214,7 +214,7 @@ def seed_if_empty() -> None:
         ),
         _person(
             "brooke-lin", "brooke.lin@gatech.edu", "Brooke Lin", "woman", 20,
-            "Industrial Design", "2", "Portland, OR", "harris", 3, "301A", [0, 4, 5],
+            "Industrial Design", "2", "Portland, OR", "harris", 3, "301", [0, 4, 5],
             ["design", "cycling", "coffee"], ["ceramics", "beltline rides"],
             "spotless", "early", "22:30", "07:10", "quiet",
             "The suite is calm and spotless. A cyclist who is up early will feel at home.",

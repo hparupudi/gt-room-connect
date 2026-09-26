@@ -16,7 +16,11 @@ import math
 from pathlib import Path
 from typing import Any
 
-OSM = json.loads((Path(__file__).resolve().parent / "data" / "gt_halls.json").read_text())
+DATA = Path(__file__).resolve().parent / "data"
+OSM = json.loads((DATA / "gt_halls.json").read_text())
+# Room numbers printed on the official Housing floor plans. Halls missing from
+# this file (Smith) keep the generated sequence below.
+ROOMS = json.loads((DATA / "gt_rooms.json").read_text()) if (DATA / "gt_rooms.json").exists() else {}
 
 # id, name, code, campus, style, units per floor, floors override (None = use OSM levels)
 HALLS: list[tuple] = [
@@ -115,12 +119,33 @@ def _units(style: str, floors: tuple[int, ...], per_floor: int) -> list[dict]:
     return units
 
 
+def _catalog_units(hall_id: str) -> tuple[tuple[int, ...], list[dict], int] | None:
+    catalog = ROOMS.get(hall_id)
+    if not catalog:
+        return None
+    floors = tuple(sorted(int(floor) for floor in catalog))
+    units = [
+        {"id": unit_id, "floor": floor}
+        for floor in floors
+        for unit_id in catalog[str(floor)]
+    ]
+    fullest = max((len(catalog[str(floor)]) for floor in floors), default=0)
+    return floors, units, fullest
+
+
 def _build() -> dict[str, dict]:
     dorms = {}
     for hall_id, name, code, campus, style, per_floor, floors in HALLS:
         osm = OSM[hall_id]
-        if floors is None:
-            floors = tuple(range(1, (osm.get("levels") or 4) + 1))
+        catalog = _catalog_units(hall_id)
+        if catalog:
+            floors, units, per_floor = catalog
+        else:
+            if floors is None:
+                floors = tuple(range(1, (osm.get("levels") or 4) + 1))
+            units = _units(style, floors, per_floor)
+            if style == "suite":
+                per_floor *= 2
         dorms[hall_id] = {
             "id": hall_id,
             "name": name,
@@ -130,14 +155,14 @@ def _build() -> dict[str, dict]:
             "lat": osm["lat"],
             "lng": osm["lng"],
             "floors": list(floors),
-            "units_per_floor": per_floor if style != "suite" else per_floor * 2,
+            "units_per_floor": per_floor,
             "address": osm.get("address") or ("Georgia Tech West Campus" if campus == "west" else "Georgia Tech East Campus"),
             "note": NOTES.get(hall_id, ""),
             "osm_name": osm.get("name"),
             "osm": osm.get("osm"),
             "footprint": osm["footprint"],
             "specs": STYLE_SPECS[style],
-            "units": _units(style, floors, per_floor),
+            "units": units,
         }
     return dorms
 
@@ -165,9 +190,9 @@ def floor_plan(dorm_id: str, floor: int) -> dict[str, Any]:
     dorm = DORMS[dorm_id]
     units = [unit for unit in dorm["units"] if unit["floor"] == floor]
     style = dorm["style"]
-    if style == "suite":
+    if style == "suite" and units and all("suite" in unit for unit in units):
         return _suite_plan(units)
-    if style == "apartment":
+    if style == "apartment" and dorm_id not in ROOMS:
         return _apartment_plan(units)
     return _traditional_plan(units)
 

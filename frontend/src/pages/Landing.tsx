@@ -58,7 +58,7 @@ export function Landing() {
             {[
               ["Glenn 314", "Early, tidy, climbing and studio nights"],
               ["Field 405", "Late concerts, a tidy double"],
-              ["North Ave East 508", "Music after basketball"],
+              ["North Ave East E507", "Music after basketball"],
             ].map(([place, line]) => (
               <li key={place} className="border-b border-line pb-3 last:border-0">
                 <p className="font-serif text-2xl">{place}</p>

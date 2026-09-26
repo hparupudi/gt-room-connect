@@ -474,8 +474,19 @@ def test_map_and_directions(client):
     assert body["steps"][-1] == "Go up to floor 2 and find unit 204"
     near = client.get("/api/directions?to=field", headers=auth(token))
     assert near.get_json()["meters"] < body["meters"]
-    other = client.get("/api/directions?from=north-ave-east&from_unit=508&to=woodruff-south&to_unit=402A", headers=auth(token))
+    other = client.get("/api/directions?from=north-ave-east&from_unit=E507&to=woodruff-south&to_unit=N402A", headers=auth(token))
     assert other.status_code == 200
     assert other.get_json()["from"]["dorm_name"] == "North Avenue East"
     bad = client.get("/api/directions?to=glenn&to_unit=999", headers=auth(token))
     assert bad.status_code == 400
+    armstrong = client.get("/api/dorms/armstrong", headers=auth(token))
+    floor_one = next(level for level in armstrong.get_json()["dorm"]["floors"] if level["floor"] == 1)
+    numbers = [room["unit"] for room in floor_one["rooms"]]
+    assert "101" in numbers and "126" in numbers and "119" in numbers
+    assert "120" not in numbers
+    assert len(numbers) > 12
+    glenn = client.get("/api/dorms/glenn", headers=auth(token))
+    glenn_one = next(level for level in glenn.get_json()["dorm"]["floors"] if level["floor"] == 1)
+    glenn_numbers = [room["unit"] for room in glenn_one["rooms"]]
+    assert "179A" in glenn_numbers or "178A" in glenn_numbers
+    assert len(glenn_numbers) > 16

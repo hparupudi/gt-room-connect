@@ -86,7 +86,7 @@ The map is a real base map (Leaflet with CARTO Voyager tiles on OpenStreetMap da
 
 Directions come from free public routers with no API key. Valhalla's pedestrian profile (FOSSGIS server) is tried first and follows walkways, stairs, and crosswalks. OSRM's demo server is the backup; its public instance only has a car profile, so Nook uses its distance and recomputes time at walking pace. If neither answers, a straight-line estimate is drawn as a dashed line. `VALHALLA_URL` and `OSRM_URL` in `.env` point at self-hosted servers if you outgrow the public ones, and `LIVE_ROUTING=0` keeps everything offline. Search's distance sort uses the offline estimate so results never wait on the network.
 
-Floor plans are the official drawings published by Georgia Tech Housing (rooms, bathrooms, study spaces, and kitchens), downloaded with `scripts/fetch_gt_floorplans.py` from each hall page on housing.gatech.edu. They are served from `backend/nook/data/floorplans`. A hall level Housing has not published falls back to an original schematic. Pick a unit under the plan to claim it or to get walking directions.
+Floor plans are the official drawings published by Georgia Tech Housing (rooms, bathrooms, study spaces, and kitchens), downloaded with `scripts/fetch_gt_floorplans.py` from each hall page on housing.gatech.edu. They are served from `backend/nook/data/floorplans`. The rooms you can claim are the numbers printed on that drawing (`scripts/extract_gt_rooms.py`), including gaps and lettered rooms such as 116A, not a shortened 101–108 sequence. A hall level Housing has not published falls back to an original schematic. Pick a unit under the plan to claim it or to get walking directions.
 
 ## Messages after a match
 

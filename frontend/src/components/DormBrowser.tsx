@@ -185,7 +185,7 @@ export function DormBrowser({
               </div>
               <dl className="grid grid-cols-2 gap-2 text-sm">
                 <Spec label="Floors" value={String(detail.floors.length)} />
-                <Spec label="Units per floor" value={String(detail.units_per_floor)} />
+                <Spec label="Rooms on this floor" value={String(plan ? plan.rooms.length : detail.units_per_floor)} />
                 <Spec label="Rooms" value={detail.specs.room} wide />
                 <Spec label="Bath" value={detail.specs.bath} wide />
                 <Spec label="Kitchen" value={detail.specs.kitchen} wide />
