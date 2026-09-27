@@ -29,7 +29,7 @@ function readDraft(): { email: string; phase: Phase; preview: string; delivery: 
 }
 
 export function AuthPage({ mode }: { mode: "login" | "signup" }) {
-  const { login, meta, setSession } = useAuth();
+  const { login, setSession } = useAuth();
   const navigate = useNavigate();
   const draft = mode === "signup" ? readDraft() : null;
   const [email, setEmail] = useState(draft?.email || "");
@@ -136,7 +136,8 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
           <p className="font-serif text-5xl leading-tight">A bed with a person attached.</p>
         </div>
       </section>
-      <section className="px-5 py-10 md:px-12">
+      <section className="flex items-center justify-center px-5 py-10 md:px-12">
+        <div className="w-full max-w-md">
         <Link to="/" className="mb-8 flex items-center gap-2 md:hidden">
           <Mark />
           <span className="font-serif text-2xl">Dormsurf</span>
@@ -222,36 +223,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
             </button>
           </form>
         )}
-        {mode === "login" && meta?.demo && meta.demo_accounts ? (
-          <div className="mt-6 space-y-2">
-            <p className="text-xs tracking-[0.16em] text-gold uppercase">Demo Jackets</p>
-            {meta.demo_accounts.map((account) => (
-              <button
-                key={account.email}
-                type="button"
-                className="flex w-full items-center justify-between rounded-2xl border border-line bg-card px-4 py-3 text-left text-sm hover:border-navy"
-                onClick={async () => {
-                  setBusy(true);
-                  setError("");
-                  try {
-                    const user = await login(account.email, meta.demo_password || "");
-                    await afterLogin(user.onboarding_step);
-                  } catch (err) {
-                    setError(err instanceof ApiError ? err.message : "Demo login failed.");
-                  } finally {
-                    setBusy(false);
-                  }
-                }}
-              >
-                <span>
-                  <span className="block font-medium">{account.name}</span>
-                  <span className="text-muted">{account.blurb}</span>
-                </span>
-                <span className="text-navy">Enter</span>
-              </button>
-            ))}
-          </div>
-        ) : null}
+        </div>
       </section>
     </div>
   );

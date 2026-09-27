@@ -44,7 +44,7 @@ Both use the password `WeekendNook!`.
 | Maya Chen | maya.chen@gatech.edu | Hosting in Glenn |
 | Andre Wallace | andre.wallace@gatech.edu | Looking for a bed |
 
-The login screen can enter as either of them. Set `DEMO_LOGIN=0` to hide those buttons. The password still works until you change the seed.
+Log in with either email and that password. It keeps working until you change the seed.
 
 ## What happens without keys
 
