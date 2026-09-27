@@ -29,7 +29,6 @@ export function FloorPlan({
     <div className="relative space-y-4">
       {showOfficial ? (
         <figure className="space-y-2">
-<<<<<<< HEAD
           <div className="relative overflow-hidden rounded-2xl border border-line bg-white" role="group" aria-label={`Rooms on floor ${plan.floor}. Click a room for its layout.`}>
             <img
               src={plan.image || ""}
@@ -77,14 +76,6 @@ export function FloorPlan({
               );
             })}
           </div>
-=======
-          <img
-            src={plan.image ? apiUrl(plan.image) : ""}
-            alt={`Georgia Tech Housing floor plan for floor ${plan.floor}, including rooms, bathrooms, and study spaces`}
-            className="w-full rounded-2xl border border-line bg-white"
-            onError={() => setImageFailed(true)}
-          />
->>>>>>> 2d40b8bff9dca56b6de840400c369c5bff886f4e
           <figcaption className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
             <span>Click a room on the drawing to open its layout. Published by Georgia Tech Housing.</span>
             {plan.pdf ? (

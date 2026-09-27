@@ -141,16 +141,12 @@ export function Onboarding() {
           Log out
         </button>
       </div>
-<<<<<<< HEAD
       <p className="text-xs tracking-[0.16em] text-gold uppercase">First time in</p>
       <h1 className="font-serif text-4xl text-navy">Tell us where you live, then how you live.</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">
         A Georgia Tech room is optional. Off-campus Yellow Jackets and students from other schools can skip it and still request a bed.
       </p>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-=======
-      <div className="flex flex-wrap items-center justify-between gap-3">
->>>>>>> 2d40b8bff9dca56b6de840400c369c5bff886f4e
         <ol className="flex flex-wrap gap-2">
           {STEPS.map((item, itemIndex) => {
             const open = itemIndex <= reached;
