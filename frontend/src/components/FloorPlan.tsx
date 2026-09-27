@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-import { apiUrl } from "../api";
 import { formatDates, sleepLabel } from "../format";
 import type { FloorPlan as Floor, RoomShape } from "../types";
 
