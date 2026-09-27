@@ -5,7 +5,8 @@
             "framework": "vite"
         },
         "backend": {
-            "root": "backend"
+            "root": "backend",
+            "entrypoint": "wsgi:app"
         }
     },
     "rewrites": [
@@ -13,8 +14,7 @@
             "source": "/api(/.*)?",
             "destination": {
                 "type": "service",
-                "service": "backend",
-                "entrypoint": "wsgi.py:app"
+                "service": "backend"
             }
         },
         {
