@@ -53,7 +53,7 @@ export function Landing() {
           </div>
         </div>
         <aside className="rounded-[28px] border border-line bg-card p-5 md:self-center">
-          <p className="text-xs tracking-[0.16em] text-gold uppercase">This weekend, roughly</p>
+          <p className="text-xs tracking-[0.16em] text-gold uppercase">Next weekend, roughly</p>
           <ul className="mt-4 space-y-4">
             {[
               ["Glenn 314", "Early, tidy, climbing and studio nights"],

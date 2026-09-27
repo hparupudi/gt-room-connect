@@ -1,27 +1,23 @@
 import { useMemo, useState } from "react";
 
 import { useDates } from "../dates";
-import { addDays, formatDates, isoDate, parseIso } from "../format";
+import { addDays, formatDates, isoDate, parseIso, startOfToday, upcomingSaturday } from "../format";
 
 export function DatePicker() {
   const { dates, toggleDate, setDates } = useDates();
   const [cursor, setCursor] = useState(() => parseIso(dates[0] ?? isoDate(new Date())));
 
   const weeks = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = startOfToday();
+    const weekday = today.getDay();
+    const start = upcomingSaturday(today);
     const chips: { label: string; days: string[] }[] = [];
-    const start = new Date(today);
-    const weekday = start.getDay();
-    if (weekday !== 6) start.setDate(start.getDate() + ((6 - weekday + 7) % 7));
     for (let index = 0; index < 4; index += 1) {
       const saturday = addDays(start, index * 7);
       const sunday = addDays(saturday, 1);
-      const days = [isoDate(saturday)];
-      if (sunday >= today) days.push(isoDate(sunday));
-      const open = days.filter((day) => parseIso(day) >= today);
+      const open = [isoDate(saturday), isoDate(sunday)].filter((day) => parseIso(day) >= today);
       chips.push({
-        label: index === 0 && weekday === 6 ? "This weekend" : formatDates(open),
+        label: index === 0 && (weekday === 6 || weekday === 0) ? "Next weekend" : formatDates(open),
         days: open,
       });
     }

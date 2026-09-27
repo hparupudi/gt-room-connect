@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
-import { defaultDates } from "./format";
+import { defaultDates, endingWeekend, isoDate, startOfToday } from "./format";
 
 type DatesValue = {
   dates: string[];
@@ -19,7 +19,10 @@ function loadDates(): string[] {
     if (!raw) return defaultDates();
     const parsed = JSON.parse(raw) as unknown;
     if (Array.isArray(parsed) && parsed.every((item) => typeof item === "string") && parsed.length) {
-      return parsed;
+      const today = isoDate(startOfToday());
+      const ending = new Set(endingWeekend());
+      const kept = parsed.filter((day) => day >= today && !ending.has(day));
+      if (kept.length) return [...new Set(kept)].sort();
     }
   } catch {
     /* use the upcoming weekend */

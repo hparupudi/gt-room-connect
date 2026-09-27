@@ -349,3 +349,40 @@ def backfill_demo_consents() -> None:
                 "responded_at": date.today().isoformat(),
             },
         )
+
+
+# Saturday of the weekend that is ending. Later Saturdays and Sundays move with it.
+_ENDING_SATURDAY = date(2026, 9, 26)
+_WEEKEND_SHIFT = "weekend-shift-2026-09-26"
+
+
+def _later_weekend(day: date) -> date:
+    if day.weekday() not in (5, 6):
+        return day
+    saturday = day - timedelta(days=day.weekday() - 5)
+    if saturday >= _ENDING_SATURDAY:
+        return day + timedelta(days=7)
+    return day
+
+
+def shift_ending_weekend() -> None:
+    """Move open nights off the weekend of September 26 onto the next one, and the weekends after it."""
+    db = get_db()
+    if db.find_one("meta", id=_WEEKEND_SHIFT):
+        return
+    touched = False
+    for user in db.find_all("users"):
+        current = list(user.get("open_dates") or [])
+        if "2026-09-26" in current:
+            touched = True
+            break
+    if not touched:
+        return
+    for user in db.find_all("users"):
+        current = list(user.get("open_dates") or [])
+        if not current:
+            continue
+        shifted = sorted({_later_weekend(date.fromisoformat(day)).isoformat() for day in current})
+        if shifted != sorted(current):
+            db.update("users", user["id"], {"open_dates": shifted})
+    db.insert("meta", {"id": _WEEKEND_SHIFT})

@@ -70,14 +70,31 @@ function formatRange(days: string[]): string {
   return `${startLabel}-${MONTHS[end.getMonth()]} ${end.getDate()}`;
 }
 
-export function defaultDates(): string[] {
+export function startOfToday(): Date {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  return today;
+}
+
+/** Saturday of the weekend to offer first. On Saturday or Sunday the current one is ending, so this is the next Saturday. */
+export function upcomingSaturday(today = startOfToday()): Date {
+  const weekday = today.getDay();
+  if (weekday === 6) return addDays(today, 7);
+  if (weekday === 0) return addDays(today, 6);
+  return addDays(today, 6 - weekday);
+}
+
+export function defaultDates(): string[] {
+  const saturday = upcomingSaturday();
+  return [isoDate(saturday), isoDate(addDays(saturday, 1))];
+}
+
+/** Saturday and Sunday of the weekend already underway. Empty Monday through Friday. */
+export function endingWeekend(today = startOfToday()): string[] {
   const weekday = today.getDay();
   if (weekday === 6) return [isoDate(today), isoDate(addDays(today, 1))];
   if (weekday === 0) return [isoDate(today)];
-  const saturday = addDays(today, 6 - weekday);
-  return [isoDate(saturday), isoDate(addDays(saturday, 1))];
+  return [];
 }
 
 export function addDays(date: Date, count: number): Date {

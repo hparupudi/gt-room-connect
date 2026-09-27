@@ -819,6 +819,25 @@ def test_typing_indicator_is_visible_to_the_other_person(client):
     assert client.get(f"/api/bookings/{booking_id}/typing", headers=auth(andre)).get_json()["typing"] == []
 
 
+def test_ending_weekend_moves_forward_once(client):
+    from nook.db import get_db
+    from nook.seed import shift_ending_weekend
+
+    store = get_db()
+    store.data["meta"] = [row for row in store.data.get("meta", []) if row.get("id") != "weekend-shift-2026-09-26"]
+    store.update(
+        "users",
+        "maya-chen",
+        {"open_dates": ["2026-09-26", "2026-09-27", "2026-09-28", "2026-10-03", "2026-10-04"]},
+    )
+    shift_ending_weekend()
+    shifted = get_db().find_one("users", id="maya-chen")["open_dates"]
+    assert shifted == ["2026-09-28", "2026-10-03", "2026-10-04", "2026-10-10", "2026-10-11"]
+    get_db().update("users", "maya-chen", {"open_dates": ["2026-09-26", "2026-10-03"]})
+    shift_ending_weekend()
+    assert get_db().find_one("users", id="maya-chen")["open_dates"] == ["2026-09-26", "2026-10-03"]
+
+
 def test_shared_room_stays_hidden_until_roommate_agrees(client):
     maya = login(client, "maya.chen@gatech.edu")
     andre = login(client, "andre.wallace@gatech.edu")

@@ -174,7 +174,7 @@ def register_routes(app: Flask) -> None:
                 {
                     "name": "Maya Chen",
                     "email": "maya.chen@gatech.edu",
-                    "blurb": "Hosting in Glenn this weekend",
+                    "blurb": "Hosting in Glenn next weekend",
                 },
                 {
                     "name": "Andre Wallace",
