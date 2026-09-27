@@ -95,10 +95,12 @@ def init_db():
     if uri:
         try:
             _db = MongoStore(uri)
+            print("MongoDB connected")
             return _db
         except Exception as exc:
             print(f"MongoDB unavailable ({exc}); using the local file store.")
     _db = FileStore(data_file())
+    print("Local file store used")
     return _db
 
 
