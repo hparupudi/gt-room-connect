@@ -2,17 +2,22 @@
 
 from __future__ import annotations
 
+import time
 import uuid
 from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
 
 from .constants import GENDERS, MAJORS, SLEEP, STYLES, YEAR_LABELS, YEARS
-from .db import get_db
+from .db import data_file, get_db
 from .dorms import DORMS, floor_plan, get_dorm, map_payload, public_dorm, walking_route
-from .floorplans import official_floors
+from .floorplans import official_floors, room_hotspots
 from .embed import normalize
 from .errors import ApiError
 from .models import LifestyleProfile
 from .rank import order_scored, score_pair
+from .housing import housing_for, room_footprint
+from .security import normalize_email
+from .muse import is_template_bio
 from .socials import present_socials
 from .vectors import fetch_vectors, upsert_vector
 
@@ -32,7 +37,7 @@ def today() -> date:
 
 def parse_dates(values: list[str], require: bool = True) -> list[str]:
     if require and not values:
-        raise ApiError("Pick at least one date. That's how Nook knows which couch is free.")
+        raise ApiError("Pick at least one date. That's how Dormsurf knows which bed is free.")
     cleaned = []
     for value in values:
         try:
@@ -42,7 +47,7 @@ def parse_dates(values: list[str], require: bool = True) -> list[str]:
         if parsed < today():
             raise ApiError("Dates need to be today or later.")
         if parsed > today() + timedelta(days=120):
-            raise ApiError("Nook only books the next four months.")
+            raise ApiError("Dormsurf only books the next four months.")
         iso = parsed.isoformat()
         if iso not in cleaned:
             cleaned.append(iso)
@@ -107,7 +112,7 @@ def serialize_user(user: dict, viewer_id: str | None = None, force_socials: bool
         "campus": dorm.get("campus"),
         "address": dorm.get("address"),
         "open_dates": user.get("open_dates") or [],
-        "bio": life.get("bio") or "",
+        "bio": "" if is_template_bio(life.get("bio") or "") else (life.get("bio") or ""),
         "tags": life.get("tags") or [],
         "interests": life.get("interests") or [],
         "hobbies": life.get("hobbies") or [],
@@ -117,6 +122,7 @@ def serialize_user(user: dict, viewer_id: str | None = None, force_socials: bool
         "wake_time": life.get("wake_time"),
         "noise": life.get("noise"),
         "guest_notes": life.get("guest_notes") or "",
+        "room_skipped": bool(user.get("room_skipped")),
         "onboarding_complete": bool(user.get("onboarding_complete")),
         "onboarding_step": onboarding_step(user),
         "embedding_model": user.get("embedding_model"),
@@ -127,11 +133,23 @@ def serialize_user(user: dict, viewer_id: str | None = None, force_socials: bool
     if viewer_id == user.get("id"):
         payload["email"] = user.get("email")
         payload["transcript"] = user.get("transcript") or ""
+        payload["roommates_needed"] = roommates_needed(user)
+        payload["room_bookable"] = room_is_bookable(user)
+        payload["roommates"] = roommate_rows_for_host(user)
+        payload["roommate_asks"] = roommate_asks_for(user)
     return payload
 
 
+def has_claimed_room(user: dict) -> bool:
+    return bool(user.get("dorm_id") and user.get("unit"))
+
+
+def place_known(user: dict) -> bool:
+    return has_claimed_room(user) or bool(user.get("room_skipped"))
+
+
 def onboarding_step(user: dict) -> str:
-    if not user.get("dorm_id") or not user.get("unit"):
+    if not place_known(user):
         return "room"
     if not user.get("name") or not user.get("major") or not user.get("year"):
         return "about"
@@ -168,7 +186,7 @@ def apply_lifestyle(user: dict, profile: LifestyleProfile, model: str, transcrip
     patch = {
         "lifestyle": lifestyle,
         "transcript": transcript,
-        "onboarding_complete": bool(user.get("dorm_id") and user.get("name")),
+        "onboarding_complete": bool(place_known(user) and user.get("name")),
         **store_embedding({**user, "lifestyle": lifestyle}, list(axes.values()) if isinstance(axes, dict) else profile.axes.as_vector(), model),
     }
     # store_embedding used lifestyle sleep from user; axes vector is explicit
@@ -229,6 +247,8 @@ def search(seeker: dict, body: dict) -> dict:
     hosts = []
     for user in get_db().find_all("users"):
         if user["id"] == seeker["id"] or not user.get("onboarding_complete"):
+            continue
+        if not room_is_bookable(user):
             continue
         if not set(dates).issubset(set(user.get("open_dates") or [])):
             continue
@@ -351,6 +371,8 @@ def unit_view(residents: list[dict], viewer_id: str | None, dates: list[str]) ->
     for resident in residents:
         if resident["id"] == viewer_id:
             yours = True
+        if not room_is_bookable(resident):
+            continue
         open_dates = set(resident.get("open_dates") or [])
         if dates:
             if not set(dates).issubset(open_dates):
@@ -389,7 +411,7 @@ def unit_view(residents: list[dict], viewer_id: str | None, dates: list[str]) ->
 def dorm_detail(dorm_id: str, viewer: dict | None, dates: list[str]) -> dict:
     dorm = get_dorm(dorm_id)
     if not dorm:
-        raise ApiError("That hall isn't on the Nook map.", 404)
+        raise ApiError("That hall isn't on the Dormsurf map.", 404)
     grouped = _residents()
     published = official_floors(dorm_id)
     floor_numbers = sorted(set(dorm["floors"]) | set(published))
@@ -406,6 +428,7 @@ def dorm_detail(dorm_id: str, viewer: dict | None, dates: list[str]) -> dict:
                 "fixtures": [],
                 "rooms": [],
             }
+        plan["hotspots"] = room_hotspots(dorm_id, floor)
         drawing = published.get(floor)
         if drawing:
             plan["image"] = f"/api/floorplans/{dorm_id}/{floor}"
@@ -427,6 +450,7 @@ def dorm_detail(dorm_id: str, viewer: dict | None, dates: list[str]) -> dict:
         open_units += floor_open
         floors.append({"floor": floor, "open_units": floor_open, **plan})
     payload = public_dorm(dorm)
+    payload["housing"] = housing_for(dorm_id)
     payload["open_units"] = open_units
     payload["floors"] = floors
     if viewer and viewer.get("dorm_id"):
@@ -457,12 +481,12 @@ def map_overview(viewer: dict | None, dates: list[str]) -> dict:
 
 def create_booking(guest: dict, host_id: str, dates: list[str], message: str) -> dict:
     if not guest.get("onboarding_complete"):
-        raise ApiError("Finish your profile before requesting a couch.")
+        raise ApiError("Finish your profile before requesting a bed.")
     if guest["id"] == host_id:
         raise ApiError("You already live there.")
     host = get_db().find_one("users", id=host_id)
-    if not host or not host.get("onboarding_complete"):
-        raise ApiError("That couch isn't available.", 404)
+    if not host or not host.get("onboarding_complete") or not room_is_bookable(host):
+        raise ApiError("That bed isn't available.", 404)
     dates = parse_dates(dates)
     if not set(dates).issubset(set(host.get("open_dates") or [])):
         raise ApiError("Those nights aren't open. Pick from the dates on their card.")
@@ -606,7 +630,11 @@ def cancel_booking(guest: dict, booking_id: str) -> dict:
 
 
 def set_availability(user: dict, dates: list[str]) -> dict:
+    if not has_claimed_room(user):
+        raise ApiError("Claim a Georgia Tech room before opening your space. You can still request a bed from Discover.")
     dates = parse_dates(dates, require=False)
+    if dates and not room_is_bookable(user):
+        raise ApiError(consent_block_reason(user))
     accepted = set()
     for booking in get_db().find_all("bookings"):
         if booking.get("host_id") == user["id"] and booking.get("status") == "accepted":
@@ -624,11 +652,194 @@ def save_room(user: dict, dorm_id: str, floor: int, unit: str, open_dates: list[
         raise ApiError("Pick a residence hall on the map.")
     if not any(item["id"] == unit and item["floor"] == floor for item in dorm["units"]):
         raise ApiError("That unit isn't on this floor.")
-    patch = {"dorm_id": dorm_id, "floor": floor, "unit": unit}
+    same_room = user.get("dorm_id") == dorm_id and user.get("unit") == unit
+    if not same_room:
+        _withdraw_consents(user["id"], keep_dorm=dorm_id, keep_unit=unit)
+    patch = {"dorm_id": dorm_id, "floor": floor, "unit": unit, "room_skipped": False}
     if open_dates is not None:
-        patch["open_dates"] = parse_dates(open_dates, require=False)
+        parsed = parse_dates(open_dates, require=False)
+        candidate = {**user, **patch}
+        patch["open_dates"] = parsed if parsed and room_is_bookable(candidate) else []
+    elif not same_room:
+        patch["open_dates"] = []
     updated = get_db().update("users", user["id"], patch)
     return serialize_user(updated, user["id"])
+
+
+def skip_room(user: dict) -> dict:
+    _withdraw_consents(user["id"])
+    updated = get_db().update(
+        "users",
+        user["id"],
+        {"dorm_id": "", "floor": None, "unit": "", "open_dates": [], "room_skipped": True},
+    )
+    return serialize_user(updated, user["id"])
+
+
+def roommates_needed(user: dict) -> int:
+    if not has_claimed_room(user):
+        return 0
+    foot = room_footprint(user.get("dorm_id") or "") or {}
+    return max(0, int(foot.get("occupants") or 1) - 1)
+
+
+def _room_consents(host_id: str, dorm_id: str, unit: str) -> list[dict]:
+    rows = []
+    for row in get_db().find_all("consents"):
+        if row.get("status") == "withdrawn" or row.get("host_id") != host_id:
+            continue
+        if row.get("dorm_id") != dorm_id or row.get("unit") != unit:
+            continue
+        rows.append(row)
+    rows.sort(key=lambda item: item.get("created_at") or "")
+    return rows
+
+
+def room_is_bookable(user: dict) -> bool:
+    if not has_claimed_room(user):
+        return False
+    rows = _room_consents(user["id"], user.get("dorm_id") or "", user.get("unit") or "")
+    if any(row.get("status") in ("pending", "declined") for row in rows):
+        return False
+    accepted = sum(1 for row in rows if row.get("status") == "accepted")
+    return accepted >= roommates_needed(user)
+
+
+def consent_block_reason(user: dict) -> str:
+    needed = roommates_needed(user)
+    rows = _room_consents(user["id"], user.get("dorm_id") or "", user.get("unit") or "")
+    if any(row.get("status") == "declined" for row in rows):
+        return "A roommate declined. Remove them and add someone who agrees before this bed can be booked."
+    if any(row.get("status") == "pending" for row in rows):
+        return "This bed stays hidden until your roommate agrees."
+    if needed == 1:
+        return "Add your roommate and wait for them to agree before this bed can be booked."
+    if needed > 1:
+        return f"Add {needed} roommates and wait for them to agree before this bed can be booked."
+    return "This bed stays hidden until every roommate you added agrees."
+
+
+def _close_if_unbookable(host_id: str) -> None:
+    host = get_db().find_one("users", id=host_id)
+    if host and host.get("open_dates") and not room_is_bookable(host):
+        get_db().update("users", host_id, {"open_dates": []})
+
+
+def _withdraw_consents(host_id: str, keep_dorm: str | None = None, keep_unit: str | None = None) -> None:
+    db = get_db()
+    for row in db.find_all("consents"):
+        if row.get("host_id") != host_id or row.get("status") == "withdrawn":
+            continue
+        if keep_dorm is not None and row.get("dorm_id") == keep_dorm and row.get("unit") == keep_unit:
+            continue
+        db.update("consents", row["id"], {"status": "withdrawn", "responded_at": now_iso()})
+
+
+def _person_name(user_id: str, fallback: str) -> str:
+    person = get_db().find_one("users", id=user_id) or {}
+    return person.get("name") or fallback
+
+
+def roommate_rows_for_host(user: dict) -> list[dict]:
+    if not has_claimed_room(user):
+        return []
+    rows = []
+    for row in _room_consents(user["id"], user.get("dorm_id") or "", user.get("unit") or ""):
+        rows.append(
+            {
+                "id": row.get("id"),
+                "email": row.get("roommate_email") or "",
+                "name": _person_name(row.get("roommate_id") or "", row.get("roommate_email") or "Roommate"),
+                "status": row.get("status") or "pending",
+            }
+        )
+    return rows
+
+
+def roommate_asks_for(user: dict) -> list[dict]:
+    asks = []
+    for row in get_db().find_all("consents"):
+        if row.get("roommate_id") != user.get("id") or row.get("status") != "pending":
+            continue
+        host = get_db().find_one("users", id=row.get("host_id")) or {}
+        dorm = get_dorm(row.get("dorm_id") or "") or {}
+        asks.append(
+            {
+                "id": row.get("id"),
+                "host_id": row.get("host_id") or "",
+                "host_name": host.get("name") or "Your roommate",
+                "dorm_name": dorm.get("name") or "",
+                "unit": row.get("unit") or "",
+                "status": "pending",
+            }
+        )
+    asks.sort(key=lambda item: item.get("id") or "")
+    return asks
+
+
+def invite_roommate(user: dict, email: str) -> dict:
+    if not has_claimed_room(user):
+        raise ApiError("Claim a room before adding a roommate.")
+    cleaned = normalize_email(email)
+    if cleaned == (user.get("email") or "").lower():
+        raise ApiError("Add the person you live with.")
+    roommate = get_db().find_one("users", email=cleaned)
+    if not roommate:
+        raise ApiError("They need a Dormsurf account before they can agree to this room.")
+    rows = _room_consents(user["id"], user.get("dorm_id") or "", user.get("unit") or "")
+    if any(row.get("roommate_id") == roommate["id"] for row in rows):
+        raise ApiError("They're already listed on this room. Remove them before inviting them again.")
+    needed = roommates_needed(user)
+    cap = needed if needed else 3
+    if len(rows) >= cap:
+        raise ApiError("Remove a roommate before adding another.")
+    get_db().insert(
+        "consents",
+        {
+            "id": uuid.uuid4().hex,
+            "host_id": user["id"],
+            "dorm_id": user.get("dorm_id") or "",
+            "unit": user.get("unit") or "",
+            "floor": user.get("floor"),
+            "roommate_id": roommate["id"],
+            "roommate_email": cleaned,
+            "status": "pending",
+            "created_at": now_iso(),
+            "responded_at": None,
+        },
+    )
+    _close_if_unbookable(user["id"])
+    fresh = get_db().find_one("users", id=user["id"]) or user
+    return serialize_user(fresh, user["id"])
+
+
+def withdraw_roommate(user: dict, consent_id: str) -> dict:
+    row = get_db().find_one("consents", id=consent_id)
+    if not row or row.get("host_id") != user["id"] or row.get("status") == "withdrawn":
+        raise ApiError("That roommate isn't on your room.", 404)
+    get_db().update("consents", consent_id, {"status": "withdrawn", "responded_at": now_iso()})
+    _close_if_unbookable(user["id"])
+    fresh = get_db().find_one("users", id=user["id"]) or user
+    return serialize_user(fresh, user["id"])
+
+
+def respond_roommate(user: dict, consent_id: str, accept: bool) -> dict:
+    row = get_db().find_one("consents", id=consent_id)
+    if not row or row.get("roommate_id") != user["id"] or row.get("status") != "pending":
+        raise ApiError("That request isn't waiting on you.", 404)
+    status = "accepted" if accept else "declined"
+    updated = get_db().update("consents", consent_id, {"status": status, "responded_at": now_iso()}) or row
+    _close_if_unbookable(row.get("host_id") or "")
+    host = get_db().find_one("users", id=row.get("host_id")) or {}
+    dorm = get_dorm(row.get("dorm_id") or "") or {}
+    return {
+        "id": updated.get("id"),
+        "host_id": row.get("host_id") or "",
+        "host_name": host.get("name") or "Your roommate",
+        "dorm_name": dorm.get("name") or "",
+        "unit": row.get("unit") or "",
+        "status": status,
+    }
 
 
 def _accepted_booking(user_id: str, booking_id: str) -> dict:
@@ -640,17 +851,76 @@ def _accepted_booking(user_id: str, booking_id: str) -> dict:
     return booking
 
 
+REACTIONS = ("👍", "❤️", "😂", "😮", "😢", "🔥")
+_IMAGE_TYPES = {"jpeg": "image/jpeg", "png": "image/png", "gif": "image/gif", "webp": "image/webp"}
+_IMAGE_MAX = 4 * 1024 * 1024
+
+
+def _upload_dir() -> Path:
+    folder = data_file().parent / "uploads"
+    folder.mkdir(parents=True, exist_ok=True)
+    return folder
+
+
+def _image_kind(raw: bytes) -> str | None:
+    if raw.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "png"
+    if raw.startswith(b"\xff\xd8\xff"):
+        return "jpeg"
+    if raw.startswith((b"GIF87a", b"GIF89a")):
+        return "gif"
+    if len(raw) >= 12 and raw.startswith(b"RIFF") and raw[8:12] == b"WEBP":
+        return "webp"
+    return None
+
+
+def _message_preview(item: dict | None) -> str:
+    if not item:
+        return ""
+    if item.get("deleted"):
+        return "Message deleted"
+    text = item.get("text") or ""
+    if text:
+        return text
+    if (item.get("image") or {}).get("file"):
+        return "Sent a photo"
+    return ""
+
+
 def _serialize_message(item: dict, viewer_id: str) -> dict:
+    deleted = bool(item.get("deleted"))
+    image = None if deleted else (item.get("image") or None)
+    reactions = []
+    if not deleted:
+        for group in item.get("reactions") or []:
+            people = list(group.get("user_ids") or [])
+            if not people:
+                continue
+            reactions.append({"emoji": group.get("emoji") or "", "count": len(people), "mine": viewer_id in people})
     return {
         "id": item.get("id"),
         "sender_id": item.get("sender_id"),
-        "channel": item.get("channel") or "nook",
-        "text": item.get("text") or "",
+        "channel": "dormsurf",
+        "text": "" if deleted else (item.get("text") or ""),
         "created_at": item.get("created_at"),
+        "edited_at": None if deleted else item.get("edited_at"),
+        "deleted": deleted,
+        "image_url": (
+            f"/api/bookings/{item.get('booking_id')}/messages/{item.get('id')}/image" if image and image.get("file") else None
+        ),
+        "reactions": reactions,
         "delivery": item.get("delivery") or "stored",
         "detail": item.get("detail") or "",
         "mine": item.get("sender_id") == viewer_id,
     }
+
+
+def _thread_message(user_id: str, booking_id: str, message_id: str) -> tuple[dict, dict]:
+    booking = _accepted_booking(user_id, booking_id)
+    item = get_db().find_one("messages", id=message_id)
+    if not item or item.get("booking_id") != booking["id"]:
+        raise ApiError("That message isn't in this thread.", 404)
+    return booking, item
 
 
 def _mark_thread_seen(user_id: str, booking: dict, rows: list[dict]) -> None:
@@ -742,7 +1012,7 @@ def inbox_for(user: dict, query: str = "") -> dict:
                     "role": "host" if booking.get("host_id") == uid else "guest",
                     "person": person,
                     "last_message": {
-                        "text": last.get("text") or "",
+                        "text": _message_preview(last),
                         "created_at": last.get("created_at") or "",
                         "mine": last.get("sender_id") == uid,
                     }
@@ -757,7 +1027,7 @@ def inbox_for(user: dict, query: str = "") -> dict:
             preview = ""
             for item in reversed(rows):
                 if item.get("sender_id") != uid:
-                    preview = item.get("text") or ""
+                    preview = _message_preview(item)
                     break
             notifications.append(
                 {
@@ -787,25 +1057,151 @@ def inbox_for(user: dict, query: str = "") -> dict:
     return {"threads": threads, "notifications": notifications, "unread": len(notifications)}
 
 
-def send_message(user: dict, booking_id: str, channel: str, text: str) -> dict:
-    booking = _accepted_booking(user["id"], booking_id)
-    channel = (channel or "nook").strip().lower()
-    if channel != "nook":
-        raise ApiError("Messages stay in Nook. Instagram, WhatsApp, and Discord open from the logos on this stay.")
+def _clean_text(text: str) -> str:
     text = " ".join((text or "").split())
-    if not text:
-        raise ApiError("Write a message first.")
     if len(text) > 1000:
         raise ApiError("Keep the message under 1000 characters.")
+    return text
+
+
+def _store_image(upload) -> dict | None:
+    if upload is None or not getattr(upload, "filename", None):
+        return None
+    raw = upload.read()
+    if not raw:
+        raise ApiError("That photo was empty.")
+    if len(raw) > _IMAGE_MAX:
+        raise ApiError("Photos need to be under 4 MB.")
+    kind = _image_kind(raw)
+    if not kind:
+        raise ApiError("Use a JPEG, PNG, GIF, or WebP photo.")
+    name = f"{uuid.uuid4().hex}.{'jpg' if kind == 'jpeg' else kind}"
+    (_upload_dir() / name).write_bytes(raw)
+    return {"file": name, "type": _IMAGE_TYPES[kind]}
+
+
+_IN_APP_CHANNELS = {"dormsurf", "nook"}
+_typing_at: dict[str, dict[str, float]] = {}
+_TYPING_TTL = 3.5
+
+
+def _touch_typing(booking_id: str, user_id: str, active: bool) -> None:
+    bucket = _typing_at.setdefault(booking_id, {})
+    if active:
+        bucket[user_id] = time.monotonic()
+    else:
+        bucket.pop(user_id, None)
+
+
+def typing_peers(user: dict, booking_id: str) -> list[dict]:
+    booking = _accepted_booking(user["id"], booking_id)
+    now = time.monotonic()
+    bucket = _typing_at.get(booking["id"], {})
+    peers = []
+    for user_id, seen in list(bucket.items()):
+        if now - seen > _TYPING_TTL:
+            bucket.pop(user_id, None)
+            continue
+        if user_id == user["id"]:
+            continue
+        person = get_db().find_one("users", id=user_id) or {}
+        peers.append({"id": user_id, "name": person.get("name") or "Someone"})
+    return peers
+
+
+def set_typing(user: dict, booking_id: str, active: bool) -> list[dict]:
+    booking = _accepted_booking(user["id"], booking_id)
+    _touch_typing(booking["id"], user["id"], active)
+    return typing_peers(user, booking_id)
+
+
+def send_message(user: dict, booking_id: str, channel: str, text: str, image=None) -> dict:
+    booking = _accepted_booking(user["id"], booking_id)
+    channel = (channel or "dormsurf").strip().lower()
+    if channel not in _IN_APP_CHANNELS:
+        raise ApiError("Messages stay in Dormsurf. Instagram, WhatsApp, and Discord open from the logos on this stay.")
+    text = _clean_text(text)
+    stored = _store_image(image)
+    if not text and not stored:
+        raise ApiError("Write a message or attach a photo.")
+    _touch_typing(booking["id"], user["id"], False)
     doc = {
         "id": uuid.uuid4().hex,
         "booking_id": booking["id"],
         "sender_id": user["id"],
-        "channel": "nook",
+        "channel": "dormsurf",
         "text": text,
+        "image": stored,
+        "reactions": [],
         "created_at": now_iso(),
+        "edited_at": None,
+        "deleted": False,
         "delivery": "stored",
-        "detail": "Saved in Nook.",
+        "detail": "Saved in Dormsurf.",
     }
     get_db().insert("messages", doc)
     return _serialize_message(doc, user["id"])
+
+
+def edit_message(user: dict, booking_id: str, message_id: str, text: str) -> dict:
+    _booking, item = _thread_message(user["id"], booking_id, message_id)
+    if item.get("sender_id") != user["id"]:
+        raise ApiError("You can only edit your own messages.")
+    if item.get("deleted"):
+        raise ApiError("That message was deleted.")
+    text = _clean_text(text)
+    if not text and not (item.get("image") or {}).get("file"):
+        raise ApiError("Write a message first.")
+    updated = get_db().update("messages", message_id, {"text": text, "edited_at": now_iso()})
+    return _serialize_message(updated or item, user["id"])
+
+
+def delete_message(user: dict, booking_id: str, message_id: str) -> dict:
+    _booking, item = _thread_message(user["id"], booking_id, message_id)
+    if item.get("sender_id") != user["id"]:
+        raise ApiError("You can only delete your own messages.")
+    image = (item.get("image") or {}).get("file")
+    if image:
+        (_upload_dir() / Path(image).name).unlink(missing_ok=True)
+    updated = get_db().update(
+        "messages",
+        message_id,
+        {"text": "", "image": None, "reactions": [], "deleted": True, "edited_at": None, "deleted_at": now_iso()},
+    )
+    return _serialize_message(updated or item, user["id"])
+
+
+def react_message(user: dict, booking_id: str, message_id: str, emoji: str) -> dict:
+    _booking, item = _thread_message(user["id"], booking_id, message_id)
+    if item.get("deleted"):
+        raise ApiError("That message was deleted.")
+    if emoji not in REACTIONS:
+        raise ApiError("Pick one of the reactions on the message.")
+    reactions = []
+    replaced = False
+    for group in item.get("reactions") or []:
+        people = list(group.get("user_ids") or [])
+        had_me = user["id"] in people
+        people = [person for person in people if person != user["id"]]
+        if group.get("emoji") == emoji and had_me:
+            replaced = True
+        elif group.get("emoji") == emoji:
+            people.append(user["id"])
+        if people:
+            reactions.append({"emoji": group.get("emoji"), "user_ids": people})
+    if not replaced and not any(group.get("emoji") == emoji for group in reactions):
+        reactions.append({"emoji": emoji, "user_ids": [user["id"]]})
+    updated = get_db().update("messages", message_id, {"reactions": reactions})
+    return _serialize_message(updated or item, user["id"])
+
+
+def message_image_path(user_id: str, booking_id: str, message_id: str) -> tuple[Path, str]:
+    _booking, item = _thread_message(user_id, booking_id, message_id)
+    if item.get("deleted"):
+        raise ApiError("That photo isn't available.", 404)
+    meta = item.get("image") or {}
+    name = Path(str(meta.get("file") or "")).name
+    path = _upload_dir() / name
+    if not name or not path.is_file():
+        raise ApiError("That photo isn't available.", 404)
+    return path, meta.get("type") or "application/octet-stream"

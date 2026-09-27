@@ -14,6 +14,22 @@ export type Socials = {
   links?: Partial<Record<"instagram" | "whatsapp" | "discord", SocialLink>>;
 };
 
+export type RoommateConsent = {
+  id: string;
+  email: string;
+  name: string;
+  status: "pending" | "accepted" | "declined";
+};
+
+export type RoommateAsk = {
+  id: string;
+  host_id: string;
+  host_name: string;
+  dorm_name: string;
+  unit: string;
+  status: "pending" | "accepted" | "declined";
+};
+
 export type User = {
   id: string;
   email?: string;
@@ -43,6 +59,11 @@ export type User = {
   wake_time?: string;
   noise?: string;
   guest_notes: string;
+  room_skipped?: boolean;
+  roommates_needed?: number;
+  room_bookable?: boolean;
+  roommates?: RoommateConsent[];
+  roommate_asks?: RoommateAsk[];
   onboarding_complete: boolean;
   onboarding_step: "room" | "about" | "voice" | "done";
   embedding_model?: string;
@@ -107,6 +128,34 @@ export type FloorPlan = {
   pdf?: string | null;
   source_page?: string | null;
   official?: boolean;
+  hotspots?: { unit: string; x: number; y: number; w: number; h: number }[];
+};
+
+export type HousingItem = { name: string; detail?: string; lines?: string[] };
+
+export type RoomFootprint = {
+  width_in: number;
+  depth_in: number;
+  width_label: string;
+  depth_label: string;
+  summary: string;
+  drawing: string;
+  range: boolean;
+  approximate: boolean;
+  occupants: number;
+  source: string;
+  note: string;
+};
+
+export type HousingFacts = {
+  page: string;
+  room_style: string;
+  amenities: HousingItem[];
+  furniture: HousingItem[];
+  furniture_note: string;
+  dimensions: HousingItem[];
+  dimensions_source: string;
+  room?: RoomFootprint | null;
 };
 
 export type HallSpecs = {
@@ -137,6 +186,7 @@ export type DormDetail = HallBase & {
   open_units: number;
   floors: FloorPlan[];
   directions?: Route;
+  housing?: HousingFacts | null;
 };
 
 export type DormPin = HallBase & {
@@ -238,12 +288,22 @@ export type Inbox = {
   unread: number;
 };
 
+export type ChatReaction = {
+  emoji: string;
+  count: number;
+  mine: boolean;
+};
+
 export type ChatMessage = {
   id: string;
   sender_id: string;
-  channel: "nook";
+  channel: "dormsurf" | "nook";
   text: string;
   created_at: string;
+  edited_at: string | null;
+  deleted: boolean;
+  image_url: string | null;
+  reactions: ChatReaction[];
   delivery: string;
   detail: string;
   mine: boolean;

@@ -4,7 +4,17 @@ import type { ReactNode } from "react";
 import { ApiError, api } from "./api";
 import type { Meta, User } from "./types";
 
-const TOKEN_KEY = "nook_token";
+const TOKEN_KEY = "dormsurf_token";
+const LEGACY_TOKEN_KEY = "nook_token";
+
+function storedToken(): string | null {
+  const current = localStorage.getItem(TOKEN_KEY);
+  if (current) return current;
+  const legacy = localStorage.getItem(LEGACY_TOKEN_KEY);
+  if (!legacy) return null;
+  localStorage.setItem(TOKEN_KEY, legacy);
+  return legacy;
+}
 
 type AuthValue = {
   token: string | null;
@@ -20,7 +30,7 @@ type AuthValue = {
 const AuthContext = createContext<AuthValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
+  const [token, setToken] = useState<string | null>(() => storedToken());
   const [user, setUser] = useState<User | null>(null);
   const [meta, setMeta] = useState<Meta | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     const generation = epoch.current;
-    const current = localStorage.getItem(TOKEN_KEY);
+    const current = storedToken();
     if (!current) {
       if (epoch.current !== generation) return;
       setUser(null);
@@ -52,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (epoch.current !== generation || localStorage.getItem(TOKEN_KEY) !== current) return;
       if (error instanceof ApiError && error.status === 401) {
         localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(LEGACY_TOKEN_KEY);
         setToken(null);
         setUser(null);
       }
@@ -80,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const commit = useCallback((next: string, nextUser: User) => {
     epoch.current += 1;
     localStorage.setItem(TOKEN_KEY, next);
+    localStorage.removeItem(LEGACY_TOKEN_KEY);
     setToken(next);
     setUser(nextUser);
     setLoading(false);
@@ -109,6 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     epoch.current += 1;
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(LEGACY_TOKEN_KEY);
     setToken(null);
     setUser(null);
   }, []);

@@ -20,7 +20,20 @@ from .db import get_db
 from .errors import ApiError
 from .mailer import send_verification, smtp_configured
 from .floorplans import image_file
-from .muse import convert_to_wav, extract_profile, habit_gaps, match_sentence, muse_configured, transcribe_wav
+from .muse import (
+    bio_fields,
+    compose_bio,
+    convert_to_wav,
+    extract_profile,
+    direct_entry_error,
+    direct_entry_transcript,
+    habit_gaps,
+    is_template_bio,
+    question_gap,
+    match_sentence,
+    muse_configured,
+    transcribe_wav,
+)
 from .security import (
     check_password,
     hash_password,
@@ -38,15 +51,26 @@ from .services import (
     cancel_booking,
     create_booking,
     decline_booking,
+    delete_message,
     dorm_detail,
+    edit_message,
     get_booking,
     inbox_for,
     list_bookings,
     list_messages,
+    message_image_path,
     map_overview,
     onboarding_step,
     parse_dates,
+    invite_roommate,
+    respond_roommate,
+    roommate_asks_for,
     save_room,
+    set_typing,
+    skip_room,
+    withdraw_roommate,
+    react_message,
+    typing_peers,
     search,
     send_message,
     serialize_user,
@@ -78,6 +102,26 @@ def _require():
 
 def _hash_code(code: str) -> str:
     return sha256(f"{secret()}:{code}".encode()).hexdigest()
+
+
+def _rewrite_bio(host: dict) -> dict:
+    """Replace a broken local blurb with one Muse writes from the structured profile."""
+    life = dict(host.get("lifestyle") or {})
+    bio = (life.get("bio") or "").strip()
+    if bio and not is_template_bio(bio):
+        return host
+    if not muse_configured():
+        return host
+    fields = bio_fields(host, life)
+    fields["year"] = YEAR_LABELS.get(host.get("year"), "") or fields["year"]
+    try:
+        written = compose_bio(fields)
+    except Exception as exc:
+        print(f"Muse Spark description failed, leaving it off: {exc}")
+        return host
+    life["bio"] = written
+    updated = get_db().update("users", host["id"], {"lifestyle": life})
+    return updated or host
 
 
 def _me_payload(user: dict) -> dict:
@@ -130,12 +174,12 @@ def register_routes(app: Flask) -> None:
                 {
                     "name": "Maya Chen",
                     "email": "maya.chen@gatech.edu",
-                    "blurb": "Hosting in Glenn this weekend",
+                    "blurb": "Hosting in Glenn next weekend",
                 },
                 {
                     "name": "Andre Wallace",
                     "email": "andre.wallace@gatech.edu",
-                    "blurb": "Looking for a couch",
+                    "blurb": "Looking for a bed",
                 },
             ]
         return jsonify(payload)
@@ -144,7 +188,7 @@ def register_routes(app: Flask) -> None:
     def email_start():
         email = normalize_email((request.get_json(silent=True) or {}).get("email", ""))
         if get_db().find_one("users", email=email):
-            raise ApiError("That email already has a Nook account. Log in instead.", 409)
+            raise ApiError("That email already has a Dormsurf account. Log in instead.", 409)
         recent = datetime.now(timezone.utc) - timedelta(hours=1)
         sent = 0
         for code in get_db().find_all("codes"):
@@ -224,7 +268,7 @@ def register_routes(app: Flask) -> None:
         if payload.get("purpose") != "verify" or payload.get("sub") != email:
             raise ApiError("Verify your email again before creating a password.")
         if get_db().find_one("users", email=email):
-            raise ApiError("That email already has a Nook account. Log in instead.", 409)
+            raise ApiError("That email already has a Dormsurf account. Log in instead.", 409)
         validate_password(password)
         user = {
             "id": uuid.uuid4().hex,
@@ -272,6 +316,8 @@ def register_routes(app: Flask) -> None:
     def update_room():
         user = _require()
         data = request.get_json(silent=True) or {}
+        if data.get("skip") or data.get("off_campus"):
+            return jsonify(user=skip_room(user))
         try:
             floor = int(data.get("floor"))
         except (TypeError, ValueError) as exc:
@@ -280,11 +326,42 @@ def register_routes(app: Flask) -> None:
         profile = save_room(user, data.get("dorm_id") or "", floor, str(data.get("unit") or ""), open_dates)
         return jsonify(user=profile)
 
+    @app.get("/api/me/roommates")
+    def my_roommates():
+        user = _require()
+        return jsonify(roommates=serialize_user(user, user["id"]).get("roommates") or [])
+
+    @app.post("/api/me/roommates")
+    def add_roommate():
+        user = _require()
+        data = request.get_json(silent=True) or {}
+        return jsonify(user=invite_roommate(user, data.get("email") or "")), 201
+
+    @app.delete("/api/me/roommates/<consent_id>")
+    def remove_roommate(consent_id: str):
+        user = _require()
+        return jsonify(user=withdraw_roommate(user, consent_id))
+
+    @app.get("/api/roommate-asks")
+    def roommate_asks():
+        user = _require()
+        return jsonify(asks=roommate_asks_for(user))
+
+    @app.post("/api/roommate-asks/<consent_id>/accept")
+    def roommate_accept(consent_id: str):
+        user = _require()
+        return jsonify(ask=respond_roommate(user, consent_id, True))
+
+    @app.post("/api/roommate-asks/<consent_id>/decline")
+    def roommate_decline(consent_id: str):
+        user = _require()
+        return jsonify(ask=respond_roommate(user, consent_id, False))
+
     @app.post("/api/me/questionnaire")
     def questionnaire():
         user = _require()
         if onboarding_step(user) == "room":
-            raise ApiError("Claim your room before the questionnaire.")
+            raise ApiError("Choose a hall or skip it before the questionnaire.")
         data = request.get_json(silent=True) or {}
         name = (data.get("name") or "").strip()
         if len(name) < 2 or len(name) > 80:
@@ -357,24 +434,52 @@ def register_routes(app: Flask) -> None:
                 updated = get_db().update("users", user["id"], {"lifestyle": life})
         return jsonify(user=serialize_user(updated, user["id"]))
 
+    def _ready_for_interview(person: dict) -> None:
+        step = onboarding_step(person)
+        if step == "room":
+            raise ApiError("Choose a hall or skip it before the interview.")
+        if step == "about":
+            raise ApiError("Finish the questionnaire before the interview.")
+
+    def _save_interview(person: dict, transcript: str, source: str):
+        gaps = habit_gaps(transcript)
+        if gaps:
+            missing = "; ".join(gaps)
+            raise ApiError(f"Tell Dormsurf the rest of your habits before this can be saved. Still missing: {missing}.")
+        questionnaire = {
+            "name": person.get("name") or "",
+            "major": person.get("major") or "",
+            "year": person.get("year") or "",
+            "year_label": YEAR_LABELS.get(person.get("year") or "", ""),
+            "hometown": person.get("hometown") or "",
+            "gender": person.get("gender") or "",
+            "age": person.get("age"),
+        }
+        profile, model = extract_profile(transcript, questionnaire)
+        patch = apply_lifestyle(person, profile, model, transcript)
+        updated = get_db().update("users", person["id"], patch)
+        body = serialize_user(updated, person["id"])
+        body["transcript_source"] = source
+        return jsonify(user=body, transcript_source=source, embedding_model=model)
+
     @app.post("/api/me/interview")
     def interview():
         user = _require()
         step = onboarding_step(user)
         if step == "room":
-            raise ApiError("Claim your room before the interview.")
+            raise ApiError("Choose a hall or skip it before the interview.")
         if step == "about":
             raise ApiError("Finish the questionnaire before the interview.")
         try:
             duration = float(request.form.get("duration_sec") or 0)
         except ValueError as exc:
             raise ApiError("The recording length didn't come through.") from exc
-        if duration < 0 or duration > 30 * 60:
+        if duration < 0:
             raise ApiError("That recording length doesn't look right.")
         transcript = (request.form.get("transcript") or "").strip()
         source = "browser"
         audio = request.files.get("audio")
-        if audio and audio.filename:
+        if audio and audio.filename and not transcript:
             folder = Path(__file__).resolve().parents[1] / "data" / "audio"
             folder.mkdir(parents=True, exist_ok=True)
             raw_path = folder / f"{user['id']}-{uuid.uuid4().hex[:8]}"
@@ -392,25 +497,37 @@ def register_routes(app: Flask) -> None:
                         source = "muse-voice-transcribe-1.0"
                 except Exception as exc:
                     print(f"Muse Voice Transcribe failed, using the browser transcript: {exc}")
-        gaps = habit_gaps(transcript)
-        if gaps:
-            missing = "; ".join(gaps)
-            raise ApiError(f"Tell Nook the rest of your habits before this can be saved. Still missing: {missing}.")
-        questionnaire = {
-            "name": user.get("name"),
-            "major": user.get("major"),
-            "year": user.get("year"),
-            "year_label": YEAR_LABELS.get(user.get("year"), ""),
-            "hometown": user.get("hometown"),
-            "gender": user.get("gender"),
-            "age": user.get("age"),
-        }
-        profile, model = extract_profile(transcript, questionnaire)
-        patch = apply_lifestyle(user, profile, model, transcript)
-        updated = get_db().update("users", user["id"], patch)
-        body = serialize_user(updated, user["id"])
-        body["transcript_source"] = source
-        return jsonify(user=body, transcript_source=source, embedding_model=model)
+        return _save_interview(user, transcript, source)
+
+    @app.post("/api/me/interview/answer")
+    def interview_answer():
+        user = _require()
+        _ready_for_interview(user)
+        data = request.get_json(silent=True) or {}
+        try:
+            index = int(data.get("index"))
+        except (TypeError, ValueError) as exc:
+            raise ApiError("Pick a question first.") from exc
+        gap = question_gap(index, data.get("answer") or "")
+        if gap:
+            raise ApiError(gap)
+        return jsonify(ok=True)
+
+    @app.post("/api/me/interview/direct")
+    def interview_direct():
+        user = _require()
+        _ready_for_interview(user)
+        data = request.get_json(silent=True) or {}
+        interests = data.get("interests") or ""
+        cleanliness = data.get("cleanliness") or ""
+        sleep_timing = data.get("sleep_timing") or ""
+        noise = data.get("noise") or ""
+        guest_notes = data.get("guest_notes") or ""
+        gap = direct_entry_error(interests, cleanliness, sleep_timing, noise, guest_notes)
+        if gap:
+            raise ApiError(gap)
+        transcript = direct_entry_transcript(interests, cleanliness, sleep_timing, noise, guest_notes)
+        return _save_interview(user, transcript, "typed")
 
     @app.patch("/api/me")
     def patch_me():
@@ -420,7 +537,7 @@ def register_routes(app: Flask) -> None:
     def availability():
         user = _require()
         if not user.get("onboarding_complete"):
-            raise ApiError("Finish your profile before opening your couch.")
+            raise ApiError("Finish your profile before opening your space.")
         data = request.get_json(silent=True) or {}
         return jsonify(user=set_availability(user, data.get("dates") or []))
 
@@ -472,7 +589,7 @@ def register_routes(app: Flask) -> None:
         if from_unit is None and from_id == user.get("dorm_id"):
             from_unit = user.get("unit") or None
         if not get_dorm(from_id):
-            raise ApiError("Claim your room first so Nook knows where to start.")
+            raise ApiError("Add a Georgia Tech room before asking for walking directions.")
         target = request.args.get("to") or ""
         if not get_dorm(target):
             raise ApiError("Pick a hall on the map.")
@@ -489,6 +606,7 @@ def register_routes(app: Flask) -> None:
         host = get_db().find_one("users", id=host_id)
         if not host or not host.get("onboarding_complete"):
             raise ApiError("That profile isn't available.", 404)
+        host = _rewrite_bio(host)
         payload = {"host": serialize_user(host, user["id"])}
         sentence, model = match_sentence(user, host)
         scores_payload = {
@@ -559,9 +677,50 @@ def register_routes(app: Flask) -> None:
     def booking_messages(booking_id: str):
         return jsonify(messages=list_messages(_require(), booking_id))
 
+    @app.get("/api/bookings/<booking_id>/typing")
+    def booking_typing(booking_id: str):
+        return jsonify(typing=typing_peers(_require(), booking_id))
+
+    @app.post("/api/bookings/<booking_id>/typing")
+    def booking_typing_set(booking_id: str):
+        user = _require()
+        data = request.get_json(silent=True) or {}
+        return jsonify(typing=set_typing(user, booking_id, bool(data.get("active"))))
+
     @app.post("/api/bookings/<booking_id>/messages")
     def booking_message_send(booking_id: str):
         user = _require()
-        data = request.get_json(silent=True) or {}
-        message = send_message(user, booking_id, data.get("channel") or "nook", data.get("text") or "")
+        if request.files or (request.content_type and "multipart/form-data" in request.content_type):
+            text = request.form.get("text") or ""
+            channel = request.form.get("channel") or "dormsurf"
+            image = request.files.get("image")
+        else:
+            data = request.get_json(silent=True) or {}
+            text = data.get("text") or ""
+            channel = data.get("channel") or "dormsurf"
+            image = None
+        message = send_message(user, booking_id, channel, text, image)
         return jsonify(message=message), 201
+
+    @app.patch("/api/bookings/<booking_id>/messages/<message_id>")
+    def booking_message_edit(booking_id: str, message_id: str):
+        user = _require()
+        data = request.get_json(silent=True) or {}
+        return jsonify(message=edit_message(user, booking_id, message_id, data.get("text") or ""))
+
+    @app.delete("/api/bookings/<booking_id>/messages/<message_id>")
+    def booking_message_delete(booking_id: str, message_id: str):
+        user = _require()
+        return jsonify(message=delete_message(user, booking_id, message_id))
+
+    @app.post("/api/bookings/<booking_id>/messages/<message_id>/reactions")
+    def booking_message_react(booking_id: str, message_id: str):
+        user = _require()
+        data = request.get_json(silent=True) or {}
+        return jsonify(message=react_message(user, booking_id, message_id, data.get("emoji") or ""))
+
+    @app.get("/api/bookings/<booking_id>/messages/<message_id>/image")
+    def booking_message_image(booking_id: str, message_id: str):
+        user = _require()
+        path, kind = message_image_path(user["id"], booking_id, message_id)
+        return send_file(path, mimetype=kind, max_age=0)

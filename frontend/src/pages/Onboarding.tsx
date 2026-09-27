@@ -49,8 +49,32 @@ export function Onboarding() {
     setStep(target);
   }
 
+  async function skipRoom() {
+    if (user?.room_skipped && !user.dorm_id && reached > 0) {
+      setStep("about");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      await api("/api/me/room", { method: "POST", body: JSON.stringify({ skip: true }) }, token);
+      await refresh();
+      setPick(null);
+      setOffer(false);
+      setReached((current) => Math.max(current, 1));
+      setStep("about");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Couldn't skip the room.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function saveRoom(advance: boolean) {
-    if (!pick) return;
+    if (!pick) {
+      if (advance) await skipRoom();
+      return;
+    }
     const unchanged =
       user?.dorm_id === pick.dormId && user.unit === pick.unit && user.floor === pick.floor && reached > 0 && !offer;
     if (unchanged) {
@@ -111,13 +135,22 @@ export function Onboarding() {
       <div className="mb-6 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <Mark />
-          <span className="font-serif text-2xl">Nook</span>
+          <span className="font-serif text-2xl">Dormsurf</span>
         </div>
         <button type="button" onClick={logout} className="text-sm text-muted hover:text-ink">
           Log out
         </button>
       </div>
+<<<<<<< HEAD
+      <p className="text-xs tracking-[0.16em] text-gold uppercase">First time in</p>
+      <h1 className="font-serif text-4xl text-navy">Tell us where you live, then how you live.</h1>
+      <p className="mt-2 max-w-2xl text-sm text-muted">
+        A Georgia Tech room is optional. Off-campus Yellow Jackets and students from other schools can skip it and still request a bed.
+      </p>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+=======
       <div className="flex flex-wrap items-center justify-between gap-3">
+>>>>>>> 2d40b8bff9dca56b6de840400c369c5bff886f4e
         <ol className="flex flex-wrap gap-2">
           {STEPS.map((item, itemIndex) => {
             const open = itemIndex <= reached;
@@ -141,7 +174,7 @@ export function Onboarding() {
           <button type="button" className={btnGhost} disabled={index === 0} onClick={() => goTo(STEPS[index - 1].id)}>
             Back
           </button>
-          <button type="button" className={btnPrimary} disabled={step === "voice" || (step === "room" && !pick) || busy} onClick={next}>
+          <button type="button" className={btnPrimary} disabled={step === "voice" || busy} onClick={next}>
             Next
           </button>
         </div>
@@ -161,12 +194,15 @@ export function Onboarding() {
           />
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" className="h-4 w-4" checked={offer} onChange={(event) => setOffer(event.target.checked)} />
-            My couch is free on the dates below. You can change this later.
+            My bed is free on the dates below. A shared room stays hidden until your roommate agrees.
           </label>
           {offer ? <DatePicker /> : null}
           <div className="flex flex-wrap items-center gap-3">
             <button type="button" className={btnPrimary} disabled={!pick || busy} onClick={() => void saveRoom(true)}>
               {pick ? `This is my room · ${pick.dormName} ${pick.unit}` : "Select a unit"}
+            </button>
+            <button type="button" className={btnGhost} disabled={busy} onClick={() => void skipRoom()}>
+              I live off campus
             </button>
             {offer && dates.length === 0 ? <p className="text-sm text-clay">Pick at least one night or uncheck the offer.</p> : null}
             {offer && dates.length ? <p className="text-sm text-muted">{formatDates(dates)}</p> : null}

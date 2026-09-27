@@ -1,27 +1,24 @@
 import { useMemo, useState } from "react";
 
 import { useDates } from "../dates";
-import { addDays, formatDay, isoDate, parseIso } from "../format";
+import { addDays, formatDates, isoDate, parseIso, startOfToday, upcomingSaturday } from "../format";
 
 export function DatePicker() {
   const { dates, toggleDate, setDates } = useDates();
   const [cursor, setCursor] = useState(() => parseIso(dates[0] ?? isoDate(new Date())));
 
   const weeks = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = startOfToday();
+    const weekday = today.getDay();
+    const start = upcomingSaturday(today);
     const chips: { label: string; days: string[] }[] = [];
-    const start = new Date(today);
-    const weekday = start.getDay();
-    if (weekday !== 6) start.setDate(start.getDate() + ((6 - weekday + 7) % 7));
     for (let index = 0; index < 4; index += 1) {
       const saturday = addDays(start, index * 7);
       const sunday = addDays(saturday, 1);
-      const days = [isoDate(saturday)];
-      if (sunday >= today) days.push(isoDate(sunday));
+      const open = [isoDate(saturday), isoDate(sunday)].filter((day) => parseIso(day) >= today);
       chips.push({
-        label: index === 0 && weekday === 6 ? "This weekend" : formatDay(isoDate(saturday)),
-        days: days.filter((day) => parseIso(day) >= today),
+        label: index === 0 && (weekday === 6 || weekday === 0) ? "Next weekend" : formatDates(open),
+        days: open,
       });
     }
     return chips.filter((chip) => chip.days.length);
@@ -43,9 +40,9 @@ export function DatePicker() {
       <div className="flex items-baseline justify-between gap-3">
         <div>
           <p className="text-xs font-medium tracking-[0.16em] text-gold uppercase">Dates</p>
-          <p className="mt-1 text-sm text-muted">Required. A couch has to be free every night you pick.</p>
+          <p className="mt-1 text-sm text-muted">Required. A bed has to be free every night you pick.</p>
         </div>
-        <p className="text-sm font-medium">{dates.length ? dates.map(formatDay).join(", ") : "None yet"}</p>
+        <p className="text-sm font-medium">{dates.length ? formatDates(dates) : "None yet"}</p>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
         {weeks.map((week) => {

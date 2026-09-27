@@ -7,7 +7,7 @@ from flask_cors import CORS
 
 from .db import init_db, reset_state
 from .routes import register_routes
-from .seed import seed_if_empty
+from .seed import backfill_demo_consents, refresh_demo_copy, seed_if_empty, shift_ending_weekend
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -40,6 +40,9 @@ def create_app() -> Flask:
     )
     init_db()
     seed_if_empty()
+    refresh_demo_copy()
+    backfill_demo_consents()
+    shift_ending_weekend()
     register_routes(app)
     return app
 

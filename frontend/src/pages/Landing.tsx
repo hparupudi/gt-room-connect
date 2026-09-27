@@ -4,8 +4,8 @@ import { Mark, btnGhost, btnPrimary } from "../components/ui";
 
 const STEPS = [
   {
-    title: "Prove you're at Tech",
-    copy: "We'll send a code to your @gatech.edu email so we know it's you.",
+    title: "Use your school email",
+    copy: "We'll send a code to an .edu address when the school in it is one we recognize.",
   },
   {
     title: "Say how you live",
@@ -13,7 +13,7 @@ const STEPS = [
   },
   {
     title: "Ask, then decide",
-    copy: "You request a couch. They read your profile and accept. Socials stay hidden until you both say yes.",
+    copy: "You request a bed. They read your profile and accept. Socials stay hidden until you both say yes.",
   },
 ];
 
@@ -21,9 +21,9 @@ export function Landing() {
   return (
     <div className="mx-auto max-w-6xl px-4 pb-16">
       <header className="flex items-center justify-between py-5">
-        <div className="flex items-center gap-2">
-          <Mark />
-          <span className="font-serif text-2xl">Nook</span>
+        <div className="flex items-center gap-2.5">
+          <Mark className="h-9 w-9 shrink-0" />
+          <span className="font-serif text-[1.7rem] leading-none tracking-tight">Dormsurf</span>
         </div>
         <div className="flex gap-2">
           <Link to="/login" className={btnGhost}>
@@ -34,26 +34,30 @@ export function Landing() {
           </Link>
         </div>
       </header>
+<<<<<<< HEAD
+      <section className="grid items-center gap-8 py-8 md:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)] md:gap-12 md:py-14">
+=======
       <section className="grid items-start gap-10 py-10 md:grid-cols-[1.3fr_0.7fr] md:py-16">
+>>>>>>> 2d40b8bff9dca56b6de840400c369c5bff886f4e
         <div>
-          <p className="text-xs font-medium tracking-[0.18em] text-gold uppercase">Georgia Tech · weekend housing</p>
+          <p className="text-xs font-medium tracking-[0.18em] text-gold uppercase">Weekend beds · accredited .edu</p>
           <h1 className="mt-3 max-w-xl font-serif text-5xl leading-[1.02] text-navy md:text-7xl">
-            Your roommate left town. Someone on campus has a couch.
+            Your roommate left town. Someone at Tech has a bed.
           </h1>
           <p className="mt-5 max-w-lg text-lg text-muted">
-            Nook is how Yellow Jackets spend a night in another hall — not a rental, a person. Match on how you live, or on the walk from your own room.
+            Dormsurf is how students spend a night in a Georgia Tech hall — not a rental, a person. A Tech room is optional if you live off campus or go to another school.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link to="/signup" className={btnPrimary}>
-              Find a couch
+              Find a bed
             </Link>
             <Link to="/signup" className={btnGhost}>
-              Offer yours
+              Offer your space
             </Link>
           </div>
         </div>
-        <aside className="rounded-[28px] border border-line bg-card p-5">
-          <p className="text-xs tracking-[0.16em] text-gold uppercase">This weekend, roughly</p>
+        <aside className="rounded-[28px] border border-line bg-card p-5 md:self-center">
+          <p className="text-xs tracking-[0.16em] text-gold uppercase">Next weekend, roughly</p>
           <ul className="mt-4 space-y-4">
             {[
               ["Glenn 314", "Early, tidy, climbing and studio nights"],

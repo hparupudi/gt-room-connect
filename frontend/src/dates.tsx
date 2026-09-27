@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
-import { defaultDates } from "./format";
+import { defaultDates, endingWeekend, isoDate, startOfToday } from "./format";
 
 type DatesValue = {
   dates: string[];
@@ -10,15 +10,19 @@ type DatesValue = {
 };
 
 const DatesContext = createContext<DatesValue | null>(null);
-const KEY = "nook-dates";
+const KEY = "dormsurf-dates";
+const LEGACY_KEY = "nook-dates";
 
 function loadDates(): string[] {
   try {
-    const raw = sessionStorage.getItem(KEY);
+    const raw = sessionStorage.getItem(KEY) || sessionStorage.getItem(LEGACY_KEY);
     if (!raw) return defaultDates();
     const parsed = JSON.parse(raw) as unknown;
     if (Array.isArray(parsed) && parsed.every((item) => typeof item === "string") && parsed.length) {
-      return parsed;
+      const today = isoDate(startOfToday());
+      const ending = new Set(endingWeekend());
+      const kept = parsed.filter((day) => day >= today && !ending.has(day));
+      if (kept.length) return [...new Set(kept)].sort();
     }
   } catch {
     /* use the upcoming weekend */

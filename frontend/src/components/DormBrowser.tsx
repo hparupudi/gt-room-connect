@@ -7,6 +7,7 @@ import { styleLabel } from "../format";
 import type { DormDetail, DormPin, MapData, Route, RoomShape } from "../types";
 import { CampusMap } from "./CampusMap";
 import { FloorPlan } from "./FloorPlan";
+import { RoomLayoutDialog } from "./RoomLayout";
 import { Banner, btnGhost, btnPrimary } from "./ui";
 
 type Pick = { dormId: string; dormName: string; floor: number; unit: string };
@@ -34,6 +35,7 @@ export function DormBrowser({
   const [destination, setDestination] = useState<Endpoint | null>(null);
   const [route, setRoute] = useState<Route | null>(null);
   const [routing, setRouting] = useState(false);
+  const [layout, setLayout] = useState<{ unit: string; floor: number } | null>(null);
 
   useEffect(() => {
     if (user?.dorm_id && user.unit && !origin) setOrigin({ dormId: user.dorm_id, unit: user.unit });
@@ -98,6 +100,7 @@ export function DormBrowser({
     setSelectedId(id);
     setZoomToId(id);
     setFloor(null);
+    setLayout(null);
   }
 
   function chooseDestination(next: Endpoint | null) {
@@ -115,6 +118,7 @@ export function DormBrowser({
 
   function chooseUnit(room: RoomShape) {
     if (!detail || !plan) return;
+    setLayout({ unit: room.unit, floor: plan.floor });
     if (mode === "pick") {
       onPick?.({ dormId: detail.id, dormName: detail.name, floor: plan.floor, unit: room.unit });
       return;
@@ -232,7 +236,10 @@ export function DormBrowser({
                 <button
                   key={item.floor}
                   type="button"
-                  onClick={() => setFloor(item.floor)}
+                  onClick={() => {
+                    setFloor(item.floor);
+                    setLayout(null);
+                  }}
                   className={`rounded-full px-3 py-1 text-sm ${item.floor === floor ? "bg-navy text-paper" : "bg-paper"}`}
                 >
                   Floor {item.floor}
@@ -247,12 +254,22 @@ export function DormBrowser({
           <p className="mt-3 text-xs text-muted">
             {plan?.image
               ? mode === "pick"
-                ? "The plan above is the Housing drawing for this floor. Choose your unit underneath it. Roommates can both live in a double."
-                : "The plan above is the Housing drawing for this floor, including bathrooms and study spaces. Choose a unit underneath it for who's hosting and for walking directions."
+                ? "Click a room on the plan to see its size and furniture, drawn to scale, and to claim that unit. Roommates can both live in a double."
+                : "Click a room on the plan to see its size and furniture, drawn to scale. That room also becomes the destination of the walk."
               : mode === "pick"
-                ? "Click a unit to claim it as yours. Roommates can both live in a double."
-                : "Hover a unit for who's hosting. Click any unit to get walking directions to it from your room."}
+                ? "Click a unit to see its layout and claim it as yours. Roommates can both live in a double."
+                : "Hover a unit for who's hosting. Click a room for its layout and for walking directions."}
           </p>
+          {layout ? (
+            <RoomLayoutDialog
+              hallName={detail.name}
+              unit={layout.unit}
+              floor={layout.floor}
+              roomStyle={detail.housing?.room_style || styleLabel(detail.style)}
+              housing={detail.housing}
+              onClose={() => setLayout(null)}
+            />
+          ) : null}
         </section>
       ) : null}
     </div>
@@ -322,7 +339,7 @@ function Navigator({
             ) : null}
             {host ? (
               <Link to={`/room/${host.id}`} className={btnPrimary}>
-                View {host.name.split(" ")[0]}'s couch
+                View {host.name.split(" ")[0]}'s space
               </Link>
             ) : null}
           </div>

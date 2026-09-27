@@ -33,10 +33,10 @@ export function AboutForm({
 }) {
   const { meta } = useAuth();
   const [name, setName] = useState(initial?.name || "");
-  const [gender, setGender] = useState(initial?.gender || "woman");
-  const [age, setAge] = useState(initial?.age ? String(initial.age) : "19");
-  const [major, setMajor] = useState(initial?.major || meta?.majors[0] || "");
-  const [year, setYear] = useState(initial?.year || "2");
+  const [gender, setGender] = useState(initial?.gender || "");
+  const [age, setAge] = useState(initial?.age ? String(initial.age) : "");
+  const [major, setMajor] = useState(initial?.major || "");
+  const [year, setYear] = useState(initial?.year || "");
   const [hometown, setHometown] = useState(initial?.hometown || "");
   const [instagram, setInstagram] = useState(initial?.socials?.instagram || "");
   const [instagramPrivate, setInstagramPrivate] = useState(Boolean(initial?.socials?.instagram_private));
@@ -77,7 +77,10 @@ export function AboutForm({
         <input value={name} onChange={(event) => setName(event.target.value)} required />
       </Field>
       <Field label="Gender">
-        <select value={gender} onChange={(event) => setGender(event.target.value)}>
+        <select value={gender} onChange={(event) => setGender(event.target.value)} required>
+          <option value="" disabled>
+            {" "}
+          </option>
           {(meta?.genders ?? []).map((option) => (
             <option key={option.id} value={option.id}>
               {option.label}
@@ -89,7 +92,10 @@ export function AboutForm({
         <input type="number" min={16} max={40} value={age} onChange={(event) => setAge(event.target.value)} required />
       </Field>
       <Field label="Year">
-        <select value={year} onChange={(event) => setYear(event.target.value)}>
+        <select value={year} onChange={(event) => setYear(event.target.value)} required>
+          <option value="" disabled>
+            {" "}
+          </option>
           {(meta?.years ?? []).map((option) => (
             <option key={option.id} value={option.id}>
               {option.label}
@@ -98,7 +104,10 @@ export function AboutForm({
         </select>
       </Field>
       <Field label="Major">
-        <select value={major} onChange={(event) => setMajor(event.target.value)}>
+        <select value={major} onChange={(event) => setMajor(event.target.value)} required>
+          <option value="" disabled>
+            {" "}
+          </option>
           {(meta?.majors ?? []).map((option) => (
             <option key={option} value={option}>
               {option}

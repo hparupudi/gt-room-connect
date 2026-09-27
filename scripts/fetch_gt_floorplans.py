@@ -19,9 +19,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "backend" / "nook" / "data" / "floorplans"
-USER_AGENT = "NookFloorplans/1.0 (educational; +https://housing.gatech.edu)"
+USER_AGENT = "DormsurfFloorplans/1.0 (educational; +https://housing.gatech.edu)"
 
-# Nook hall id -> housing.gatech.edu location slug.
+# Dormsurf hall id -> housing.gatech.edu location slug.
 SLUGS = {
     "glenn": "glenn",
     "field": "field",

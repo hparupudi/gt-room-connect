@@ -25,7 +25,7 @@ _cache: dict[tuple[str, str], tuple[float, dict]] = {}
 _lock = threading.Lock()
 CACHE_SECONDS = 60 * 60 * 6
 WALK_METERS_PER_MINUTE = 80
-UA = {"User-Agent": "nook-campus/0.1 (student housing map)"}
+UA = {"User-Agent": "dormsurf-campus/0.1 (student housing map)"}
 
 
 def valhalla_url() -> str:

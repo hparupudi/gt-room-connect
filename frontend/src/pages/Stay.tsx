@@ -60,7 +60,7 @@ export function Stay() {
           {booking.status === "accepted" ? <MatchChat bookingId={booking.id} /> : null}
           {booking.status === "accepted" && other.socials ? (
             <div className="mt-6 rounded-[28px] bg-navy p-5 text-paper">
-              <p className="text-xs tracking-[0.16em] text-gold-soft uppercase">If you step outside Nook</p>
+              <p className="text-xs tracking-[0.16em] text-gold-soft uppercase">If you step outside Dormsurf</p>
               <p className="mt-2 font-serif text-3xl">Their socials, now that this is a yes.</p>
               <p className="mt-2 text-sm text-gold-soft">
                 Instagram, WhatsApp, and Discord open in their own apps. A private Instagram, or a Discord profile that still needs a friend request, opens the profile instead of a thread.
