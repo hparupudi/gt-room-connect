@@ -408,11 +408,13 @@ def extract_profile(transcript: str, questionnaire: dict) -> tuple[LifestyleProf
     profile = None
     if muse_configured():
         try:
+            print("Muse Spark 1.3 is extracting this interview profile.", flush=True)
             profile = muse_extract(transcript, questionnaire)
             model_name = "muse-spark-1.3"
         except Exception as exc:
-            print(f"Muse Spark extraction failed, using local parser: {exc}")
+            print(f"Muse Spark extraction failed, using local parser: {exc}", flush=True)
     if profile is None:
+        print("Keyword detection is extracting this interview profile.", flush=True)
         profile = local_extract(transcript, questionnaire)
     profile.bio = ""
     if muse_configured():

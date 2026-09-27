@@ -819,6 +819,29 @@ def test_typing_indicator_is_visible_to_the_other_person(client):
     assert client.get(f"/api/bookings/{booking_id}/typing", headers=auth(andre)).get_json()["typing"] == []
 
 
+def test_console_says_when_muse_spark_extracts(monkeypatch, capsys):
+    from nook import muse
+
+    monkeypatch.setattr(muse, "muse_configured", lambda: True)
+    monkeypatch.setattr(muse, "muse_extract", lambda transcript, questionnaire: muse.local_extract(transcript, questionnaire))
+    monkeypatch.setattr(muse, "compose_bio", lambda fields: "Maya keeps a tidy room. She climbs on Fridays.")
+    _profile, model = muse.extract_profile(
+        "I love climbing, keep a tidy quiet room, and fall asleep at 10pm.",
+        {"name": "Maya", "major": "Computer Science"},
+    )
+    assert model == "muse-spark-1.3"
+    assert "Muse Spark 1.3 is extracting this interview profile." in capsys.readouterr().out
+
+    monkeypatch.setattr(muse, "muse_configured", lambda: False)
+    muse.extract_profile(
+        "I love climbing, keep a tidy quiet room, and fall asleep at 10pm.",
+        {"name": "Maya", "major": "Computer Science"},
+    )
+    keyword = capsys.readouterr().out
+    assert "Keyword detection is extracting this interview profile." in keyword
+    assert "Muse Spark 1.3 is extracting this interview profile." not in keyword
+
+
 def test_ending_weekend_moves_forward_once(client):
     from nook.db import get_db
     from nook.seed import shift_ending_weekend
